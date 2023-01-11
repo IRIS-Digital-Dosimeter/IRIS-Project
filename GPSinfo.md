@@ -12,4 +12,4 @@ Software: `Arduino IDE 2.0.3`
 - Testing blink
   - File > Examples > 01.Basics > Blink
   - Adjust delay time as needed
-  - Status: Successful trial
+  - Status: Successful trial session
