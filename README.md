@@ -5,4 +5,3 @@
   - File > Examples
 - Book to reference:
   - Jack Purdum Beginning C for Arduino 2nd Ed.
-  - Located: Textbooks
