@@ -36,6 +36,6 @@ Testing blink
 ### Successful Trials
 
 - Blink
-- Measuring Battery
+- [Measuring Battery](https://learn.adafruit.com/adafruit-feather-m0-adalogger/power-management)
 
 ![Output of Measuring Battery](images/MeasuringBatteryPin7.png)
