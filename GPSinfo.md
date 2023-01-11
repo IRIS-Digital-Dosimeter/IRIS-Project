@@ -29,6 +29,4 @@ Testing blink
 
 ### Loop Function
 
-```
-Arduino does not provide any way of stopping the void loop function. Besides Arduino there is no such thing to exist in microcontrollers in the first place. Technically all the techniques we used are just to halt the Arduino loop functionality. It does not stop completely, we either send void loop to an infinite condition using while or use an exit statement to halt its process. By doing this Arduino loop stuck inside an infinite loop without executing instructions, the only way to get it back is by resetting; through a button or by uploading a new sketch. So technically the Arduino void loop does not stop.
-```
+> Arduino does not provide any way of stopping the void loop function. Besides Arduino there is no such thing to exist in microcontrollers in the first place. Technically all the techniques we used are just to halt the Arduino loop functionality. It does not stop completely, we either send void loop to an infinite condition using while or use an exit statement to halt its process. By doing this Arduino loop stuck inside an infinite loop without executing instructions, the only way to get it back is by resetting; through a button or by uploading a new sketch. So technically the Arduino void loop does not stop.
