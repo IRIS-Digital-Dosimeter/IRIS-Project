@@ -2,7 +2,7 @@
 
 This project is done on a Windows computer using Windows subsystem for Linux (WSL 2).
 
-## Adalogger
+## Adalogger General Info
 
 Device: `Adafruit Feather M0 Adalogger `\
 Software: `Arduino IDE 2.0.3`\
@@ -16,11 +16,11 @@ Cable: `Micro-B USB to USB-A`
 4.  Use a `Micro-B USB to USB-A` cable to connect the Adalogger to a computer
     - Arduino IDE should identify the Adalogger board automatically
 
-## Testing Adalogger
+## Adalogger Testing
 
 `Important`: Arduino Integrated Development Environment (IDE) comes with several example code files ready to run.
 
-- Testing blink
-  - File > Examples > 01.Basics > Blink
-  - Adjust delay time as needed
-  - Status: Successful trial
+1. Testing blink
+   - File > Examples > 01.Basics > Blink
+   - Adjust delay time as needed
+   - Status: Successful trial
