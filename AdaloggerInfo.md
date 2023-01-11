@@ -9,7 +9,7 @@ This project is done on a Windows computer using Windows subsystem for Linux (WS
 Device: `Adafruit Feather M0 Adalogger `\
 Software: `Arduino IDE 2.0.3`\
 Cable: `Micro-B USB to USB-A`\
-Website: [Overview](https://learn.adafruit.com/adafruit-feather-m0-adalogger/overview)
+Website: [Overview](https://learn.adafruit.com/adafruit-feather-m0-adalogger/overview) \
 Pinouts: [link](https://learn.adafruit.com/adafruit-feather-m0-adalogger/pinouts)
 
 ![Adalogger](images/Adalogger.png)
