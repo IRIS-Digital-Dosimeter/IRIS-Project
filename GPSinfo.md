@@ -2,6 +2,8 @@
 
 This project is done on a Windows computer using Windows subsystem for Linux (WSL 2).
 
+> `Important`: Certain scripts take longer to upload and print to Serial Monitor. Additionally, sometimes the script needs to be run twice if initial upload produced no result. This is something to investigate.
+
 ## Adalogger General Info
 
 Device: `Adafruit Feather M0 Adalogger `\
@@ -19,7 +21,7 @@ Cable: `Micro-B USB to USB-A`
 
 ## Adalogger Testing
 
-`Important`: Arduino Integrated Development Environment (IDE) comes with several example code files ready to run.
+> `Important`: Arduino Integrated Development Environment (IDE) comes with several example code files ready to run.
 
 Testing blink
 
@@ -40,3 +42,8 @@ Testing blink
 - [Measuring Battery](https://learn.adafruit.com/adafruit-feather-m0-adalogger/power-management)
 
 ![Output of Measuring Battery](images/MeasuringBatteryPin7.png)
+
+- Check Secure Digital (SD) Card Info
+  - File > Examples > SD > CardInfo
+
+![Output of SD Card Info](images/CardInfo1_15_23.png)
