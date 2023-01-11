@@ -37,4 +37,5 @@ Testing blink
 
 - Blink
 - Measuring Battery
-  ![Output of Measuring Battery](images/MeasuringBatteryPin7.png)
+
+![Output of Measuring Battery](images/MeasuringBatteryPin7.png)
