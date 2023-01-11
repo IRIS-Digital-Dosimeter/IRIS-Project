@@ -1,13 +1,11 @@
-# Iris - Adafruit - GPS Project
+# IRIS: GPS Project
 
-Tentative Outline:
-
-## Device: Adalogger
+## Adalogger
 
 Device: `Adafruit Feather M0 Adalogger `\
 Software: `Arduino IDE 2.0.3`
 
-# Testing Adalogger
+## Testing Adalogger
 
 `Important`: Arduino IDE comes with several example code files ready to run.
 
