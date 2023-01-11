@@ -52,6 +52,8 @@ Testing blink
 
 ![Output of SD Card Info](images/CardInfo1_15_23.png)
 
+> Actually ^ this shows the txt files are 0 bytes and should be attempted again
+
 ### Failed Trials
 
 - DumpFile
