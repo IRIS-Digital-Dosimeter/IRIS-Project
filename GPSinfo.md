@@ -20,7 +20,8 @@ Cable: `Micro-B USB to USB-A`
 
 `Important`: Arduino Integrated Development Environment (IDE) comes with several example code files ready to run.
 
-1. Testing blink
-   - File > Examples > 01.Basics > Blink
-   - Adjust delay time as needed
-   - Status: Successful trial
+Testing blink
+
+1.  File > Examples > 01.Basics > Blink
+2.  Adjust delay time as needed
+3.  Status: Successful trial
