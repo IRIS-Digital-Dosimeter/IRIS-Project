@@ -17,7 +17,7 @@ Cable: `Micro-B USB to USB-A`
   - Adjust delay time as needed
   - Status: Successful trial
 
-## Adalogger Install
+## Adalogger Installs
 
 1.  [Download Arduino IDE 2.0 of higher](https://www.arduino.cc/en/software)
 2.  [Follow IDE prompts from the Adafruit website ](https://learn.adafruit.com/adafruit-feather-m0-adalogger/setup)
