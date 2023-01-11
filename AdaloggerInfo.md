@@ -10,6 +10,8 @@ Device: `Adafruit Feather M0 Adalogger `\
 Software: `Arduino IDE 2.0.3`\
 Cable: `Micro-B USB to USB-A`
 
+![Adalogger](images/Adalogger.png)
+
 ## Adalogger Installs
 
 1.  [Download Arduino IDE 2.0 of higher](https://www.arduino.cc/en/software)
