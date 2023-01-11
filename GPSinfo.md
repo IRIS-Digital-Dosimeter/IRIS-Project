@@ -12,4 +12,8 @@ Software: `Arduino IDE 2.0.3`
 - Testing blink
   - File > Examples > 01.Basics > Blink
   - Adjust delay time as needed
-  - Status: Successful trial session
+  - Status: Successful trial
+
+## Adalogger Install
+
+1.  [Download Arduino IDE 2.0 of higher](https://www.arduino.cc/en/software)
