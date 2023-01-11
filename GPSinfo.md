@@ -2,7 +2,7 @@
 
 Tentative Outline:
 
-## Setup for Adalogger
+## Device: Adalogger
 
 Device: `Adafruit Feather M0 Adalogger `\
 Software: `Arduino IDE 2.0.3`
