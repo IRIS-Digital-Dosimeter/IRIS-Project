@@ -12,8 +12,9 @@ Cable: `Micro-B USB to USB-A`
 
 1.  [Download Arduino IDE 2.0 of higher](https://www.arduino.cc/en/software)
 2.  [Follow IDE prompts from the Adafruit website ](https://learn.adafruit.com/adafruit-feather-m0-adalogger/setup)
-3.  [Download additional drivers: adafruit_drivers_2.5.0.0.exe](https://github.com/adafruit/Adafruit_Windows_Drivers/releases)
-4.  Use a `Micro-B USB to USB-A` cable to connect the Adalogger to a computer
+3.  [Install the SAMD Support Boards](https://learn.adafruit.com/adafruit-feather-m0-adalogger/using-with-arduino-ide)
+4.  [Download additional drivers: adafruit_drivers_2.5.0.0.exe](https://github.com/adafruit/Adafruit_Windows_Drivers/releases)
+5.  Use a `Micro-B USB to USB-A` cable to connect the Adalogger to a computer
     - Arduino IDE should identify the Adalogger board automatically
 
 ## Adalogger Testing
