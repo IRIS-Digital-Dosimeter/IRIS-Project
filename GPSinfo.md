@@ -47,3 +47,11 @@ Testing blink
   - File > Examples > SD > CardInfo
 
 ![Output of SD Card Info](images/CardInfo1_15_23.png)
+
+### Failed Trials
+
+- DumpFile
+  - This example shows how to read a file from the SD card using the SD library and send it over the serial port
+  - File > Examples > SD > DumpFile
+
+![Dumpfile Output](images/DumpfileOutput.png)
