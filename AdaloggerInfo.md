@@ -61,3 +61,11 @@ Testing blink
   - File > Examples > SD > DumpFile
 
 ![Dumpfile Output](images/DumpfileOutput.png)
+
+## Current Trials
+
+CurrenWriting to a file and dumping the file
+
+Steps Taken
+
+1.
