@@ -54,7 +54,15 @@ Testing blink
 
 > Actually ^ this shows the txt files are 0 bytes and should be attempted again
 
-### Failed Trials
+#### Update
+
+- Successful in reading, writing, open, closing, deleting files from SD card from the IDE script.
+
+![Reading out a stored file](images/SDoutputTestfile.png)
+
+![SD Contents](images/SDOutput.png)
+
+### Past Failed Trials
 
 - DumpFile
   - This example shows how to read a file from the SD card using the SD library and send it over the serial port

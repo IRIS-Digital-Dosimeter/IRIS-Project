@@ -117,8 +117,10 @@ void setup() {
     Serial.println("test1.txt contents:");
 
     // read from the file until there's nothing else in it:
+    // look into usb interface 
+    // what are relationship between the write and read pins
     while (myFile.available()) {
-      Serial.write(myFile.read());
+      Serial.write(myFile.read());//look into functions
     }
     // close the file:
     myFile.close();
