@@ -15,6 +15,7 @@ val = input("Select Port: COM")
 for x in range(0, len(portsList)):
     if portsList[x].startswith("COM" + str(val)):
         portVar = "COM" + str(val)
+        print(portsList[x])
         print(portVar)
 
 
@@ -24,9 +25,16 @@ serialInst.open()
 
 
 while True:
-    command = input("Arduino Command:")
-    # we need to encore to utf-8 because arudio assumes it
-    serialInst.write(command.encode("utf-8"))
+    if serialInst.in_waiting:
+        packet = serialInst.readline()
+        # encoded in unicode from arudino
+        # (if sending integer/binary/ect it needs a different method)
+        # works for strings
+        print(packet.decode("utf-8"))
 
-    if command == "exit":
-        exit()
+    # command = input("Arduino Command:")
+    # # we need to encore to utf-8 because arudio assumes it
+    # serialInst.write(command.encode("utf-8"))
+
+    # if command == "exit":
+    #     exit()
