@@ -1,7 +1,8 @@
-import numpy as np
+# installed pyserial to use the following
 import serial.tools.list_ports
 
-# installed pyserial
+# Need to define all values below: see reference https://www.youtube.com/@von14
+
 
 ports = serial.tools.list_ports.comports()
 serialInst = serial.Serial()

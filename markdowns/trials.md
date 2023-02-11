@@ -7,6 +7,15 @@
   - putty is it a good option?
   - alternative write a script do some digging
 
+## Results of 2/10/22 Trail
+
+- Succssful serial + unicode communication between python script and arduino
+- Files:
+  - `scripts > blinkRedGreenWithPyton.ino`
+    - upload ready, parameters `(ON/OFF/exit)`
+  - `pythonEnv > tests > serial_send_LED.py`
+    - terminal run, checks for ports , port used (COM4)
+
 # Successful Trials
 
 > - Blink

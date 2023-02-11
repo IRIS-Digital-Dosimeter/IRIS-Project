@@ -24,7 +24,7 @@ void loop() {
     }
   else{
     digitalWrite(LED_error_pin, HIGH);
-    delay(100);
+    delay(500);
     digitalWrite(LED_error_pin, LOW); 
     }
   }
