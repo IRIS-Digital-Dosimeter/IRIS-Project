@@ -27,16 +27,16 @@ serialInst.open()
 
 
 while True:
-    if serialInst.in_waiting:
-        packet = serialInst.readline()
-        # encoded in unicode from arudino
-        # (if sending integer/binary/ect it needs a different method)
-        # works for strings
-        print(packet.decode("utf-8"))
+    # if serialInst.in_waiting:
+    #     packet = serialInst.readline()
+    #     # encoded in unicode from arudino
+    #     # (if sending integer/binary/ect it needs a different method)
+    #     # works for strings
+    #     print(packet.decode("utf-8"))
 
-    # command = input("Arduino Command:")
-    # # we need to encore to utf-8 because arudio assumes it
-    # serialInst.write(command.encode("utf-8"))
+    command = input("Arduino Command (ON/OFF):")
+    # we need to encore to utf-8 because arudio assumes it
+    serialInst.write(command.encode("utf-8"))
 
-    # if command == "exit":
-    #     exit()
+    if command == "exit":
+        exit()
