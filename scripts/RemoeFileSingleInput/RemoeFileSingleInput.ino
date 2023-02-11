@@ -1,5 +1,6 @@
 /*
   SD card: Remove File
+
   This example shows how to  destroy an SD card file
   The circuit:
    SD card attached to SPI bus as follows:
@@ -7,13 +8,22 @@
  ** MISO - pin 12
  ** CLK - pin 13
  ** CS - pin 4 (for MKRZero SD: SDCARD_SS_PIN)
+
+ See Buffer protocol: https://www.programmingelectronics.com/sprintf-arduino/
+
  Modified by: Michelle Pichardo
  Date: 1/29/23
+
 */
 #include <SPI.h>
 #include <SD.h>
 
 File myFile;
+
+// Declare the File to be removed
+const char *foo = "testmich.txt";
+char buffer[40];
+
 
 void setup() {
   // Open serial communications and wait for port to open:
@@ -23,7 +33,7 @@ void setup() {
   }
 
 
-  Serial.print("Initializing SD card...");
+  Serial.print("\nInitializing SD card...");
 
   if (!SD.begin(4)) {
     Serial.println("initialization failed!");
@@ -31,24 +41,32 @@ void setup() {
   }
   Serial.println("initialization done.");
 
-  if (SD.exists("analog03.txt")) {
-    Serial.println("analog03.txt exists.");
+  if (SD.exists(foo)) {
+    sprintf(buffer, "%s exists", foo);
+    Serial.println(buffer);
   } else {
-    Serial.println("analog03.txt doesn't exist.");
+    sprintf(buffer, "%s doesn't exist", foo);
+    Serial.println(buffer);
   }
 
   // delete the file:
-  Serial.println("Removing analog03.txt...");
-  SD.remove("analog03.txt");
+  sprintf(buffer, "Removing %s ...", foo);
+  Serial.println(buffer);
+  SD.remove(foo);
 
   // Check that it's removed
-  if (SD.exists("analog03.txt")) {
-    Serial.println("analog03.txt exists.");
+  if (SD.exists(foo)) {
+    sprintf(buffer, "%s exists", foo);
+    Serial.println(buffer);
   } else {
-    Serial.println("analog03.txt doesn't exist.");
+    sprintf(buffer, "%s doesn't exist", foo);
+    Serial.println(buffer);
   }
 }
 
 void loop() {
   // nothing happens after setup finishes.
 }
+
+
+

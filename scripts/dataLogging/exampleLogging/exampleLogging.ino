@@ -1,8 +1,16 @@
+/* This script is from https://learn.adafruit.com/adafruit-feather-m0-adalogger/using-the-sd-card
+   It is reading from pin A0 however it does not save to sd, this needs to be updated 
+  
+  
+  modified  2/10/2023
+  by Michelle Pichardo
+*/ 
+
 #include <SPI.h>
 #include <SD.h>
 
 // Set the pins used
-#define cardSelect 4
+#define cardSelect 4 
 
 File logfile;
 
