@@ -44,6 +44,11 @@ File myFile; // File is a class, right click to see all functions av.
 // Declare our Pin (not really needed, A7 could be used explicitly)
 #define VBATPIN A7 
 
+// Declare Global Namae of file
+const char *foo = "testmichv1.txt";
+char buffer[40];
+
+
 /*
   About Directive: 
   - #define: ascribes the identifier VBATPIN the the constant A7
@@ -96,7 +101,7 @@ void setup() {
     /*-------------------- Close file and Check that it exists -----------*/
     // close the file:
     myFile.close();
-    Serial.println("done.(This is in the Monitor)");
+    Serial.println("writing to file complete");
   } else {
     // if the file didn't open, print an error:
     Serial.println("error opening test1.txt");
@@ -111,7 +116,7 @@ void setup() {
 
   /* ------------------------- Read the file ---------------------------------------*/
 
-  // open the file for reading:
+  // re-open the file for reading:
   myFile = SD.open("test1.txt");
   if (myFile) {
     Serial.println("test1.txt contents:");
