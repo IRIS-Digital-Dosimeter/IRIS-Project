@@ -6,7 +6,7 @@ serial_send_LED.py
 
  - Reference video series: https://www.youtube.com/@von14
 
- - This works in tandem with: RemoteFileSingleInput.ino 
+ - This works in tandem with: any .ino file that outputs to terminal
 
  - Process: 
     - Run the .ino file on the logger 
@@ -21,7 +21,14 @@ serial_send_LED.py
  - Communication requirements:
     - The Adalogger has the TSAMD21G18 ARM Cortex M0 processor same as Arduino Zero
     - The Arduino Zero takes utf-8 communication
-    - utf-8: UNICODE Universal Coded Character Set Transformation Format - 8-bit.
+    - utf-8: UNICODE Universal Coded Character Set Transformation Format - 8-bit
+
+ - Selecting ports: 
+    - When running serial.tools.list_ports.comports() and viewing the list of ports we
+        want to select the USB Serial Device associated to our Adalogger
+
+Created by: Michelle Pichardo 
+Date: 02/19/2023
 """
 
 # Installs
@@ -54,7 +61,9 @@ for x in range(0, len(portsList)):  # loop through the ports and store the desir
         "COM" + str(val)
     ):  # check for the one with the desired numerical value
         portVar = "COM" + str(val)  # Declare a variable of the desired port
-        print(f"Selected Port: {portVar}")  # Print the value to check for accuracy
+        print(
+            f"Selected Port: {portVar}, {portsList[x]}"
+        )  # Print the value to check for accuracy
     else:
         print("\nThe port selected is not a valid input. The program will terminate.\n")
 
