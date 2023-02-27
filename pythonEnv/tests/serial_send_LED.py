@@ -6,7 +6,7 @@ serial_send_LED.py
 
  - Reference video series: https://www.youtube.com/@von14
 
- - This works in tandem with: any .ino file that outputs to terminal
+ - This works in tandem with: any .ino file that takes input from serial
 
  - Process: 
     - Run the .ino file on the logger 
@@ -57,15 +57,10 @@ val = input("Select Port: COM")
 # print(val) # the value is a number, the user con accidentally choose the wrong value
 
 for x in range(0, len(portsList)):  # loop through the ports and store the desired port
-    if portsList[x].startswith(
-        "COM" + str(val)
-    ):  # check for the one with the desired numerical value
+    if portsList[x].startswith("COM" + str(val)):  # check for the one with the desired numerical value
         portVar = "COM" + str(val)  # Declare a variable of the desired port
-        print(
-            f"Selected Port: {portVar}, {portsList[x]}"
-        )  # Print the value to check for accuracy
-    else:
-        print("\nThe port selected is not a valid input. The program will terminate.\n")
+        print(f"Selected Port: {portVar}, {portsList[x]}")  # Print the value to check for accuracy
+    # No else statement provided, as there maybe other ports in the list
 
 # Ask the user to declare the baud rate
 baud = input("Set baud rate:")  # default 9600

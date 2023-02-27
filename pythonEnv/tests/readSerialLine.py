@@ -13,16 +13,10 @@ for onePort in ports:  # loop through ports list and save them to the port list
 val = input("Select Port: COM")
 
 for x in range(0, len(portsList)):  # loop through the ports and store the desired port
-    if portsList[x].startswith(
-        "COM" + str(val)
-    ):  # check for the one with the desired numerical value
-        portVar = "COM" + str(val)  # Declare a variable of the desired port
-        print(
-            f"Selected Port: {portVar}, {portsList[x]}"
-        )  # Print the value to check for accuracy
-    else:
-        print("\nThe port selected is not a valid input. The program will terminate.\n")
-
+    if portsList[x].startswith("COM" + str(val)):  # check for the one with the desired numerical value
+        portVar = "COM"+str(val)  # Declare a variable of the desired port
+        print(f"Selected Port: {portVar}, {portsList[x]}")  # Print the value to check for accuracy
+   
 # Ask the user to declare the baud rate
 baud = input("Set baud rate:")  # default 9600
 # Give serial class a serial port name (COM4)
