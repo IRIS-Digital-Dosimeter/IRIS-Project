@@ -1,14 +1,13 @@
 # Current Trials
 
-- Need to update but we have a huge success! we are able to write/read/delete files.
 - There is a program Putty that might be able to take serial output and create data files
 - need to determine the timing involved
   - this will open and read files one at a time, (quickly) but how quickly is currently unknown
   - putty is it a good option?
-  - alternative write a script do some digging
 
 ## Results of 2/10/22 Trail
 
+- huge success! we are able to write/read/delete files.
 - Succssful serial + unicode communication between python script and arduino
 - Files:
   - `scripts > blinkRedGreenWithPyton.ino`
