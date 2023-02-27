@@ -1,21 +1,42 @@
 # General notes of the day
 
-Duties :
+Duties & Questions :
 
+- `How quickly can files be read out `
+  - Found these for reference
+    - [Fast Data Logging on SD Card - Forum](https://forum.arduino.cc/t/fast-data-logging-on-sd-card/687012/18)
+    - [Fast, Efficient Data Storage on an Arduino - Full Example](https://hackingmajenkoblog.wordpress.com/2016/03/25/fast-efficient-data-storage-on-an-arduino/)
+    - [Adafruit Feathers for datalogging](https://publiclab.org/notes/cfastie/11-14-2017/adafruit-feathers-for-datalogging)
+    - [Realterm: Serial Terminal](https://realterm.sourceforge.io)
+- `Can data continue to be taken while dumping`
+- `What does peripheral mean in the context of serial communication `
 - Determine the communication the arduino is using
 - Understand the serial communication commands relative to the machinery
 - Have the "dumped" file piped into a file to be read on the users computer
 - treat as an external drive this is what we could do
-- other options : computer command to dump the files over the serial line
-  - instigated by the computer and then taking care of it on it's
 - Look into the code David added to the slack repo
+  - looks complex I would need to sit for a bit to determine if we could run the arduino as a Tiny. It looks like we have the required files (except the header files) but I'm not sure if the execution would cause an issue.
 
 # In-use Files
 
+-n/a
+
+# Functional Files
+
+## Python Files
+
+- `readSerialLine.py`
+  > How it works: Once .ino is running run this file and the Adalogger serial information is dumped onto the terminal line
+- `serial_send_LED.py`
+  > How it Works :Once .ino is running run this file and send commands to Adalogger
+
+## .ino Files
+
 - `CreateFileWriteToFile.ino`
 - `RemoveFileSingleInput.ino`
-  - provide name of file once at declaration and all instances are removed without needed to parse the code
-  - Function was possible due to [Buffer](https://www.programmingelectronics.com/sprintf-arduino/)
+  > How it works: provide name of file once at declaration and all instances are removed without needed to parse the code
+  >
+  > > Function was possible due to [Buffer](https://www.programmingelectronics.com/sprintf-arduino/)
 
 # Non-Functioning Files
 
