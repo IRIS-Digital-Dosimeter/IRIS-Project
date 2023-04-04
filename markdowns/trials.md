@@ -1,6 +1,9 @@
 # Current Trials
 
+## Notes
+
 - There is a program Putty that might be able to take serial output and create data files
+  - May not be needed, I'm able to read in data to terminal
 - need to determine the timing involved
   - this will open and read files one at a time, (quickly) but how quickly is currently unknown
   - putty is it a good option?

@@ -11,6 +11,7 @@
     "SAMD",
     "SRAM",
     "TSAMD",
-    "veralog"
+    "veralog",
+    "verilog"
   ]
 }

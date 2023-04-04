@@ -1,71 +1,3 @@
-# General notes of the day
-
-Duties & Questions :
-
-- `How quickly can files be read out `
-
-  - Found these for reference
-
-    - [Fast Data Logging on SD Card - Forum](https://forum.arduino.cc/t/fast-data-logging-on-sd-card/687012/18)
-    - [Fast, Efficient Data Storage on an Arduino - Full Example](https://hackingmajenkoblog.wordpress.com/2016/03/25/fast-efficient-data-storage-on-an-arduino/)
-    - [Adafruit Feathers for datalogging](https://publiclab.org/notes/cfastie/11-14-2017/adafruit-feathers-for-datalogging)
-    - [Realterm: Serial Terminal](https://realterm.sourceforge.io)
-    - want to sample at 30 and sample each 10 successive samples together which is essenstial 3 khz
-    - we have 1ms time constant (function on analog circuit)
-    - 1/e time to aprox 1/3 of peak, relative to base line
-      - if at this point
-    - 30kz is 30 samples per ()
-
-      - this may be more data than needed
-      - we could recall the peak value 1st, then take intervals of 10 and average them together - produces about 10 averaged data points
-        - this should be enough to give us the general shape
-
-    - algorithm
-      - we have 1 sec worth of samples (from the 30kh)
-      - see if it can hold 30k worth of data (in memory at once)
-      - check the working memory
-      - if we can keep the data set then we want to check for the highest point ( check zeeman )
-    - Q: can it hold this much data
-      - write something in a memory buffer that saves 30kh
-      - collect 30 samples per sec and every second save to file or tak on to end of a large file
-      - then push for larger number
-      - can we control the frequency we save to
-      - see where it breaks
-    - Q: how long is the average (?)
-    - Q: can it do two things at once
-      - analyze data (peak and average)
-      - and take data
-      - veralog vs arduino (buffer 1 vs buffer 2) (dual buffer system)
-      - if unable - how much data do we lose when we transfer over to a different processes
-      - key word: data acquisition
-    - FPGA? is programed in verilog (dual buffer tho can be done with a cpu with two processes)
-
-    - Start with Jackson's example:
-      - see how it runs on our hardware
-      - write 200bytes every second and see how long it takes to write
-      - how long does the process to write to card ?
-    - Then check how much of the sample data can be used in working memory before writing to SD card - meaning we might need to write an algorithm as it takes data and then saves
-    - would want a 1s to be a grouping and check for peaks and then average
-
-  - `Look at ADC (0-4095) values as they come in at 30 kHz; sum each 10 as they come in and place sums in an array (2-byte integers)`
-  - `How big can this array be?`
-    -how limited is our memory (working memory and SD)
-  - 2nd process option ( no stress on the board ) (about 60hz)
-  - `Smaller: sample at 300 Hz, sum 10 -> 30 bins/second`
-  - `Every second, write those 30 sums to SD file`
-  - hopeful to have a large file over many little files
-  - `Every 5 minutes (300 sec), close and start new file`
-  - `Or new file every one minute`
-
-- `Can data continue to be taken while dumping`
-- `What does peripheral mean in the context of serial communication `
-- Determine the communication the arduino is using
-- Understand the serial communication commands relative to the machinery
-- Have the "dumped" file piped into a file to be read on the users computer
-- treat as an external drive this is what we could do
-- Look into the code David added to the slack repo
-  - looks complex I would need to sit for a bit to determine if we could run the arduino as a Tiny. It looks like we have the required files (except the header files) but I'm not sure if the execution would cause an issue.
-
 # In-use Files
 
 -n/a
@@ -113,3 +45,89 @@ Duties & Questions :
 - Assumption is we have ArduinoCore - [SAMD](https://learn.adafruit.com/adafruit-feather-m0-adalogger/using-the-sd-card)
 
 1. In the Arduino IDE select Tools > USB Stack > TinyUSB
+
+# March 2023 notes
+
+Duties & Questions :
+
+- `How quickly can files be read out `
+
+  - Found these for reference
+
+    - [Fast Data Logging on SD Card - Forum](https://forum.arduino.cc/t/fast-data-logging-on-sd-card/687012/18)
+    - [Fast, Efficient Data Storage on an Arduino - Full Example](https://hackingmajenkoblog.wordpress.com/2016/03/25/fast-efficient-data-storage-on-an-arduino/)
+    - [Adafruit Feathers for datalogging](https://publiclab.org/notes/cfastie/11-14-2017/adafruit-feathers-for-datalogging)
+    - [Realterm: Serial Terminal](https://realterm.sourceforge.io)
+
+Notes which may be mis-written and require follow up:
+
+- We want to sample at 30khz and sample each 10 successive samples together which is essential 3 khz
+- we have 1ms time constant (function on analog circuit)
+  - 1/e time to approx 1/3 of peak, relative to base line
+    - if at this point
+  - 30kz is 30k samples per interval
+- This may be more data than needed
+
+  - we could measure the peak value 1st, then take intervals of 10 and average them together - produces about 10 averaged data points
+    - this should be enough to give us the general shape
+
+- algorithm
+  - we have 1 sec worth of samples (from the 30kh)
+  - see if it can hold 30k worth of data (in memory at once)
+  - check the working memory (?)
+  - if we can keep the data set then we want to check for the highest point ( check Zeeman )
+
+> Q: can it hold this much data?
+
+      - write something in a memory buffer that saves 30kh
+      - collect 30 (?) samples per sec and every second save
+          to file or tack on to end of a large file
+      - then push for larger number
+      - can we control the frequency we save to
+      - see where it breaks
+
+> Q: how long is the average (?)
+
+> Q: can it do two things at once
+
+      - analyze data (peak and average)
+      - and take data
+      - verilog vs arduino (buffer 1 vs buffer 2)
+          (dual buffer system)
+      - if unable - how much data do we lose when we
+          transfer over to a different processes
+      - key word: data acquisition
+    - FPGA? is programed in verilog
+        (dual buffer tho can be done with a cpu with two
+          processes)
+
+    - Start with Jackson's example:
+      - see how it runs on our hardware
+      - write 200bytes every second and see
+        how long it takes to write
+      - how long does the process to write to card ?
+
+    - Then check how much of the sample data can be used in working memory before writing to SD card - meaning we might need to write an algorithm as it takes data and then saves
+    - would want a 1s as the grouping and then check for peaks and then average
+
+Tests to run:
+
+- `Look at ADC (0-4095) values as they come in at 30 kHz; sum each 10 as they come in and place sums in an array (2-byte integers)`
+- `How big can this array be?`
+- how limited is our memory (working memory and SD)
+- 2nd option: Process-( no stress on the board ) ~ about 60hz
+
+  - `Smaller: sample at 300 Hz, sum 10 -> 30 bins/second`
+  - `Every second, write those 30 sums to SD file`
+  - hopeful to have a large file over many little files
+  - `Every 5 minutes (300 sec), close and start new file`
+  - `Or new file every one minute`
+
+- `Can data continue to be taken while dumping`
+- `What does peripheral mean in the context of serial communication `
+- Better outline the communication the arduino is using
+- Understand the serial communication commands relative to the machinery Pins and such
+- Have the "dumped" file piped into a file to be read on the users computer
+- treat as an external drive this is what we could do
+- Look into the code David added to the slack repo
+  - looks complex I would need to sit for a bit to determine if we could run the arduino as a Tiny. It looks like we have the required files (except the header files) but I'm not sure if the execution would cause an issue.
