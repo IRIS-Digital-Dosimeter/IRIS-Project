@@ -8,6 +8,11 @@
   - this will open and read files one at a time, (quickly) but how quickly is currently unknown
   - putty is it a good option?
 
+## Results of 4/4/23 Trial
+
+- A protocol on the Adalogger can be set and then on a separate computer we can control it via the python program.
+- Conclusion: we can proceed with the python GUI
+
 ## Results of 2/10/22 Trail
 
 - huge success! we are able to write/read/delete files.

@@ -74,7 +74,7 @@ void setup() {
 
   if (!SD.begin(4)) {
     Serial.println("initialization failed!");
-    while (1);
+    while (1); // Consider useing: return;  // to convey that this stops the program
   }
   Serial.println("initialization done.");
 
