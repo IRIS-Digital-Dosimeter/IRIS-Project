@@ -46,6 +46,18 @@
 
 1. In the Arduino IDE select Tools > USB Stack > TinyUSB
 
+# April 7 2024 notes
+
+Want: to have a portable and a desktop unit
+
+- do simple simple circuit (very simple)
+- operate at 1kHz adc line, take all the data and dump it to the sd dump to to computer and cont.
+- find the max sample rate where we don't lose files
+- this will be used to set the time constants, we do this by swapping out the capacitors on the board
+
+- makes plots as we take in the files
+- dual buffer1 (one data file on the sd card defined - write util full), switch buffer2 or file, when one is empty and the other is free we can switch - want to make sure that the file being written is not used as the file is transferred (may cost a gap in data collection)
+
 # March 2023 notes
 
 Duties & Questions :

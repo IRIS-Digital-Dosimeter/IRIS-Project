@@ -1,4 +1,14 @@
-# Questions & Goals
+# Primary Objective
+
+Create a simple prototype of our data acquisition using the Adafruit.
+
+1. Store data on SD using alternative pins and store them to a computer
+
+Once this is possible we can move forward with questions:
+
+- Speed; What protocols are being used; What pins are of importance; How efficient can we make this; How much can we store; can we preform two protocols (parallel); etc.
+
+# Questions & Processes to Implement
 
 References:
 
@@ -11,6 +21,7 @@ References:
 
 - [Realterm: Serial Terminal](https://realterm.sourceforge.io)
 - [How Fast Does Your Arduino Code Run?](https://www.youtube.com/watch?v=yGJq2XxfdlY)
+- [Arduino as Disk drive: TinyUSB; video by LadyAda](https://www.youtube.com/watch?v=0bWba0PU4-g)
 
 Questions:
 
@@ -31,17 +42,6 @@ Todo:
 > Look into the references and try out the examples to read out writing speeds
 
 - Found, need to consider if we should write using registers over using predefined functions that have large overhead
-
-long time constant - will take up too much memory
-Want: to have a portable and a desktop unit
-
-- do simple simple circuit (very simple)
-- operate at 1kHz adc line, take all the data and dump it to the sd dump to to computer and cont.
-- find the max sample rate where we don't lose files
-- this will be used to set the time constants, we do this by swapping out the capacitors on the board
-
-- makes plots as we take in the files
-- dual buffer1 (one data file on the sd card defined - write util full), switch buffer2 or file, when one is empty and the other is free we can switch - want to make sure that the file being written is not used as the file is transferred (may cost a gap in data collection)
 
 Process 1:
 
@@ -73,7 +73,7 @@ Process 3: Jackson's Example
     how long it takes to write
   - how long does the process to write to card ?
 
-# Results
+# Webpage Results
 
 - [Use scope to determine the actual speed of the microcontroller](https://www.youtube.com/watch?v=xLBN9taUzDc)
   - Result: The frequency maybe lower than listed but this is due to the overhead from the code itself,

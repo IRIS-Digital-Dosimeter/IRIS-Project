@@ -16,9 +16,9 @@
 ## Results of 2/10/22 Trail
 
 - huge success! we are able to write/read/delete files.
-- Succssful serial + unicode communication between python script and arduino
+- Successful serial + unicode communication between python script and arduino
 - Files:
-  - `scripts > blinkRedGreenWithPyton.ino`
+  - `scripts > blinkRedGreenWithPython.ino`
     - upload ready, parameters `(ON/OFF/exit)`
   - `pythonEnv > tests > serial_send_LED.py`
     - terminal run, checks for ports , port used (COM4)
@@ -27,6 +27,9 @@
 
 > - Blink
 > - [Measuring Battery](https://learn.adafruit.com/adafruit-feather-m0-adalogger/power-management)
+> - use TinyUSB as MassStorage
+
+![TinyUSB](../images/TinyUSBMassStorageAttempt1.png)
 
 ![Output of Measuring Battery](../images/MeasuringBatteryPin7.png)
 
