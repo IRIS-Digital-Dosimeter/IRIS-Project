@@ -46,6 +46,8 @@
 
 1. In the Arduino IDE select Tools > USB Stack > TinyUSB
 
+![Tiny](../images/TinyUSBMassStorageAttempt1.png)
+
 # April 7 2024 notes
 
 Want: to have a portable and a desktop unit
