@@ -22,6 +22,7 @@ References:
 - [Realterm: Serial Terminal](https://realterm.sourceforge.io)
 - [How Fast Does Your Arduino Code Run?](https://www.youtube.com/watch?v=yGJq2XxfdlY)
 - [Arduino as Disk drive: TinyUSB; video by LadyAda](https://www.youtube.com/watch?v=0bWba0PU4-g)
+- [Use button to make USB protocol instead of plug in](https://forums.adafruit.com/viewtopic.php?f=25&p=767525)
 
 Questions:
 
