@@ -17,6 +17,12 @@
 
 > for complex protocols, there are physical layers / upper layers (USB) and lower layers (USB serial or USB mass storage & others). The SDCard will need to use USB mass storage and the Arduino interface always uses USB serial. Yes, at the SDCard one of two possible physical layers is SPI. But by the time you get to the USB port, an SDCard is using USB mass storage. And, unfortunately, that is not what the Arduino supports on its USB port. The Arduino is of course supporting USB serial.
 
+## Results of 4/19/23
+
+- [Found Tutorials on Serial communication](https://forum.arduino.cc/t/serial-input-basics-updated/382007)
+- Discoved files dropped into the arudino that I cannot remove, I need to create code that removed unwanted folders
+- I also started my own outline of the algorithm in notion
+
 ## Results of 4/10/23
 
 - Able to use adalogger as an external drive

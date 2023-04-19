@@ -21,8 +21,8 @@
 File myFile;
 
 // Declare the File to be removed
-const char *foo = "testmich.txt";
-char buffer[40];
+const char *fileName = "PHA.txt";
+char buffer[40]; // 40 is the number of characters + null termination byte to store to memory
 
 
 void setup() {
@@ -41,25 +41,25 @@ void setup() {
   }
   Serial.println("initialization done.");
 
-  if (SD.exists(foo)) {
-    sprintf(buffer, "%s exists", foo);
+  if (SD.exists(fileName)) {
+    sprintf(buffer, "%s exists", fileName);
     Serial.println(buffer);
   } else {
-    sprintf(buffer, "%s doesn't exist", foo);
+    sprintf(buffer, "%s doesn't exist", fileName);
     Serial.println(buffer);
   }
 
   // delete the file:
-  sprintf(buffer, "Removing %s ...", foo);
+  sprintf(buffer, "Removing %s ...", fileName);
   Serial.println(buffer);
-  SD.remove(foo);
+  SD.remove(fileName);
 
   // Check that it's removed
-  if (SD.exists(foo)) {
-    sprintf(buffer, "%s exists", foo);
+  if (SD.exists(fileName)) {
+    sprintf(buffer, "%s exists", fileName);
     Serial.println(buffer);
   } else {
-    sprintf(buffer, "%s doesn't exist", foo);
+    sprintf(buffer, "%s doesn't exist", fileName);
     Serial.println(buffer);
   }
 }
