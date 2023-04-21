@@ -13,7 +13,7 @@
     ** MISO - pin 12
     ** CLK - pin 13
     ** CS - pin 4 (for MKRZero SD: SDCARD_SS_PIN)
-  - Descriptions found in header files 
+    ** Descriptions found in header files 
 
   Created by: Michelle Pichardo 
   Date: 1/29/23
@@ -21,12 +21,13 @@
 */
 
 // Add Preprocessor Directives: Header files
-#include <SPI.h> // SPI Serial Peripheral Interface, Communication
-#include <SD.h> // Requires SPI.h to operate 
+#include <SPI.h>
+#include <SD.h> 
 
 /*
   About these Headers: 
   - SPI: https://www.arduino.cc/reference/en/libraries/sd/
+    - SPI Serial Peripheral Interface, Communication
         - synchornous serial data protocol used by micro controllers
          for communicating with one or more peripheral devices quickly
          over short distances. 
@@ -35,19 +36,19 @@
          - MOSI: Master Out Slave In
          - CS: Chip select pin 
   - SD: https://www.arduino.cc/reference/en/libraries/sd/
+    - Requires SPI.h to operate 
 */
 
-// Declare a File instance 
-
-File myFile; // File is a class, right click to see all functions av.
+/* Declare a File instance 
+File is a class, right click to see all functions av.*/
+File myFile; 
 
 // Declare our Pin (not really needed, A7 could be used explicitly)
 #define VBATPIN A7 
 
 // Declare Global Namae of file
-const char *foo = "testmichv1.txt";
+const char *foo = "testmichv2.txt";
 char buffer[40];
-
 
 /*
   About Directive: 
@@ -70,7 +71,7 @@ void setup() {
   
 
   /*-------------------------------- Initialize SD -----------------------------------*/
-  Serial.print("Initializing SD card...");
+  Serial.print("\n\nInitializing SD card 4...");
 
   if (!SD.begin(4)) {
     Serial.println("initialization failed!");
@@ -81,7 +82,7 @@ void setup() {
  /*-------------------------------- Open 1 File -----------------------------------*/  
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
-  myFile = SD.open("test1.txt", FILE_WRITE); // Name the file, call SD 
+  myFile = SD.open("data2.txt", FILE_WRITE); // Name the file, call SD 
 
   /* ------------------------- BOOLEAN --------------------------------------------*/
   // if the file opened okay, write to it:
@@ -96,30 +97,38 @@ void setup() {
     measuredvbat /= 1024; // convert to voltage
     myFile.println("VBat:"); 
     myFile.println(measuredvbat);
-
-
-    /*-------------------- Close file and Check that it exists -----------*/
+    
     // close the file:
     myFile.close();
     Serial.println("writing to file complete");
+
+
   } else {
     // if the file didn't open, print an error:
-    Serial.println("error opening test1.txt");
+    // sprintf(buffer, "error opening %s", foo);
+    // Serial.println(buffer);
+    Serial.println("error opening data.txt");
   }
 
   // Check to see if the file exists:
-  if (SD.exists("test1.txt")) {
-    Serial.println("test1.txt exists.");
+  if (SD.exists("data2.txt")) {
+    Serial.println("data.txt exists.");
+    // sprintf(buffer, "%s exist", foo);
+    // Serial.println(buffer);
   } else {
-    Serial.println("test1.txt doesn't exist.");
+    Serial.println("data.txt doesn't exist.");
+    // sprintf(buffer, "%s doesn't exist", foo);
+    // Serial.println(buffer);
   }
 
   /* ------------------------- Read the file ---------------------------------------*/
 
   // re-open the file for reading:
-  myFile = SD.open("test1.txt");
+  myFile = SD.open("data2.txt");
   if (myFile) {
     Serial.println("test1.txt contents:");
+    // sprintf(buffer, "%s  contents:", foo);
+    // Serial.println(buffer);
 
     // read from the file until there's nothing else in it:
     // look into usb interface 
@@ -131,7 +140,9 @@ void setup() {
     myFile.close();
   } else {
     // if the file didn't open, print an error:
-    Serial.println("error opening test1.txt");
+    Serial.println("error opening data.txt");
+    // sprintf(buffer, "error opening %s", foo);
+    // Serial.println(buffer);
   }
 
 }

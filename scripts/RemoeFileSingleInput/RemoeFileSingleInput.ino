@@ -31,15 +31,17 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-
-
   Serial.print("\nInitializing SD card...");
+
+
 
   if (!SD.begin(4)) {
     Serial.println("initialization failed!");
     while (1);
   }
   Serial.println("initialization done.");
+
+  
 
   if (SD.exists(fileName)) {
     sprintf(buffer, "%s exists", fileName);

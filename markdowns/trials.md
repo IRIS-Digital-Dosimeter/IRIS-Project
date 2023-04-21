@@ -1,39 +1,5 @@
 # Current Trials
 
-## Notes
-
-- [PuTTY](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjQjdHrsa3-AhWiIzQIHc2yALQQFnoECAkQAQ&url=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FPuTTY&usg=AOvVaw39LhFePT-cKfkd3c-cxIpO): Terminal Emulator
-  - [Second forum referencing](https://forum.arduino.cc/t/suggestions-on-how-to-move-a-file-from-sd-card-to-the-pc/146966/16)
-
-## Results of 4/19/23
-
-- [Found Tutorials on Serial communication](https://forum.arduino.cc/t/serial-input-basics-updated/382007)
-- Discoved files dropped into the arudino that I cannot remove, I need to create code that removed unwanted [directories](https://forum.arduino.cc/t/create-variable-directory-and-incremetal-files/137615), [2nd source](https://forum.arduino.cc/t/recursive-sd-directory-removal/541936)
-- I also started my own outline of the algorithm in notion
-- [Resource: issues with sync](https://electronics.stackexchange.com/questions/60675/carrying-out-multiple-synchronous-tasks-with-a-micrcontroller)
-
-## Results of 4/15/23
-
-- [Use of terminal programs to send files](https://forum.arduino.cc/t/send-file-to-microsd-on-arduino-uno-with-micro-sd-shield/103658/4)
-  - Terra Term
-  - PuTTY
-  - CoolTerm (less secure than PuTTY)
-- [General Guide, no direct instructions to SD-PC via serial](https://forum.arduino.cc/t/transfer-data-from-sd-card-to-pc-via-serial-transmission-protocol-with-crc/255908/6)
-- [Need to look into this troubling comments](https://arduino.stackexchange.com/questions/70668/reading-micro-sd-card-directly-from-pc)
-  > USB contains many different protocols. The Arduino uses the USB serial protocol. An SDCard uses the USB mass storage protocol. Not many, if any, USB peripherals can switch between protocols.
-
-> for complex protocols, there are physical layers / upper layers (USB) and lower layers (USB serial or USB mass storage & others). The SDCard will need to use USB mass storage and the Arduino interface always uses USB serial. Yes, at the SDCard one of two possible physical layers is SPI. But by the time you get to the USB port, an SDCard is using USB mass storage. And, unfortunately, that is not what the Arduino supports on its USB port. The Arduino is of course supporting USB serial.
-
-## Results of 4/10/23
-
-- Able to use adalogger as an external drive
-- need to move it away from ram and read the sd instead
-
-## Results of 4/4/23 Trial
-
-- A protocol on the Adalogger can be set and then on a separate computer we can control it via the python program.
-- Conclusion: we can proceed with the python GUI
-
 ## Results of 2/10/22 Trail
 
 - huge success! we are able to write/read/delete files.
