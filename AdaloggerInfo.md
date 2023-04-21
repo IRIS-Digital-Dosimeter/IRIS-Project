@@ -1,4 +1,4 @@
-b# IRIS: GPS Project
+# IRIS: GPS Project
 
 This project is done on a Windows computer using powershell. Previous attempts at using WSL required a more involved process of communication.
 
