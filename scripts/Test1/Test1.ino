@@ -1,49 +1,39 @@
-/* 
-Attempt 1 Preform an operation and expose the sd card 
-*/ 
+// Attempt 1 at preforming two operations 
 
 // Directives 
 #include "SD.h"
-#include "Adafruit_TinyUSB.h"
 #include "SPI.h"
+#include "Adafruit_TinyUSB.h"
 
+// constants & classes 
 
-// Chip 
-const int chipSelect = 4;
+const int chipSelect = 4; // for the MO board 
 
-// Classes
-Adafruit_USBD_MSC usb_msc;
-Sd2Card card;
-SdVolume volume;
-File myFile; // File is a class, right click to see all functions av.
+Adafruit_USBD_MSC usb_msc; 
 
-// Declare our Pin (not really needed, A7 could be used explicitly)
-#define VBATPIN A7 
+Sd2Card card; 
+SdVolume volume; 
+File myFile;
 
-
-// the setup function runs once when you press reset or power the board
 void setup()
 {
-  // Set disk vendor id, product id and revision with string up to 8, 16, 4 characters respectively
-  usb_msc.setID("Adafruit", "SD Card", "1.0");
-
-  // Set read write callback
+  usb_msc.setID("Adafruit", "SD Card", "1.0"); 
+  // Vendor ID, Product ID, Product Rev 
   usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
-
-  // Still initialize MSC but tell usb stack that MSC is not ready to read/write
-  // If we don't initialize, board will be enumerated as CDC only
-  usb_msc.setUnitReady(false);
+  // lookup call back functions 
+  usb_msc.setUnitReady(false); // talks to the usb stack
   usb_msc.begin();
+  
+  // Set the serial 
+  Serial.begin(115200); // fastest? 
+  while(!Serial) delay(10); // wait for native usb
 
-  Serial.begin(115200);// fastest speed possible (woah)
-  while ( !Serial ) {;}// delay(10);   // wait for native usb, remove {;} or comment out 
-
-
+  //Checks 
   Serial.println("Adafruit TinyUSB Mass Storage SD Card example");
+  Serial.println("\nInitializing SD card ..."); 
 
-  Serial.println("\nInitializing SD card...");
-
-  if ( !card.init(SPI_HALF_SPEED, chipSelect) ) // spi_half_speed = 1/4 the CPU freq
+  //if running at the logger speed 
+  if ( !card.init(SPI_HALF_SPEED, chipSelect) ) // if not run the checks
   {
     Serial.println("initialization failed. Things to check:");
     Serial.println("* is a card inserted?");
@@ -51,70 +41,81 @@ void setup()
     Serial.println("* did you change the chipSelect pin to match your shield or module?");
     while (1) delay(1);
   }
-
-  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
-  if (!volume.init(card)) {
-    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    while (1) delay(1);
+  if ( !volume.init(card)) // attepts to open the Fat16 or Fat 32
+  {
+    Serial.println("Could not find FAT16/FAT32 partition. \nMake sure you've formatted the card");
+    while(1) delay(1); 
   }
-  
-  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
 
-  Serial.print("Volume size (MB):  ");
-  Serial.println((block_count/2) / 1024);
+  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount(); 
+  // Checks
+  Serial.print("Volume size (MB): "); 
+  Serial.println((block_count, 512)); 
 
-  // Set disk size, SD block size is always 512
-  usb_msc.setCapacity(block_count, 512);
+  usb_msc.setCapacity(block_count, 512); 
+  usb_msc.setUnitReady(true); // now the mass storage is ready to read/write
 
-  // MSC is ready for read/write
-  usb_msc.setUnitReady(true);
-
-}
-
-
-
-
-// Callback invoked when received READ10 command.
-// Copy disk's data to buffer (up to bufsize) and
-// return number of copied bytes (must be multiple of block size)
-int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
-{
-  (void) bufsize;
-  return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
-}
-
-// Callback invoked when received WRITE10 command.
-// Process data in buffer to disk's storage and 
-// return number of written bytes (must be multiple of block size)
-int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
-{
-  (void) bufsize;
-  return card.writeBlock(lba, buffer) ? 512 : -1;
-}
-
-// Callback invoked when WRITE10 command is completed (status received and accepted by host).
-// used to flush any pending cache.
-void msc_flush_cb (void)
-{
-  // nothing to do
-}
-
-void createFile() {
-
-  if (!SD.begin(4)) {
-    Serial.println("initialization failed!");
-    while (1); // Consider useing: return;  // to convey that this stops the program
-  }
-  Serial.println("initialization done.");
-
-  myFile = SD.open(foo, FILE_WRITE); // Name the file, call SD 
-
-
-
+  openWriteFile();
 }
 
 
 void loop()
 {
-  // nothing to do; required to have 
+  //required but does not need to be filled 
+}
+
+// function callback
+int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
+{
+  (void) bufsize; 
+  return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1; 
+}
+
+// function callback 
+int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
+{
+  (void) bufsize; 
+  return card.writeBlock(lba, buffer) ? 512 : -1; 
+}
+
+// function callback 
+void msc_flush_cb (void)
+{
+  // should flush we're just going to have it as a place holder
+}
+
+// function write 
+void openWriteFile()
+{
+  myFile = SD.open("Mich.txt", FILE_WRITE); 
+  if (myFile)
+  {
+    Serial.print("Writing to txt file..."); 
+    myFile.println("Reading the Voltage on Analog Pin 7");
+
+
+    // Read the Voltange once (Need to figure out the loop)
+    float measuredvbat = analogRead(A7);
+    measuredvbat *= 2;    // we divided by 2, so multiply back
+    measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+    measuredvbat /= 1024; // convert to voltage
+    myFile.println("VBat:"); 
+    myFile.println(measuredvbat);
+
+    //CLOSE
+    myFile.close(); 
+    Serial.println("writing to file complete"); 
+  }
+  else
+  {
+    Serial.println("error opening file"); 
+  }
+  if (SD.exists("Mich.txt"))
+  {
+    Serial.println("File exists");
+  }
+  else
+  {
+    Serial.println("File does not exist");
+  }
 }
