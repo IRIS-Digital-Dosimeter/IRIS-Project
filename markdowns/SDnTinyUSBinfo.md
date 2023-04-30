@@ -22,3 +22,13 @@
 1. In the Arduino IDE select Tools > USB Stack > TinyUSB
 
 ![Tiny](../images/TinyUSBMassStorageAttempt1.png)
+
+# SD Hidden System Files
+
+- FOUND or .chk files
+  - hidden system files which occur due to curruption of files
+  - can happen when system loses power suddenly
+  - [Method to remove files](https://pureinfotech.com/show-hidden-files-folders-windows-10/)
+- Other system files are left on Card
+
+![sys files](../images/SDsystFiles.png)
