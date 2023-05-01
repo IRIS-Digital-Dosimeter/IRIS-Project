@@ -1,5 +1,9 @@
 # SD & TinyUSB information
 
+- Datasheet info:
+  - Memories
+    - 32/64/128/256 KB in-sys self-programmable Flash
+    - 4/8/16/32 KB SRAM memory
 - Interface: SPI Serial Peripheral Interface
   - Interface between microcontrollers and Peripheral ICs sensors
   - Peripheral ICs as sensors: ADCs, DACs, shift registers, SRAM etc (?)

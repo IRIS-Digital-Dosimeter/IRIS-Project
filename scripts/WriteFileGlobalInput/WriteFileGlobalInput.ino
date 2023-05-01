@@ -32,6 +32,16 @@ char buffer[12];                    // 39 char + 1 null termination byte
 
 void setup()
 {
+  initialize_SD();
+
+  writeFile(); 
+  checkExistance();
+  readFile();
+
+}
+
+void initialize_SD()
+{
   Serial.begin(9600); // open serial communications
   while (!Serial)
   {
@@ -45,11 +55,6 @@ void setup()
     while (1); 
   }
   Serial.println("Initialization done.");
-
-  writeFile(); 
-  checkExistance();
-  readFile();
-
 }
 
 void writeFile()

@@ -10,6 +10,18 @@
 
 # Progress Notes
 
+## 4/30/23
+
+- Use of any interal devices will require registers topics include
+  - Timers
+  - Interupts
+  - Registers
+  - Headers that take over any assebly that might be needed
+  - [power management example](https://www.youtube.com/watch?v=iMC6eG24S9g)
+  - Atmel Software Framework data structures
+  - data frames/ reg / hexidecimal etc.
+- To get a really surface level program running I'll need to work with provided arduino code anything beyond that will require a few weeks of data sheet interpretations and self learning of new materials listed
+
 ## 4/20/23
 
 - [Move file to SD card = terminal app](https://forum.arduino.cc/t/suggestions-on-how-to-move-a-file-from-sd-card-to-the-pc/146966/16)
