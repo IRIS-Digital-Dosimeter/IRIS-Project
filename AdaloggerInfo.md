@@ -12,7 +12,8 @@ Cable: `Micro-B USB to USB-A`\
 Website: [Overview](https://learn.adafruit.com/adafruit-feather-m0-adalogger/overview) \
 Pinouts: [link](https://learn.adafruit.com/adafruit-feather-m0-adalogger/pinouts) \
 Parts: `microSD Socket`\
-Protocols: `UART`, `SPI`, `I2C`
+Protocols: `UART`, `SPI`, `I2C`\
+[Arduino Documentation](https://www.ele.uri.edu/courses/ele205/ELE205Lab/ELE205_Lab_files/Arduino%20-%20Reference.pdf)
 
 ![Adalogger](images/Adalogger.png)
 
