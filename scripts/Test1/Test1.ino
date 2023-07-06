@@ -110,7 +110,7 @@ void openWriteFile()
   {
     Serial.println("error opening file"); 
   }
-  if (SD.exists("Mich.txt"))
+  if (SD.exists("data2.txt"))
   {
     Serial.println("File exists");
   }

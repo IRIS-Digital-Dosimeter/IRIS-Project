@@ -5,7 +5,7 @@
   Examples > SD > Files
 
   This example shows how to create and destroy an SD card file
-
+  Not optimized for global values 
 
   The circuit:
    SD card attached to SPI bus as follows:
@@ -47,7 +47,7 @@ File myFile;
 #define VBATPIN A7 
 
 // Declare Global Namae of file
-const char *foo = "testmichv2.txt";
+const char *foo = "testmich.txt";
 char buffer[40];
 
 /*
