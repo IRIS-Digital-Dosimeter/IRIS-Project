@@ -1,4 +1,6 @@
-// Attempt 1 at preforming two operations 
+// Attempt 1 at preforming two operations on SD 
+// No Global variables 
+// Created: 5/12/23
 
 // Directives 
 #include "SD.h"
