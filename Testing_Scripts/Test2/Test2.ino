@@ -145,6 +145,9 @@ void loop()
   }
 
   dataFile.close();
+  // change the extension
+  // while written .tmp
+  // when closed .txt
   fileCounter++;
 
   if (fileCounter >= maxFiles)
@@ -159,7 +162,8 @@ File createDataFile(int fileIndex)
 {
   // Serial.print("\nInitilizing write to file...");
 
-  String fileName = "data" + String(fileIndex) + ".txt";
+  //.tmp
+  String fileName = "data" + String(fileIndex) + ".tmp";
   ;
   // fileName += fileCounter;
   // fileName += ".txt";
