@@ -19,6 +19,9 @@
   SD: https://www.arduino.cc/reference/en/libraries/sd/
   Buffer protocol: https://www.programmingelectronics.com/sprintf-arduino/
   Pin Modes: https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/
+
+  Update: 7/26/23
+  - Program is obsolete
 */
 
 // Directives

@@ -27,7 +27,7 @@ int readVal;                  // read in value is [0,1023] for 10 bit, [0,4096] 
 int baud = 9600;              // desired Baud rate
 
 float V2 = 0;                 // set initial value 0V 
-float VHI = 3;                // Highest voltage of the circuit, this was measured
+float VHI = 3.29;                // Highest voltage of the circuit, this was measured
 
 float scaleHi10=1023;         // for conversion
 float scaleHi12=4096;         // for conversion
@@ -53,6 +53,10 @@ void loop() {
 
   // Read pin 
   readVal =analogRead(readPin);
+
+  // Retrun analog 
+  Serial.println("V2 anaglog read (Bit [0,4096]):"); Serial.println(readVal);
+
 
   // Convert to Voltage 
   V2 =readVal*(VHI/scaleHi12);

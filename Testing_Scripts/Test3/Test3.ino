@@ -1,30 +1,34 @@
 /*
   Composite program: Board MO, SD
-  No Global variables on files
   Created: 5/12/23
   Michelle Pichardo
 
-  SD card basic file example
-
-  This example shows how to create and destroy an SD card file
   The circuit:
     SD card attached to SPI bus as follows:
   ** MOSI - pin 11
   ** MISO - pin 12
   ** CLK - pin 13
-  ** CS - pin 4 (for MKRZero SD: SDCARD_SS_PIN)
+  ** CS(Chip Select) - pin 4 (for MKRZero SD: SDCARD_SS_PIN)
 
   Reference links:
   SPI: https://www.arduino.cc/reference/en/language/functions/communication/spi/
   SD: https://www.arduino.cc/reference/en/libraries/sd/
   Buffer protocol: https://www.programmingelectronics.com/sprintf-arduino/
   Pin Modes: https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/
+
+  Update: 7/20/23
+  - void functions return nothing
+  - String, File Functions return strings and files
+
+  Update: 7/26/23
+  - Program is obsolete
 */
 
 // Directives
-#include <SPI.h>
-#include <SD.h>
-#include <TimeLib.h>
+#include <SPI.h>     // serial Monitor communication
+#include <SD.h>      // SD card namespace
+#include <TimeLib.h> // Time namespance
+#include "HelperFunc.h"
 
 // Uncomment when we want to expose the memory
 // #include "Adafruit_TinyUSB.h"
@@ -41,93 +45,96 @@ File dataFile;
 const int chipSelect = 4;
 const int baudRate = 9600;
 
-char fileName[25]; // Increase the buffer size to accommodate the formatted string
+char fileName[8]; // SD card files can only have 8 char
 
 const unsigned long maxInterval = 60000; // 1 minute interval (in milliseconds)
-const int maxFiles = 10;                 // Maximum number of files to write
-int fileCounter = 0;                     // Counter for the number of files written
+const unsigned int maxFiles = 10;        // Maximum number of files to write
+unsigned int fileCounter = 0;            // Counter for the number of files written
 
-#define VBATPIN A7
-#define ANALOG0 A0
+#define VBATPIN A7 // External Battery value found on A7
+#define ANALOG0 A0 // Analog probe for this sketch
 
+// Main Program (Runs once) ------------------------------------------------------------------
 void setup()
 {
-    SPI_initialization();
-    SD_initialization();
-    printMemoryUsage();
+  SPI_initialization(); // Set up Serial communication
+  SD_initialization();  // Set up SD card
+  setDateTime();
 }
 
 // Initialize SPI communication ------------------------------------------------------------------
 void SPI_initialization()
 {
-    // Open serial communications by initializing serial obj
-    Serial.begin(baudRate);
+  // Open serial communications by initializing serial obj @ baudRate
+  //  - Standard baudRate = 9600
+  Serial.begin(baudRate);
 
-    // Wait wait up to 15 seconds for Arduino Serial Monitor / serial port to connect
-    // -  Ensure only one monitor is open
-    while (!Serial && millis() < 15000)
-    {
-        ; //  Needed for native USB port only
-    }
-    Serial.println("Serial Communication Secured");
+  // Wait wait up to 15 seconds for Arduino Serial Monitor / serial port to connect
+  //  - Needed for native USB port only
+  //  - Ensure only one monitor is open
+  while (!Serial && millis() < 15000)
+  {
+    ;
+  }
+  Serial.println("Serial Communication Secured");
 }
 
 // Initialize SD communication ------------------------------------------------------------------
 void SD_initialization()
 {
-    Serial.print("Initializing SD card... ");
+  Serial.print("Initializing SD card... ");
 
-    // Initialize the SD card
-    if (!SD.begin(chipSelect))
-    {
-        Serial.println("initialization failed!");
-        while (1)
-            ; // endless loop which "stops" useful function
-              // this may need to be changed to a user controlled break later
-    }
-    Serial.println("initialization done.");
+  // Check access to SD card "Initialize the SD card"
+  //  - Chipselect pin is different per board
+  if (!SD.begin(chipSelect))
+  {
+    Serial.println("initialization failed!");
+    while (1)
+      ; // endless loop which "stops" any useful function
+        // this may need to be changed to a user controlled break later
+  }
+  Serial.println("initialization done.");
 }
 
-// Fuction to check SD Memory use ------------------------------------------------------------------
-void printMemoryUsage()
+void setDateTime(int hr, int min, int sec, int day, int month, int yr)
 {
-    // Get the SD card object
-    Sd2Card card;
-    card.init(SPI_HALF_SPEED, chipSelect);
+  // Setting Provided Date & Time
+  setTime(hr, min, sec, day, month, yr); // Hr, min, sec, day, month, yr
 
-    // Get the card's volume object
-    SdVolume volume;
-    volume.init(card);
+  // Return the time stamp on the Serial Monitor
+  String DateStamp = getDateStamp();
+  Serial.print("DateStamp:");
+  Serial.println(DateStamp);
+}
 
-    // Get the file system object
-    SdFile root;
-    root.openRoot(volume);
+// String getDateStamp()
+// {
+//   String DateStamp = ""; // Initially Empty
+//   DateStamp += twoDigits(month());
+//   DateStamp += twoDigits(day());
+//   return DateStamp;
+// }
 
-    // Iterate through the files and calculate total size
-    uint32_t totalSize = 0;
+String getTimeStamp()
+{
+  String timeStamp = ""; // Initally Empty
+  timeStamp += String(int minute());
+  timeStamp += String(int second());
+}
 
-    while (true)
-    {
-        SdFile file;
-        if (!file.openNext(&root, O_READ))
-        {
-            break; // No more files
-        }
+// Used to format MMDD
+// String twoDigits(int digits)
+// {
+//   if (digits < 5)
+//   {
+//     return "0" + String(digits);
+//   }
+//   else
+//   {
+//     return String(digits);
+//   }
+// }
 
-        totalSize += file.fileSize();
-
-        file.close();
-    }
-
-    Serial.print("Total Memory Used: ");
-    Serial.print(totalSize);
-    Serial.println(" bytes");
-
-    // Print available memory on the SD card
-    Serial.print("Available Memory: ");
-    Serial.print(volume.freeClusterCount() * 512); // Bytes per cluster (typically 512)
-    Serial.println(" bytes");
-
-    // Close the root directory
-    root.close();
+void loop()
+{
 }

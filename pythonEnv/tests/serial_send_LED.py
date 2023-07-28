@@ -30,7 +30,7 @@ serial_send_LED.py
 Created by: Michelle Pichardo 
 Date: 02/19/2023
 """
-
+# %%
 # Installs
 import serial.tools.list_ports
 
@@ -57,9 +57,13 @@ val = input("Select Port: COM")
 # print(val) # the value is a number, the user con accidentally choose the wrong value
 
 for x in range(0, len(portsList)):  # loop through the ports and store the desired port
-    if portsList[x].startswith("COM" + str(val)):  # check for the one with the desired numerical value
+    if portsList[x].startswith(
+        "COM" + str(val)
+    ):  # check for the one with the desired numerical value
         portVar = "COM" + str(val)  # Declare a variable of the desired port
-        print(f"Selected Port: {portVar}, {portsList[x]}")  # Print the value to check for accuracy
+        print(
+            f"Selected Port: {portVar}, {portsList[x]}"
+        )  # Print the value to check for accuracy
     # No else statement provided, as there maybe other ports in the list
 
 # Ask the user to declare the baud rate

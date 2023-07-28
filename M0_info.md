@@ -19,7 +19,7 @@ Protocols: `UART`, `SPI`, `I2C`\
 
 ## Adalogger Installs
 
-1.  [Download Arduino IDE 2.0 of higher](https://www.arduino.cc/en/software)
+1.  [Download Arduino IDE 2.0 or higher](https://www.arduino.cc/en/software)
 2.  [Follow IDE prompts from the Adafruit website ](https://learn.adafruit.com/adafruit-feather-m0-adalogger/setup)
 3.  [Install the SAMD Support Boards](https://learn.adafruit.com/adafruit-feather-m0-adalogger/using-with-arduino-ide)
 4.  [Download additional drivers: adafruit_drivers_2.5.0.0.exe](https://github.com/adafruit/Adafruit_Windows_Drivers/releases)
@@ -42,26 +42,3 @@ Testing blink
 > Arduino `does not` provide any way of stopping the void loop function. Besides Arduino there is no such thing to exist in microcontrollers in the first place. Technically all the techniques we used are just to halt the Arduino loop functionality. It does not stop completely, we either send void loop to an infinite condition using while or use an exit statement to halt its process. By doing this Arduino loop stuck inside an infinite loop without executing instructions, `the only way to get it back is by resetting; through a button or by uploading a new sketch`. So technically the Arduino void loop does not stop.
 
 - [Resource Link: Linuxhint.com](https://linuxhint.com/stop-void-loop-function-arduino/)
-
-# Documentation specs of interest
-
-The Atmel SAM D21 device features:
-
-- In-system `programmable Flash`
-- twelve-channel direct memory access (`DMA`) controller
-- 12 channel `Event System`
-- programmable `interrupt controller`
-- up to `52 programmable I/O pins`
-- `32-bit real-time clock` and `calendar`
-- up to five 16-bit Timer/Counters (`TC`) and three 24-bit Timer/Counters for Control (`TCC`)
-  - where each TC can be configured to perform frequency and waveform generation
-  - accurate program execution timing or input capture with time and frequency measurement of digital signals. The TCs can operate in 8- or 16-bit mode, selected TCs can be cascaded to forma 32-bit TC, and three timer/counters have extended functions optimized for motor, lighting and other control applications.
-- The series provide one `full-speed USB` 2.0 embedded host and device interface
-- up to six `Serial Communication Modules `(`SERCOM`) that each can be configured to act as an USART, UART, SPI, $I^2C$
-- up to 3.4MHz, SMBus, PMBus, and LIN slave
-- two-channel $I^2S$ interface
-- up to twenty-channel 350ksps 12-bit ADC with programmable gain and optional oversampling and decimation supporting up to 16-bit resolution, one 10-bit 350ksps DAC
-- two analog comparators with window mode
-- Peripheral Touch Controller supporting up to 256 buttons, sliders, wheels and proximity sensing
-- programmable Watchdog Timer, brown-out
-  detector and power-on reset and two-pin Serial Wire Debug (SWD) program and debug interface.
