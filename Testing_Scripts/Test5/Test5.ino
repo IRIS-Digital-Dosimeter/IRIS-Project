@@ -38,15 +38,19 @@ const int chipSelect = 4;       // M0 pin for SD card use
 // Declarations for Files
 char fileName[8];                           // Arduino supports 8 char limit
 const unsigned long maxInterval = 60000;    // 1 min = 60_000 ms
-const unsigned int maxFiles = 5;            // Maximum number of files to write
-unsigned int fileCounter = 0;               // Initial value for files created
+const unsigned int maxFiles = 1;            // Maximum number of files to write
 const unsigned long maxfileCounter = 9999;  // Maximum file value
-
+const unsigned int samplingFrequency = 20;           // 20Hz sample rate (20 points per sec)
+unsigned int fileCounter = 0;               // Initial value for files created
 
 // Declarations/classes specific to SD card 
 Sd2Card card;
 SdVolume volume;
 File dataFile;
+
+// Constants for Timing (per file)
+unsigned long startTime = 0;          // Micros and Milis requires unsigned long
+unsigned long currentTime = 0;
 
 // Constants for digital to voltage Conversion 
 int delayTime = 1000;                 // Used for: not overwhelming the serial monitor
@@ -71,10 +75,10 @@ void setup() {
   Serial.printf("%02d/%02d", date.month, date.day);
   
   // Testing file block ------------------------------------------------------------------
-  File File_1 = open_SD_tmp_File(fileCounter, date);
+  File File_1 = open_SD_tmp_File(fileCounter, date); // Create first file
   Serial.print("File Created: ");
   Serial.print(File_1.name());
-  File_1.close(); 
+  // File_1.close(); 
   // ------------------------------------------------------------------
 }
 
