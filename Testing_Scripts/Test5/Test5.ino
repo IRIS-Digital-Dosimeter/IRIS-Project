@@ -6,20 +6,26 @@
   Michelle Pichardo
 
   Helper files: HelperFunc.h, HelperFunc.cpp 
-    - Contents: 
+    - Contents: Date extractDateFromInput();
+                String twoDigits(int digits);
+                String fourDigits(int digits);
+                File open_SD_tmp_File(int fileIndex, Date date);
     - Required: Compile on Arduino IDE
+
+  Timing: No timing optimization is currently considered 
+  Memory usage: No checks considered 
 
 */
 /////////////////////////////////////////////
 
-// Directives 
+// Preprocessor Directives: Contains namespaces 
 #include "SPI.h"
 #include "SD.h"
 #include "TimeLib.h"
 #include "HelperFunc.h"
 
 // Constants for communication 
-const int baudRate = 9600;      // speed of communication
+const int baudRate = 115200;   // Speed of communication (bits per sec) (9600,115200)
 const int chipSelect = 4;       // M0 pin for SD card use
 
 // Analog Pins 
@@ -32,21 +38,31 @@ const int chipSelect = 4;       // M0 pin for SD card use
 // Declarations for Files
 char fileName[8];                           // Arduino supports 8 char limit
 const unsigned long maxInterval = 60000;    // 1 min = 60_000 ms
-const unsigned int maxFiles = 10;           // Maximum number of files to write
-unsigned int fileCounter = 1;               // Counter for the number of files written
+const unsigned int maxFiles = 5;            // Maximum number of files to write
+unsigned int fileCounter = 0;               // Initial value for files created
 const unsigned long maxfileCounter = 9999;  // Maximum file value
 
 
-// Declarations specific to SD card 
+// Declarations/classes specific to SD card 
 Sd2Card card;
 SdVolume volume;
 File dataFile;
 
+// Constants for digital to voltage Conversion 
+int delayTime = 1000;                 // Used for: not overwhelming the serial monitor
+int readDigital;                      // Store the digital value 10[0-1023] , 12[0-4096]
+
+float Volt = 0;                       // Store inital voltage 
+float Vref = 3.29;                    // Provide highest/ref voltage of circuit [0-3.29]V
+float scale_10bit = 1023;             // digital Hi value for 10 bit 
+float scale_12bit = 4096;             // digital Hi value for 12 bit
+
 
 // Main Program (Runs once) ------------------------------------------------------------------
 void setup() {
-  SPI_initialization();         // Set up Serial communication
-  SD_initialization();          // Set up SD card
+
+  SPI_initialization();               // Set up Serial communication
+  SD_initialization();                // Set up SD card
 
   // Ask for date 
   Serial.println("Enter date in format: MM/DD");
@@ -56,7 +72,7 @@ void setup() {
   
   // Testing file block ------------------------------------------------------------------
   File File_1 = open_SD_tmp_File(fileCounter, date);
-  Serial.print("File Created :");
+  Serial.print("File Created: ");
   Serial.print(File_1.name());
   File_1.close(); 
   // ------------------------------------------------------------------

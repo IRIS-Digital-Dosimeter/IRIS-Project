@@ -50,6 +50,8 @@ void setup()  // -------------------------------------------------------------
   setTime(1, 0, 0, 12, 7, 2023);
   SPI_initialization();
   SD_initialization();
+  Serial.print("\nFile Counter: "); 
+  Serial.println(fileCounter);
   Serial.println("Data logging initialized");
 }
 
@@ -80,6 +82,7 @@ void loop() // -------------------------------------------------------------
   if (fileCounter >= maxFiles)
   {
     Serial.println("Maximum number of files created. Data logging stopped.");
+    Serial.println(fileCounter);
     while (1)
       ;
   }

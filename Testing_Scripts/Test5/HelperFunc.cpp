@@ -28,7 +28,7 @@ Date extractDateFromInput() {
 
 File open_SD_tmp_File(int fileIndex, Date date)
 {
-  Serial.print("\nInitilizing write to file...");
+  Serial.print("\nInitilizing write to file... ");
 
   //.tmp
   String fileName = twoDigits(date.month) + twoDigits(date.day) + fourDigits(fileIndex) + ".tmp";
