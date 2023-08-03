@@ -30,7 +30,7 @@ File open_SD_tmp_File(int fileIndex, Date date)
   Serial.print("\nInitilizing write to file... "); 
 
   //.tmp
-  String fileName = twoDigits(date.month) + twoDigits(date.day) + fourDigits(fileIndex) + ".tmp";
+  String fileName = twoDigits(date.month) + twoDigits(date.day) + fourDigits(fileIndex) + ".txt";
 
   File newFile = SD.open(fileName, FILE_WRITE);
   if (newFile)
@@ -43,6 +43,32 @@ File open_SD_tmp_File(int fileIndex, Date date)
     while(1); // Stop recording if the file creation fails 
   }
   return newFile;
+}
+
+
+String getTimeStamp_MMSSXXXX(unsigned long now) 
+{
+  /*
+  This function uses modulo to compute values 
+     ** 1 min = 60_000 ms 
+     ** 1 sec = 1_000  ms 
+     ** ms range: [0 - 1000]
+  */
+  unsigned long minutes = (now / 60000 ) % 60; 
+  unsigned long seconds = (now / 1000 ) % 60; 
+  unsigned long milliseconds = now % 1000; 
+
+  String timeStamp = "";
+  // timeStamp += "(MM:SS:XXXX): ";
+  timeStamp += twoDigits(minutes);
+  timeStamp += ":";
+  timeStamp += twoDigits(seconds);
+  timeStamp += ":"; 
+  timeStamp += fourDigits(milliseconds);
+  timeStamp += "\tRaw(ms):";
+  timeStamp += String(now);
+
+  return timeStamp;
 }
 
 String twoDigits(int digits)

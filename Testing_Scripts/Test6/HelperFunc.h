@@ -16,10 +16,13 @@ struct Date {
 
 
 // Function prototypes
+void myDelay(unsigned long ms);
+void SPI_initialization(int baudRate);
+void SD_initialization(const int chipSelect);
 Date extractDateFromInput();
+File open_SD_tmp_File(int fileIndex, Date date);
 String twoDigits(int digits);
 String fourDigits(int digits);
-File open_SD_tmp_File(int fileIndex, Date date);
-String getTimeStamp_MMSSXXXX(unsigned long now);
+
 
 #endif
