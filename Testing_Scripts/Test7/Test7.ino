@@ -1,6 +1,6 @@
 //////////////////////////////////////////////
 /*  
-  Test 6: Composite Sketch + Helper Files 
+  Test 7: Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
   Created: 7/26/23
   Michelle Pichardo
@@ -39,6 +39,7 @@
 #include "TimeLib.h"
 #include "HelperFunc.h"
 
+
 // Constants for communication 
 const int baudRate = 9600;   // Speed of communication (bits per sec) (9600,115200)
 const int chipSelect = 4;       // M0 pin for SD card use
@@ -48,13 +49,11 @@ const int chipSelect = 4;       // M0 pin for SD card use
 #define ANALOG0 A0              // Analog probe for this sketch
 #define ANALOG1 A1              // Analog pin use: TBD
 #define LED_pin 13              // Red
-
 #define LED_error_pin 8         // Green
 
 // Declarations for Files
 const unsigned long maxInterval = 10000;    // 1 min = 60_000 ms ; 1s = 1_000 ms 
 const unsigned int maxFiles = 2;            // Maximum number of files to write
-unsigned int fileCounter = 1;               // Initial value for files created
 
 // Declarations/classes specific to SD card 
 Sd2Card card;
@@ -76,11 +75,10 @@ float scale_10bit = 1023;             // digital Hi value for 10 bit
 float scale_12bit = 4096;             // digital Hi value for 12 bit
 
 // Declarations for the Date
-Date date = {10, 10};
+MyDate myDate = MyDate(10, 10);
 
 // Declaration for test-only 
 boolean serialPrint = true;            //true or false
-
 
 // Main Program (Runs once) ------------------------------------------------------------------
 void setup(){
@@ -89,54 +87,68 @@ void setup(){
 
   // Ask for date 
   Serial.println("Enter date in format: MM/DD");
-  date = extractDateFromInput();     
+  extractDateFromInput();     
   Serial.print("Date entered: ");
-  Serial.printf("%02d/%02d", date.month, date.day);
+  Serial.printf("%02d/%02d", myDate.getMonth(), myDate.getDay());
 
   // Ask for Desired File interval
   // Serial.println("\nEnter desired file interval (s): ");
 
   // Testing file block ------------------------------------------------------------------
-  // File dataFile = open_SD_tmp_File(fileCounter, date); // Create first file
+  // File dataFile = open_SD_tmp_File(fileCounter, &myDate); // Create first file
   // Serial.print("File Created: ");
   // Serial.println(dataFile.name());
   // dataFile.close(); 
   // ------------------------------------------------------------------
-
-}
-
-// Main Loop Runs after setup() (indefinetly) ------------------------------------------------------------------
-void loop() {
-  //Create/open File; log A0; repeat 
-  File dataFile = open_SD_tmp_File(fileCounter, date); // Create first file
-  Serial.print("File Created: ");
-  Serial.println(dataFile.name());
-  dataFile.println("my Delay = 1ms; tot= 10s");
-  startTime = millis();   // Save time stamp
+  
+  // set resolution
   analogReadResolution(12);
 
-  while (millis() - startTime < maxInterval) {
-    // While Scope Declarations 
-    int sensorValue = analogRead(ANALOG0); 
-    
-    dataFile.print(getTimeStamp_test_MMSSXXXX_ms(millis())); 
-    dataFile.print(", Digits: ");
-    dataFile.println(sensorValue);
-    myDelay(1);
-    // delay(10); 
-  }
-  
-  dataFile.close();
-  fileCounter++; 
-  if (fileCounter >= maxFiles)
-  {
-    Serial.println("Maximum number of files created. Data logging stopped.");
-    Serial.println(fileCounter);
-    while (1) {
-      ;
-    }
-  }  
-
 }
 
 
+void loop() {
+  //Create/open File; log A0; repeat 
+
+  for (unsigned int fileCounter = 1; fileCounter <= maxFiles; fileCounter++){
+    // Create file
+    File dataFile = open_SD_tmp_File(fileCounter, &myDate); 
+
+    if (serialPrint){
+      Serial.print("File Created: ");
+      Serial.println(dataFile.name());
+    }
+
+    //Temp Header
+    dataFile.print("File time length (ms): ");
+    dataFile.println(String(maxInterval));
+
+    //Store start time
+    startTime = millis();
+
+    while (millis() - startTime < maxInterval) {
+      // Declartion
+      int sensorValue = analogRead(ANALOG0); 
+      // Write to file 
+      dataFile.print(getTimeStamp_test_MMSSXXXX_ms(millis())); 
+      dataFile.print(", Digits: ");
+      dataFile.println(sensorValue);
+      // nonblocking delay
+      myDelay(1);
+      // delay(10); 
+    }
+    dataFile.close();
+
+    if (serialPrint){
+      Serial.println("File Closed.");
+    }
+
+  }
+
+  Serial.println("Maximum number of files created. Data logging stopped.");
+  while (1) {
+     ;
+  }
+ 
+
+}
