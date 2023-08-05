@@ -1,7 +1,23 @@
 /*
-  Composite program: Board MO, SD
+  ##############
+  OBSOLETE File
+  ##############
+  Test3.ino
+  Board MO with SD
+
   Created: 5/12/23
   Michelle Pichardo
+
+  Details:
+    - Failed attempt at using modules
+    - contians notes but otherwise obsolete
+
+  Update: 7/20/23
+    - void functions return nothing
+    - String, File Functions return strings and files
+
+  Update: 7/26/23
+    - Program is obsolete
 
   The circuit:
     SD card attached to SPI bus as follows:
@@ -15,13 +31,6 @@
   SD: https://www.arduino.cc/reference/en/libraries/sd/
   Buffer protocol: https://www.programmingelectronics.com/sprintf-arduino/
   Pin Modes: https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/
-
-  Update: 7/20/23
-  - void functions return nothing
-  - String, File Functions return strings and files
-
-  Update: 7/26/23
-  - Program is obsolete
 */
 
 // Directives
@@ -29,12 +38,6 @@
 #include <SD.h>      // SD card namespace
 #include <TimeLib.h> // Time namespance
 #include "HelperFunc.h"
-
-// Uncomment when we want to expose the memory
-// #include "Adafruit_TinyUSB.h"
-
-// USB Mass Storage object class
-// Adafruit_USBD_MSC usb_msc;
 
 // SD Card classes
 Sd2Card card;
@@ -47,7 +50,7 @@ const int baudRate = 9600;
 
 char fileName[8]; // SD card files can only have 8 char
 
-const unsigned long maxInterval = 60000; // 1 minute interval (in milliseconds)
+const unsigned long maxInterval = 60000; // 60_000ms = 1min
 const unsigned int maxFiles = 10;        // Maximum number of files to write
 unsigned int fileCounter = 0;            // Counter for the number of files written
 

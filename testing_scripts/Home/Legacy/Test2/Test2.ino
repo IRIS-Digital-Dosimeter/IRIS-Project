@@ -1,12 +1,18 @@
-/*
-  Composite program: Board MO, SD
-  Read pin A0 and store 5 files of minute length
+/*Test2.ino
+
+  Board MO with SD
+
   Created: 5/12/23
   Michelle Pichardo
 
-  SD card basic file example
+  Details:
+    - Read pin A0 and store 5 files of minute length
+    - Creates timestamps
 
-  This example shows how to create and destroy an SD card file
+  Update: 7/26/23
+    - Use Test2.ino as refernce only
+    - A better loop is created in later files
+
   The circuit:
     SD card attached to SPI bus as follows:
   ** MOSI - pin 11
@@ -19,9 +25,6 @@
   SD: https://www.arduino.cc/reference/en/libraries/sd/
   Buffer protocol: https://www.programmingelectronics.com/sprintf-arduino/
   Pin Modes: https://www.arduino.cc/reference/en/language/functions/digital-io/pinmode/
-
-  Update: 7/26/23
-  - Program is no longer in use
 */
 
 // Directives
@@ -30,12 +33,12 @@
 #include <TimeLib.h>
 
 // Constants & Classes
-const int chipSelect = 4;             // for the MO board
+const int chipSelect = 4; // for the MO board
 const int baudRate = 9600;
 
-char fileName[8];                     // Increase the buffer size to accommodate the formatted string
+char fileName[8]; // arduino SD can only take 8 char names
 
-const unsigned long interval = 60000; // 1 minute interval (in milliseconds)
+const unsigned long interval = 60000; // 60_000ms = 1m
 const int maxFiles = 5;               // Maximum number of files to write
 int fileCounter = 0;                  // Counter for the number of files written
 
@@ -44,12 +47,15 @@ int fileCounter = 0;                  // Counter for the number of files written
 // SD Card
 File dataFile;
 
-
-void setup()  // -------------------------------------------------------------
+void setup() // -------------------------------------------------------------
 {
+  // Set Global Time Manually
   setTime(1, 0, 0, 12, 7, 2023);
+  // Serial & SD Initializatoins --> these are now dedicated functions
   SPI_initialization();
   SD_initialization();
+
+  // Send confirmation to user
   Serial.println("Data logging initialized");
 }
 
@@ -118,7 +124,7 @@ void SD_initialization() // ----------------------------------------------------
 
 // Additional Functions -------------------------------------------------------------
 
-File createDataFile(int fileIndex)  // -------------------------------------------------------------
+File createDataFile(int fileIndex) // -------------------------------------------------------------
 {
   // Serial.print("\nInitilizing write to file...");
 
@@ -140,7 +146,7 @@ File createDataFile(int fileIndex)  // -----------------------------------------
   return newFile;
 }
 
-String getTimeStamp()  // -------------------------------------------------------------
+String getTimeStamp() // -------------------------------------------------------------
 {
   String timeStamp = "";
   timeStamp += year();
@@ -157,7 +163,7 @@ String getTimeStamp()  // ------------------------------------------------------
   return timeStamp;
 }
 
-String twoDigits(int digits)  // -------------------------------------------------------------
+String twoDigits(int digits) // -------------------------------------------------------------
 {
   if (digits < 10)
   {

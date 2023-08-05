@@ -1,17 +1,23 @@
 /*
-Testing with Helper Functions 
-Result: Sucessful 
+###########################
+MODULE TEST 1
 
-- Board: M0 
+Result: SUCCESFUL
+###########################
+Board: M0
+
+Michelle Pichardo
+
 */
 
-// Directives 
+// Directives
 #include "SPI.h"
 #include "HelperFunc.h"
 
 const int baudRate = 9600;
 
-void setup() {
+void setup()
+{
   SPI_initialization();
   int x = 5, y = 3;
 
@@ -24,7 +30,8 @@ void setup() {
   Serial.println(result2);
 }
 
-void loop() {
+void loop()
+{
   // Your main code here (if any)
 }
 
