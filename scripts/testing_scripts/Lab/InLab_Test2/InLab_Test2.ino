@@ -28,6 +28,7 @@
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Debug.h"
+#include "Adafruit_TinyUSB.h"
 
 // DO NOT CHANGE WITHIN THIS ###############################################################
 
@@ -43,6 +44,7 @@ const int chipSelect = 4;            // M0 pin for SD card use
 Sd2Card card;
 SdVolume volume;
 File dataFile;
+Adafruit_USBD_MSC usb_msc;            // used to create external usb
 
 /* Constants for digital to voltage Conversion */
 int sensorValue;                      // Store the digital value 10[0-1023] , 12[0-4096]
@@ -77,13 +79,19 @@ void setup(){
   // Set up Serial Monitor communication  
   SPI_initialization(baudRate);
   // Set up SD card 
-  SD_initialization(chipSelect);
+
   // Set the analog pin resolution 
   analogReadResolution(12);
   // Ask for the date: MM/DD
-  // extractDateFromInput();    
+  extractDateFromInput();    
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
+
+  usb_initialization();
+
+
+
+  SD_initialization(chipSelect);
 
 }
 
@@ -95,45 +103,61 @@ void loop() {
     readSerial_A0(Vref, scale_12bit);
   }
 
-  // debug("File count: ");
-  // debugln(fileCounter);
+}
 
-  // // Create file
-  // File dataFile = open_SD_tmp_File(fileCounter, &myDate); 
-
-  // // Debug prints 
-  // debug("File Created: ");
-  // debugln(dataFile.name());
+void usb_initialization() {
+  // Vendor ID, Product ID, Product Rev
+  usb_msc.setID("Adafruit", "SD Card", "1.0");
+  // lookup call back functions      
+  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
+  usb_msc.setUnitReady(false); 
+  usb_msc.begin();
   
+  Serial.println("Adafruit TinyUSB Mass Storage SD Card example");
 
-  // //Temp Header
-  // dataFile.print("File time interval (s): ");
-  // dataFile.println(String(maxInterval));
-  // dataFile.print("Lab Test");
+  Serial.println("\nInitializing SD card...");
+  if (!card.init(SPI_HALF_SPEED, chipSelect)) // if not run the checks
+  {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("* is a card inserted?");
+    Serial.println("* is your wiring correct?");
+    Serial.println("* did you change the chipSelect pin to match your shield or module?");
+    while (1)
+      delay(1);
+  }
+  if (!volume.init(card)) // attepts to open the Fat16 or Fat 32
+  {
+    Serial.println("Could not find FAT16/FAT32 partition. \nMake sure you've formatted the card");
+    while (1)
+      delay(1);
+  }
 
-  // //Store start time
-  // startTime = millis();
+  uint32_t block_count = volume.blocksPerCluster() * volume.clusterCount();
+  // Checks
+  Serial.print("Volume size (MB): ");
+  Serial.println((block_count, 512));
 
-  // while (millis() - startTime < maxInterval) {
-  //   // Declartions
-  //   sensorValue = analogRead(ANALOG0); 
-  //   Volt = sensorValue*(Vref/scale_12bit);
+  usb_msc.setCapacity(block_count, 512);
+  usb_msc.setUnitReady(true); // now the mass storage is ready to read/write
 
+}
 
+// function callback for external usb --------------------------------------------------------
+int32_t msc_read_cb(uint32_t lba, void *buffer, uint32_t bufsize)
+{
+  (void)bufsize;
+  return card.readBlock(lba, (uint8_t *)buffer) ? 512 : -1;
+}
 
-  // }
-  // dataFile.close();
+// function callback
+int32_t msc_write_cb(uint32_t lba, uint8_t *buffer, uint32_t bufsize)
+{
+  (void)bufsize;
+  return card.writeBlock(lba, buffer) ? 512 : -1;
+}
 
-  // if (serialPrint){
-  //   Serial.println("File Closed.");
-  // }
-
-  
-
-  // Serial.println("Maximum number of files created. Data logging stopped.");
-  // while (1) {
-  //    ;
-  // }
- 
-
+// function callback
+void msc_flush_cb(void)
+{
+  // should flush we're just going to have it as a place holder
 }

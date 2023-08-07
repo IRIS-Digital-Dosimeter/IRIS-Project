@@ -12,7 +12,8 @@ Details:
 #include "SPI.h"
 #include "SD.h"
 #include "HelperFunc.h"
-#include "Arduino.h"    
+#include "Arduino.h" 
+#include "Adafruit_TinyUSB.h"
 
 // Classes ------------------------------------------------------
 class MyDate {
