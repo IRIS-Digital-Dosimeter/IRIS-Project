@@ -1,10 +1,19 @@
+/*/////////////////////////////////////////////////////////////////////////////////////////
+HelperFunc.cpp 
+
+Details: 
+  - this file contains helper functions in all their glory 
+  - comments found b4 the function are docstrings which show up on hover /*docstring*/
+/////////////////////////////////////////////////////////////////////////////////////////*/
+
 #include "SPI.h"
 #include "SD.h"
-// #include "TimeLib.h"
 #include "HelperFunc.h"
 #include "Debug.h"
 
-void extractIntervalFromInput2() {
+/*Sets desired file time length
+**e.g.: interval = 5s creates files that collect for 5s each*/
+void extractIntervalFromInput() {
   unsigned long desiredInterval_s;
   unsigned long desiredInterval_us;
 
@@ -34,35 +43,6 @@ void extractIntervalFromInput2() {
   return;
 }
 
-unsigned long extractIntervalFromInput() {
-  unsigned long desiredInterval_s;
-  unsigned long desiredInterval_us;
-
-  Serial.println("\nEnter desired file interval as an integer (s): ");
-  while (true) {
-    if (Serial.available() > 0) {
-      String userInput = Serial.readStringUntil('\n');
-
-      if (sscanf(userInput.c_str(), "%d", &desiredInterval_s) == 1) {
-        // Successfully extracted both month and day, break the loop
-        desiredInterval_us = desiredInterval_s * 1000000UL;
-        break;
-        } else {
-        Serial.println("Invalid input format. Please enter an integer.");
-      }
-    }
-    // Add a small delay between checks to avoid excessive processor load
-    delay(100);
-  }
-  Serial.print("Interval entered (s): ");
-  Serial.println(desiredInterval_s);
-  Serial.print("Interval entered (ms): ");
-  Serial.println(desiredInterval_s * 1000UL);
-  Serial.print("Interval entered (us): ");
-  Serial.println(desiredInterval_us);
-
-  return desiredInterval_us;
-}
 
 /* readSerial_A0:
   ** reads A0 and prints Voltage to serial monitor 
@@ -105,33 +85,6 @@ String getTimeStamp_XXXX_us(unsigned long currentTime)
   return timeStamp;
 }
 
-/* getTimeStamp_MMSSXXXX_ms:
-   uses modulo to compute values 
-     ** 1 min = 60_000 ms 
-     ** 1 sec = 1_000  ms 
-     ** ms range: [0 - 1000]
-*/
-String getTimeStamp_MMSSXXXX_ms(unsigned long currentTime) 
-{
-
-  unsigned long minutes = (currentTime / 60000 ) % 60; 
-  unsigned long seconds = (currentTime / 1000 ) % 60; 
-  unsigned long milliseconds = currentTime % 1000; 
-
-  String timeStamp = "";
-  // timeStamp += "Time Stamp (MM:SS:XXXX): ";
-  timeStamp += twoDigits(minutes);
-  timeStamp += ":";
-  timeStamp += twoDigits(seconds);
-  timeStamp += ":"; 
-  timeStamp += fourDigits(milliseconds);
-  // timeStamp += "\tRaw(ms):";
-  // timeStamp += String(currentTime);
-  // timeStamp += "\tModulo:\t";
-  // timeStamp += String(currentTime % 1000);
-
-  return timeStamp;
-}
 
 /*open_SD_tmp_File:
   **Opens/Creates a file in the SD card
@@ -199,6 +152,7 @@ void myDelay_ms(unsigned long ms)             // ms: duration (use instaed of bl
             return;
     }
 }
+
 /* myDelay removes overflow issue by converting negatives to unsigned long*/
 void myDelay_us(unsigned long us)                      // us: duration (use instaed of block func delay())
 {   
@@ -210,6 +164,7 @@ void myDelay_us(unsigned long us)                      // us: duration (use inst
             return;
     }
 }
+
 
 void SPI_initialization(const int baudRate)
 {
@@ -229,6 +184,7 @@ void SPI_initialization(const int baudRate)
   Serial.println("Serial Communication Secured");
 }
 
+
 void SD_initialization(const int chipSelect)
 {
   Serial.print("Initializing SD card... ");
@@ -245,6 +201,8 @@ void SD_initialization(const int chipSelect)
   Serial.println("initialization done.");
 }
 
+/* Format function; adds leading zeros;
+retruns 2 digits*/
 String twoDigits(int digits) // used to format file name
 {
   if (digits < 10)
@@ -257,7 +215,9 @@ String twoDigits(int digits) // used to format file name
   }
 }
 
-String fourDigits(int digits) //  used to format file name
+/* Format function; adds leading zeros;
+retruns 4 digits*/
+String fourDigits(int digits) 
 {
   if (digits < 10)
   {

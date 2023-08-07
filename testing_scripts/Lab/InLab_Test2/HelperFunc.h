@@ -1,19 +1,17 @@
-/* 
-##########################
-Contents: 
-  Classes 
-  Global Variables 
-  Prototypes  
-##########################
-*/
+/*/////////////////////////////////////////////////////////////////////////////////////////
+HelperFunc.h 
+
+Details: 
+  - This file contains classes; global variables; and prototypes of our helper functions 
+  - Full fuctions are found in HelperFunc.cpp 
+/////////////////////////////////////////////////////////////////////////////////////////*/
+
 #ifndef HELPER_FUNC_H
 #define HELPER_FUNC_H
 
 #include "SPI.h"
 #include "SD.h"
-// #include "TimeLib.h"
 #include "HelperFunc.h"
-// needed in this file 
 #include "Arduino.h"    
 
 // Classes ------------------------------------------------------
@@ -54,12 +52,13 @@ class MyDate {
       return true;
     }
 };
-// Pass this gloabally ------------------------------------------------------
+
+// Global Variables ------------------------------------------------------
 extern MyDate myDate;
 extern unsigned long maxInterval;
 
 
-// Prototypes ------------------------------------------------------
+// Function Prototypes ------------------------------------------------------
 
 // For Testing 
 void readSerial_A0(float VHi, float bit_scale);
@@ -69,8 +68,7 @@ void myDelay_us(unsigned long us);
 void myDelay_ms(unsigned long ms); 
 
 // Permanent 
-unsigned long extractIntervalFromInput();
-void extractIntervalFromInput2();
+void extractIntervalFromInput();
 File open_SD_tmp_File(int fileIndex, MyDate* myDate);
 void extractDateFromInput(); 
 void SPI_initialization(const int baudRate); 
