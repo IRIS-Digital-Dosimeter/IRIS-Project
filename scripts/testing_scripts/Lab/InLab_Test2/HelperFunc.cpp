@@ -10,7 +10,7 @@ Details:
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Debug.h"
-#include "Adafruit_TinyUSB.h"
+// #include "Adafruit_TinyUSB.h"
 
 /*Sets desired file time length
 **e.g.: interval = 5s creates files that collect for 5s each*/
@@ -46,19 +46,37 @@ void extractIntervalFromInput() {
 
 
 /* readSerial_A0:
-  ** reads A0 and prints Voltage to serial monitor 
+  ** reads A0 and prints (us,Voltage) to serial monitor
+  ** set printTime = false to remove time 
 */
-void readSerial_A0(float VHi, float bit_scale) {
+void readSerial_A0(float VHi, float bit_scale, bool printTime) {
 
   int sensorValue = analogRead(A0); 
   float V_A0;
   unsigned long now = micros();
   String reading_A0 = String(micros()) + "," ;
-
   V_A0 = sensorValue*(VHi/bit_scale);
 
-  Serial.print(reading_A0);
-  Serial.println(V_A0,3);
+  if (printTime){
+    Serial.print(0);
+    Serial.print("");
+    Serial.print(5);
+    Serial.print("");
+    Serial.print("us:");
+    Serial.print(micros());
+    Serial.print(",");
+    Serial.print("A0V:");
+    Serial.println(V_A0,3);
+  }
+  else{
+    Serial.print(0);
+    Serial.print(" ");
+    Serial.print(3);
+    Serial.print(" ");
+    // Serial.print("A0 V:");
+    Serial.println(V_A0,3);
+  }
+
 }
 
 /*getTimeStamp_XXXX_us:

@@ -19,7 +19,8 @@
     - Timing: No timing optimization is currently considered 
     - Memory usage: No checks considered 
     - SPI: Typically at Half Speed 24MHz
-  
+  - lab: 2GB micro sd
+  - home: 8GB micro sd
 */
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +29,7 @@
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Debug.h"
-#include "Adafruit_TinyUSB.h"
+// #include "Adafruit_TinyUSB.h"
 
 // DO NOT CHANGE WITHIN THIS ###############################################################
 
@@ -44,7 +45,7 @@ const int chipSelect = 4;            // M0 pin for SD card use
 Sd2Card card;
 SdVolume volume;
 File dataFile;
-Adafruit_USBD_MSC usb_msc;            // used to create external usb
+// Adafruit_USBD_MSC usb_msc;            // used to create external usb
 
 /* Constants for digital to voltage Conversion */
 int sensorValue;                      // Store the digital value 10[0-1023] , 12[0-4096]
@@ -70,8 +71,8 @@ unsigned long startTime = 0;            // Micros and Milis requires unsigned lo
 unsigned long currentTime = 0;
 
 /* Send A0 Voltage to Serial Monitor */
-bool serialPrint = false;               // true/false ; true = send ; false = don't send
-
+bool serialPrint = true;               // true/false ; true = send ; false = don't send
+bool print_time = false; 
 
 // Main Program (Runs once) ------------------------------------------------------------------
 void setup(){
@@ -87,11 +88,6 @@ void setup(){
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
 
-
-
-
-
-
 }
 
 
@@ -99,7 +95,7 @@ void loop() {
 
   // Serial Print Test
   if (serialPrint) {
-    readSerial_A0(Vref, scale_12bit);
+    readSerial_A0(Vref, scale_12bit, print_time);
   }
 
 }

@@ -13,7 +13,7 @@ Details:
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Arduino.h" 
-#include "Adafruit_TinyUSB.h"
+// #include "Adafruit_TinyUSB.h"
 
 // Classes ------------------------------------------------------
 class MyDate {
@@ -62,7 +62,7 @@ extern unsigned long maxInterval;
 // Function Prototypes ------------------------------------------------------
 
 // For Testing 
-void readSerial_A0(float VHi, float bit_scale);
+void readSerial_A0(float VHi, float bit_scale, bool printTime);
 String getTimeStamp_XXXX_us(unsigned long currentTime);
 String getTimeStamp_MMSSXXXX_ms(unsigned long currentTime); 
 void myDelay_us(unsigned long us);             
