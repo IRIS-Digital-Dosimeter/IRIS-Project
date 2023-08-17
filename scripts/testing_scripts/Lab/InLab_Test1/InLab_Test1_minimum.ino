@@ -57,14 +57,14 @@ const unsigned int maxFiles = 5;            // Maximum number of files to write
 
 // Declarations for sampling
 // Slow board:
-const unsigned long intersampleDelay = 250;    //microseconds
-const unsigned long interaverageDelay = 1000;   //microseconds
-const unsigned int numSamples = 40;
+//const unsigned long intersampleDelay = 250;    //microseconds
+//const unsigned long interaverageDelay = 1000;   //microseconds
+//const unsigned int numSamples = 40;
 
 // Fast board:
-//const unsigned long intersampleDelay = 25;    //microseconds
-//const unsigned long interaverageDelay = 100;   //microseconds
-//const unsigned int numSamples = 20;
+const unsigned long intersampleDelay = 25;    //microseconds
+const unsigned long interaverageDelay = 1000;   //microseconds
+const unsigned int numSamples = 1;
 
 // Declarations/classes specific to SD card 
 Sd2Card card;
