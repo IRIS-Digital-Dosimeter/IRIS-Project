@@ -182,34 +182,3 @@ void readSerial(){
 
 }
 
-String getTimeStamp_MMSSXXXX_uuuu(unsigned long currentTime) 
-{
-  /*
-  This function uses modulo to compute values 
-     ** 1 min = 60_000 ms 
-     ** 1 sec = 1_000  ms 
-     ** 1 ms  = 1_000  us
-     ** ms range: [0 - 1000]
-     ** us range: [0 - 1000]
-  */
-  unsigned long minutes = (currentTime / (60000 * 1000) )% 60; 
-  unsigned long seconds = (currentTime / (1000 * 1000) )% 60; 
-  unsigned long milliseconds = (currentTime / 1000)  % 1000; 
-  unsigned long microseconds = currentTime % 1000;
-
-  String timeStamp = "";
-  // timeStamp += "Time Stamp (MM:SS:XXXX): ";
-  // timeStamp += twoDigits(minutes);
-  // timeStamp += ":";
-  timeStamp += twoDigits(seconds);
-  timeStamp += ":"; 
-  timeStamp += fourDigits(milliseconds);
-  timeStamp += ":"; 
-  timeStamp += fourDigits(microseconds);
-  // timeStamp += "\tRaw(ms):";
-  // timeStamp += String(currentTime);
-  // timeStamp += "\tModulo:\t";
-  // timeStamp += String(currentTime % 1000);
-
-  return timeStamp;
-}
