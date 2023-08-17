@@ -52,8 +52,13 @@ const int chipSelect = 4;       // M0 pin for SD card use
 #define LED_error_pin 8         // Green
 
 // Declarations for Files
-const unsigned long maxInterval = 5000;    // 1 min = 60_000 ms ; 1s = 1_000 ms 
+const unsigned long maxInterval = 5*1000000;    // in microseconds
 const unsigned int maxFiles = 5;            // Maximum number of files to write
+
+// Declarations for sampling
+const unsigned long intersampleDelay = 100;    //microseconds
+const unsigned long interaverageDelay = 500;   //microseconds
+const unsigned int numSamples = 10;
 
 // Declarations/classes specific to SD card 
 Sd2Card card;
@@ -118,7 +123,7 @@ void loop() {
   // readSerial();
 
   //Create/open File; log A0; repeat 
-
+  
   for (unsigned int fileCounter = 1; fileCounter <= maxFiles; fileCounter++){
     // Create file
     File dataFile = open_SD_tmp_File(fileCounter, &myDate); 
@@ -129,24 +134,32 @@ void loop() {
     }
 
     //Temp Header
-    dataFile.print("File time length (ms): ");
-    dataFile.println(String(maxInterval));
-    dataFile.println("Lab Test");
+    
+    dataFile.println("File time length (ms): "+maxInterval);
+    //dataFile.println(String(maxInterval));
+    //dataFile.println("Lab Test");
 
     //Store start time
-    startTime = millis();
+    startTime = micros();
 
-    while (millis() - startTime < maxInterval) {
-      // Declartion
-      int sensorValue = analogRead(ANALOG0); 
-      Volt = sensorValue*(Vref/scale_12bit);
+    while (micros() - startTime < maxInterval) {
+      // Average up some data
+      int sensorValue = 0;
+      for (unsigned int counter = 1; counter <= numSamples; counter++){
+        sensorValue += analogRead(ANALOG0); 
+      String stringOne = "";
+      String stringThree = stringOne + sensorValue;
+
+      Serial.println(stringThree);
+      
+      //Volt = sensorValue*(Vref/scale_12bit);
       // Write to file 
       // dataFile.print(getTimeStamp_test_MMSSXXXX_ms(millis())); 
       dataFile.print(micros()); 
       // dataFile.print(", Digits: ");
       // dataFile.print(sensorValue);
-      dataFile.print(", Volts: ");
-      dataFile.println(Volt);
+      //dataFile.print(", Volts: ");
+      //dataFile.println(Volt);
       // nonblocking delay
       // myDelay(1);
       // delay(10); 
