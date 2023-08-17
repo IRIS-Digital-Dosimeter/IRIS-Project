@@ -139,7 +139,7 @@ void loop() {
       Volt = sensorValue*(Vref/scale_12bit);
       // Write to file 
       // dataFile.print(getTimeStamp_test_MMSSXXXX_ms(millis())); 
-      dataFile.print(getTimeStamp_MMSSXXXX_uuuu(micros())); 
+      dataFile.print(micros()); 
       // dataFile.print(", Digits: ");
       // dataFile.print(sensorValue);
       dataFile.print(", Volts: ");
