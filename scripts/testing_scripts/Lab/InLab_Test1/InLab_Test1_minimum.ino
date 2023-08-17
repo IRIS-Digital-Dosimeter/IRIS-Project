@@ -52,13 +52,19 @@ const int chipSelect = 4;       // M0 pin for SD card use
 #define LED_error_pin 8         // Green
 
 // Declarations for Files
-const unsigned long maxInterval = 5*1000000;    // in microseconds
+const unsigned long maxInterval = 10*1000000;    // in microseconds
 const unsigned int maxFiles = 5;            // Maximum number of files to write
 
 // Declarations for sampling
-const unsigned long intersampleDelay = 100;    //microseconds
-const unsigned long interaverageDelay = 500;   //microseconds
-const unsigned int numSamples = 10;
+// Slow board:
+const unsigned long intersampleDelay = 250;    //microseconds
+const unsigned long interaverageDelay = 1000;   //microseconds
+const unsigned int numSamples = 40;
+
+// Fast board:
+//const unsigned long intersampleDelay = 25;    //microseconds
+//const unsigned long interaverageDelay = 100;   //microseconds
+//const unsigned int numSamples = 20;
 
 // Declarations/classes specific to SD card 
 Sd2Card card;
@@ -135,35 +141,27 @@ void loop() {
 
     //Temp Header
     
-    dataFile.println("File time length (ms): "+maxInterval);
-    //dataFile.println(String(maxInterval));
-    //dataFile.println("Lab Test");
+    dataFile.println("File time length (us): "+String(maxInterval));
+    dataFile.println("Interaverage gap (us): "+String(interaverageDelay));
+    dataFile.println("Intersample gap (us): "+String(inersampleInterval));
+    dataFile.println("Samples averaged: "+String(numSamples));
 
     //Store start time
     startTime = micros();
 
     while (micros() - startTime < maxInterval) {
       // Average up some data
-      int sensorValue = 0;
+      unsigned long sensorValue = 0;
       for (unsigned int counter = 1; counter <= numSamples; counter++){
         sensorValue += analogRead(ANALOG0); 
-      String stringOne = "";
-      String stringThree = stringOne + sensorValue;
+        myDelay_us(intersampleDelay);
+      }
 
-      Serial.println(stringThree);
-      
-      //Volt = sensorValue*(Vref/scale_12bit);
-      // Write to file 
-      // dataFile.print(getTimeStamp_test_MMSSXXXX_ms(millis())); 
-      dataFile.print(micros()); 
-      // dataFile.print(", Digits: ");
-      // dataFile.print(sensorValue);
-      //dataFile.print(", Volts: ");
-      //dataFile.println(Volt);
-      // nonblocking delay
-      // myDelay(1);
-      // delay(10); 
+      // Print it to file then wait and go again
+      dataFile.println(String(micros())+" "+String(sensorValue)); 
+      myDelay_us(interaverageDelay) 
     }
+
     dataFile.close();
 
     if (serialPrint){
