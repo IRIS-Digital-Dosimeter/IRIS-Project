@@ -66,13 +66,13 @@ unsigned long currentTime = 0;
 
 
 // Constants for digital to voltage Conversion 
-int delayTime = 5000;                 // Time delay in ms (1s = 1000 ms) 
+//int delayTime = 5000;                 // Time delay in ms (1s = 1000 ms) UNUSED
 int readDigital;                      // Store the digital value 10[0-1023] , 12[0-4096]
 
 float Volt = 0;                       // Store inital voltage 
-float Vref = 3.29;                    // Provide highest/ref voltage of circuit [0-3.29]V
-float scale_10bit = 1023;             // digital Hi value for 10 bit 
-float scale_12bit = 4096;             // digital Hi value for 12 bit
+//float Vref = 3.29;                    // Provide highest/ref voltage of circuit [0-3.29]V
+//float scale_10bit = 1023;             // digital Hi value for 10 bit 
+//float scale_12bit = 4096;             // digital Hi value for 12 bit
 
 // Declarations for the Date
 MyDate myDate = MyDate(8, 4);
@@ -85,8 +85,11 @@ void setup(){
   SPI_initialization(baudRate);
   SD_initialization(chipSelect);
   myDelay(30000);
-  Serial.println("Startlog");
 
+  if (serialPrint){
+    Serial.println("Startlog");
+  }
+  
   // Ask for date 
   // Serial.println("Enter date in format: MM/DD");
   // extractDateFromInput();     
