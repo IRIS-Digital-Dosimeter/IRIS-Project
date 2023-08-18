@@ -1,5 +1,10 @@
 //////////////////////////////////////////////
 /*  
+  #########################################
+  THIS FILE WAS USED FOR OUR 1ST IN LAB 
+  SESSION IT IS NO LONGER USED FOR TESTING
+  #########################################
+
   Test 7: Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
   Created: 7/26/23
@@ -18,6 +23,8 @@
   Memory usage: No checks considered 
 
   SPI: Typically at Half Speed 24MHz
+
+  Old notes: 
   - Board rate and Baud rate
   - fast board sample at min 1kHz with 1ms delay 
   - slow signal on fast board :
