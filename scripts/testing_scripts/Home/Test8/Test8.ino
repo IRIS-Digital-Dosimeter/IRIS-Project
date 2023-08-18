@@ -29,6 +29,7 @@
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Debug.h"
+// #include "Adafruit_BMP085"
 // #include "Adafruit_TinyUSB.h"
 
 // DO NOT CHANGE WITHIN THIS ###############################################################
@@ -60,10 +61,12 @@ MyDate myDate = MyDate(10, 10);
 
 // OPEN TO CHANGES ..........................................................................
 
-/* Declarations for Files */
-unsigned long maxInterval = 3000;       // 1 min = 60_000 ms ; 1s = 1_000 ms 
-unsigned int maxFiles = 5;              // Maximum number of files to write
-String buffer;                          // string to buffer output
+/* Defaults for Files */
+unsigned long desiredInterval_s = 1;        // 1 min = 60 s  
+unsigned long desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
+unsigned long desiredInterval_us = 1000000; // 1 ms  = 1_000_000 us
+unsigned int maxFiles = 5;                  // Maximum number of files to write
+String buffer;                              // string to buffer output
 
 
 /* Constants for Timing (per file) */
@@ -72,7 +75,8 @@ unsigned long currentTime = 0;
 
 /* Send A0 Voltage to Serial Monitor */
 bool serialPrint = true;               // true/false ; true = send ; false = don't send
-bool print_time = false; 
+bool print_time = true; 
+float VLo = 0.0; 
 
 // Main Program (Runs once) ------------------------------------------------------------------
 void setup(){
@@ -88,6 +92,7 @@ void setup(){
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
 
+  debugf("Global Change (s): %2d ", desiredInterval_s);
 }
 
 
@@ -95,9 +100,15 @@ void loop() {
 
   // Serial Print Test
   if (serialPrint) {
-    readSerial_A0(Vref, scale_12bit, print_time);
+    printSerial_A0(Vref, VLo, scale_12bit, print_time);
   }
 
+  
 }
 
+/* Notes
+micros() does not keep time properly if interupts are turned off
+if board is put to sleep the clock stops 
+micros() is based on sysClock
 
+*/
