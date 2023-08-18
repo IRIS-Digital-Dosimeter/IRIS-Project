@@ -143,7 +143,7 @@ void loop() {
     
     dataFile.println("File time length (us): "+String(maxInterval));
     dataFile.println("Interaverage gap (us): "+String(interaverageDelay));
-    dataFile.println("Intersample gap (us): "+String(inersampleInterval));
+    dataFile.println("Intersample gap (us): "+String(intersampleDelay));
     dataFile.println("Samples averaged: "+String(numSamples));
 
     //Store start time
@@ -159,7 +159,7 @@ void loop() {
 
       // Print it to file then wait and go again
       dataFile.println(String(micros())+" "+String(sensorValue)); 
-      myDelay_us(interaverageDelay) 
+      myDelay_us(interaverageDelay); 
     }
 
     dataFile.close();
