@@ -1,18 +1,36 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
-/* Test8.ino
+/* InLab_Test3.ino
 
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
 
   Created: 8/17/23
   Michelle Pichardo
+  David Smith
 
   Details: 
-    - 
+    - Creates 10 files 
+    - Naming is determined by input (Date)
+    - 10 points are summed and stored to file
+    - Green LED indicates when writing is active 
 
-  Helper FILES: HelperFunc.h, HelperFunc.cpp, Debug.h 
-    - Contents: 
+  Helper FILES: Debug.h, HelperFunc.h, HelperFunc.cpp
     - Required: Compile on Arduino IDE
+    - Contents: 
+      - Debug.h: Removes print statements; see file for notes
+      - HelperFunc.cpp: 
+          Contains full functions and external Constants
+      - HelperFunc.h:
+          unsigned long desiredInterval_(s,ms,us); 
+          float scale_12bit = 4096;
+          const int chipSelect = 4;
+          void printSerial_A0(float VHi, float VLo);
+          String getTimeStamp_XXXX_us(unsigned long currentTime);
+          File open_SD_tmp_File(int fileIndex, MyDate* myDate);
+          void myDelay_ms(unsigned long ms);
+          void myDelay_us(unsigned long us);
+          void SPI_initialization(const int baudRate);
+          void SD_initialization(const int chipSelect);
 
   Notes:
     - Timing: No timing optimization is currently considered 
