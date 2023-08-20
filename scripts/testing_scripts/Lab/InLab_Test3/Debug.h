@@ -12,14 +12,14 @@ How to use in .ino file:
     - debug("my check string") or debug(variable_of_interest)
     - debugln("my check string with a new line") or debugln(variable_of_interest)
     - debugf("my f-string %f", my_float_variable)
-Reson: 
+Reason: 
   - Serial.print bloats the program and slows it down 
   - This program adds them if they are needed and removes them when they are not 
 /////////////////////////////////////////////////////////////////////////////////////////*/
 
 
 // OPEN TO CHANGES ........................................
-#define DEBUG 1   
+#define DEBUG 0   
 #define APRINT 0
 // ........................................................
 

@@ -103,7 +103,7 @@ void setup(){
   // Set up Green LED pin
   pinMode(greenLEDpin, OUTPUT);
 
-  delay(5000);
+  delay(10000);
 
 }
 
@@ -163,14 +163,15 @@ void loop() {
    }
 
 
+
 }
 
 /* Notes
-micros() does not keep time properly if interupts are turned off
+micros() does not keep time properly if interrupts are turned off
 if board is put to sleep the clock stops 
 micros() is based on sysClock
 
-using while(1) in the loop without a condiional will not allow the loop to 
+using while(1) in the loop without a conditional will not allow the loop to 
 execute 
 
 */

@@ -112,7 +112,7 @@ String getTimeStamp_XXXX_us(unsigned long currentTime)
 */
 File open_SD_tmp_File(int fileIndex, MyDate* myDate)
 {
-  debug("\nInitilizing write to file... "); 
+  debug("\nInitializing write to file... "); 
 
   //.tmp
   String fileName = twoDigits(myDate -> getMonth()) + twoDigits(myDate -> getDay()) + fourDigits(fileIndex) + ".txt";
@@ -162,7 +162,7 @@ void extractDateFromInput() {
 }
 
 /* myDelay removes overflow issue by converting negatives to unsigned long */
-void myDelay_ms(unsigned long ms)             // ms: duration (use instaed of block func delay())
+void myDelay_ms(unsigned long ms)             // ms: duration (use instead of block func delay())
 {   
     unsigned long start_ms = millis();           // start: timestamp
     for (;;) {                                // for (;;) infinite for loop 
@@ -174,7 +174,7 @@ void myDelay_ms(unsigned long ms)             // ms: duration (use instaed of bl
 }
 
 /* myDelay removes overflow issue by converting negatives to unsigned long*/
-void myDelay_us(unsigned long us)                      // us: duration (use instaed of block func delay())
+void myDelay_us(unsigned long us)                      // us: duration (use instead of block func delay())
 {   
     unsigned long start_us = micros();                 // start: timestamp
     for (;;) {                                         // for (;;) infinite for loop 
@@ -222,7 +222,7 @@ void SD_initialization(const int chipSelect)
 }
 
 /* Format function; adds leading zeros;
-retruns 2 digits*/
+returns 2 digits*/
 String twoDigits(int digits) // used to format file name
 {
   if (digits < 10)
@@ -236,7 +236,7 @@ String twoDigits(int digits) // used to format file name
 }
 
 /* Format function; adds leading zeros;
-retruns 4 digits*/
+returns 4 digits*/
 String fourDigits(int digits) 
 {
   if (digits < 10)
