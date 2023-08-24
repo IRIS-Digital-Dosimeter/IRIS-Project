@@ -8,6 +8,10 @@
   Michelle Pichardo
   David Smith
 
+  REQUIRED HARDWARE: 
+    - The reset pin RST must be connected to a digital pin for this program 
+      to work. This program is using A4 as the digital pin controlling RST. 
+
   Details: 
     - Exposes M0 as an external USB; Check that it does 
       - The process is slow; be patient; check light indicators 
