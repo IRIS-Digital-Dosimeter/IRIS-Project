@@ -70,7 +70,6 @@ extern const int chipSelect;
 // For Testing 
 void printSerial_A0(float VHi, float VLo);
 String getTimeStamp_XXXX_us(unsigned long currentTime);
-String getTimeStamp_MMSSXXXX_ms(unsigned long currentTime); 
 void myDelay_us(unsigned long us);             
 void myDelay_ms(unsigned long ms); 
 

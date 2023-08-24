@@ -1,6 +1,10 @@
 //////////////////////////////////////////////
 /* Test7.ino
 
+  ##############
+  OBSOLETE File
+  ##############
+
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
 

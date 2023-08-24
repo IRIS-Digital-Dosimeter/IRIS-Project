@@ -97,8 +97,8 @@ String getTimeStamp_XXXX_us(unsigned long currentTime)
   String timeStamp = "";
   // timeStamp += "Time Stamp (XXXX): ";
   timeStamp += String(microseconds);
-  timeStamp += "\tRaw(us):";
-  timeStamp += String(currentTime);
+  // timeStamp += "\tRaw(us):";
+  // timeStamp += String(currentTime);
   // timeStamp += "\tModulo:";
   // timeStamp += String(currentTime % 1000);
 
@@ -130,6 +130,8 @@ File open_SD_tmp_File(int fileIndex, MyDate* myDate)
   return newFile;
 }
 
+/*Set Global date to one provided by user
+**Takes serial input */
 void extractDateFromInput() {
   int day;
   int month;
@@ -185,16 +187,16 @@ void myDelay_us(unsigned long us)                      // us: duration (use inst
     }
 }
 
-
+/* Open serial communications by initializing serial obj @ baudRate
+    - Standard baudRate = 9600
+    - Speed of printing to serial monitor 
+*/
 void SPI_initialization(const int baudRate)
 {
-  /* Open serial communications by initializing serial obj @ baudRate
-      - Standard baudRate = 9600
-      - Speed of printing to serial monitor 
-  */
+
   Serial.begin(baudRate);
 
-  // Wait wait up to 15 seconds for Arduino Serial Monitor / serial port to connect
+  // Will wait up to 15 seconds for Arduino Serial Monitor / serial port to connect
   //  - Needed for native USB port only
   //  - Ensure only one monitor is open
   while (!Serial && millis() < 15000)
@@ -205,12 +207,12 @@ void SPI_initialization(const int baudRate)
 }
 
 
+// Check access to SD card "Initialize the SD card"
+//  - Chipselect pin is different per board
 void SD_initialization(const int chipSelect)
 {
   Serial.print("Initializing SD card... ");
 
-  // Check access to SD card "Initialize the SD card"
-  //  - Chipselect pin is different per board
   if (!SD.begin(chipSelect))
   {
     Serial.println("initialization failed!");

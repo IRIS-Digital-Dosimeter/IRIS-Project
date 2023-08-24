@@ -61,7 +61,7 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 // Analog Pins 
 #define ANALOG0 A0                          // Analog probe for this sketch
 #define greenLEDpin 8                       // Green
-#define RESET_PIN  A4                   // Used to trigger board Reset
+#define RESET_PIN  A4                       // Used to trigger board Reset
 
 /* Declarations/classes specific to SD card */           
 File dataFile;

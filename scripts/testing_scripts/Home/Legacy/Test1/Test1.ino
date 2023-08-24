@@ -1,5 +1,9 @@
 /* Test1.ino
 
+############################################
+        LEGACY FILE 1 : Usb + File creation
+############################################
+
   Created: 5/12/23
   Michelle Pichardo
 
