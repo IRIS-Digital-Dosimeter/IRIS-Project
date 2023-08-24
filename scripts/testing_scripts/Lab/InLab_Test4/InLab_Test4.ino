@@ -64,7 +64,7 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 
 // Analog Pins 
 #define ANALOG0 A0                          // Analog probe for this sketch
-#define greenLEDpin 8                       // Green
+#define REDLEDpin 13                        // Green
 #define RESET_PIN  A4                       // Used to trigger board Reset
 
 /* Declarations/classes specific to SD card */           
@@ -133,7 +133,7 @@ void loop() {
   if (filePrint){
 
     // Turn on LED whie writing
-    digitalWrite(greenLEDpin, HIGH);
+    digitalWrite(REDLEDpin, LOW);
 
     // Create File: MMDDXXXX.tmp 
     dataFile = open_SD_tmp_File(fileCounter,&myDate);
@@ -168,7 +168,7 @@ void loop() {
 
     if (fileCounter > maxFiles){
       //Turn off LED 
-      digitalWrite(greenLEDpin, LOW);
+      digitalWrite(REDLEDpin, HIGH);
       debugln("Maximum number of files created. Data logging stopped.");
       debugf("File count: %i", fileCounter-1);
       debugln(" ");
