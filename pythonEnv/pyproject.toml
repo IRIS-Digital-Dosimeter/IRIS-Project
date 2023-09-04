@@ -11,6 +11,8 @@ pyserial = "^3.5"
 numpy = "^1.24.2"
 jupyter = "^1.0.0"
 notebook = "^6.5.2"
+matplotlib = "^3.7.2"
+progressbar = "^2.5"
 
 
 [build-system]
