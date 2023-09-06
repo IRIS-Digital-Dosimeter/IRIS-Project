@@ -8,6 +8,10 @@
   Michelle Pichardo
   David Smith
 
+  REQUIRED HARDWARE: 
+    - The reset pin RST must be connected to a digital pin for this program 
+      to work. This program is using A4 as the digital pin controlling RST. 
+
   Details: 
     - Exposes M0 as an external USB; Check that it does 
       - The process is slow; be patient; check light indicators 
@@ -60,8 +64,7 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 
 // Analog Pins 
 #define ANALOG0 A0                          // Analog probe for this sketch
-#define greenLEDpin 8                       // Green
-#define RESET_PIN  A4                   // Used to trigger board Reset
+#define REDLEDpin 13                        // Red
 
 /* Declarations/classes specific to SD card */           
 File dataFile;
@@ -69,12 +72,13 @@ File dataFile;
 // ##########################################################################################
 
 // OPEN TO CHANGES ..........................................................................
+#define RESET_PIN  A4                       // Used to trigger board Reset
 
 /* Constants for Timing (per file) */
 unsigned long startTime = 0;               // Micros and Milis requires unsigned long
 unsigned long currentTime = 0;
 
-/* Send A0 Voltage to Serial Monitor */
+/* Send A0 Voltage to Serial Monitor: initial testing */
 float VLo = 0.0;
 float Vref = 3.29;                         // Provide highest/ref voltage of circuit [0-3.29]V
 
@@ -99,7 +103,7 @@ void setup(){
   digitalWrite(RESET_PIN, HIGH);
   pinMode(RESET_PIN, OUTPUT);
 
-  // Run when creating new files 
+  // Setup to create files: Set filePrint = true
   if (filePrint){
   // Set up SD card 
   SD_initialization(chipSelect);
@@ -119,16 +123,20 @@ void setup(){
 
 void loop() {
 
-  /* Serial Print test:
+  /* Serial Print test: debug_serialPrintA0()
     - This is a debug_ statement and is only active if 
       the debug file has APRINT set to 1 
-    - Try not to run this with while creating files 
+    - Do not run this with while creating files 
+    - Do run if you want a preliminary test of the board 
+        - 1. Set filePrint = false on line 86
+        - 2. Set APRINT to 1 in Debug.h
+    - To zoom into a region change the values of Vref and Vlo
   */
   debug_serialPrintA0(Vref, VLo); 
 
   if (filePrint){
 
-    // Turn on LED whie writing
+    // Turn on LED while writing
     digitalWrite(greenLEDpin, HIGH);
 
     // Create File: MMDDXXXX.tmp 
@@ -147,27 +155,41 @@ void loop() {
     // Store start Time
     startTime = millis();
 
+    // Gather data over a determined time interval 
     while (millis() - startTime < desiredInterval_ms){
 
-      unsigned long sensorValue = 0; 
+      // Declare local variable/Buffer 
+      unsigned long sum_sensorValue = 0; 
+
+      // Build buffer: read sensor value then sum it to the previous sensor value 
       for (unsigned int counter = 1; counter <= numSamples; counter++){
-        sensorValue += analogRead(ANALOG0);
+        sum_sensorValue += analogRead(ANALOG0);
+        // Pause for stability 
         myDelay_us(intersampleDelay);
       }
 
-      dataFile.println(String(micros()) + "," + String(sensorValue));
+      // Write to file 
+      dataFile.println(String(micros()) + "," + String(sum_sensorValue));
+      // Pause for stability 
       myDelay_us(interaverageDelay);
     }
 
+    // Close the file 
     dataFile.close();
+    // Incriment file counter 
     fileCounter++;
 
+    // Condition when we've reached max files 
     if (fileCounter > maxFiles){
+
       //Turn off LED 
       digitalWrite(greenLEDpin, LOW);
+      // Debug prints 
       debugln("Maximum number of files created. Data logging stopped.");
       debugf("File count: %i", fileCounter-1);
       debugln(" ");
+      
+      // Change Condition 
       filePrint = false; 
 
       delay(3000);
@@ -179,41 +201,3 @@ void loop() {
 
 
 }
-
-
-
-/* Notes
-micros() does not keep time properly if interupts are turned off
-if board is put to sleep the clock stops 
-micros() is based on sysClock
-
-using while(1) in the loop without a condiional will not allow the loop to 
-execute 
-
-*/
-
-
-// // Callback invoked when received READ10 command.
-// // Copy disk's data to buffer (up to bufsize) and
-// // return number of copied bytes (must be multiple of block size)
-// int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
-// {
-//   (void) bufsize;
-//   return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
-// }
-
-// // Callback invoked when received WRITE10 command.
-// // Process data in buffer to disk's storage and 
-// // return number of written bytes (must be multiple of block size)
-// int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
-// {
-//   (void) bufsize;
-//   return card.writeBlock(lba, buffer) ? 512 : -1;
-// }
-
-// // Callback invoked when WRITE10 command is completed (status received and accepted by host).
-// // used to flush any pending cache.
-// void msc_flush_cb (void)
-// {
-//   // nothing to do
-// }

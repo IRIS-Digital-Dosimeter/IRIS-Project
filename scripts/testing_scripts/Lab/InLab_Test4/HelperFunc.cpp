@@ -221,7 +221,6 @@ void SD_initialization(const int chipSelect)
     Serial.println("initialization failed!");
     while (1)
       ; // endless loop which "stops" any useful function
-        // this may need to be changed to a user controlled break later
   }
   Serial.println("initialization done.");
 }
@@ -262,6 +261,8 @@ String fourDigits(int digits)
   }
 }
 
+// #############################################################################
+// SD card block of functions 
 
 // Callback invoked when received READ10 command.
 // Copy disk's data to buffer (up to bufsize) and
@@ -321,3 +322,4 @@ void USB_SPI_initialization(const int baudRate){
   usb_msc.setCapacity(block_count, 512);
   usb_msc.setUnitReady(true);
 }
+// #############################################################################

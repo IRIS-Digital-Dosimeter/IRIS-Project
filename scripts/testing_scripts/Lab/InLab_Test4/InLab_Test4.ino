@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
-/* Test8.ino
+/* Test8.ino --> InLab_Test4.ino
 
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
@@ -64,8 +64,7 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 
 // Analog Pins 
 #define ANALOG0 A0                          // Analog probe for this sketch
-#define REDLEDpin 13                        // Green
-#define RESET_PIN  A4                       // Used to trigger board Reset
+#define REDLEDpin 13                        // Red
 
 /* Declarations/classes specific to SD card */           
 File dataFile;
@@ -73,12 +72,13 @@ File dataFile;
 // ##########################################################################################
 
 // OPEN TO CHANGES ..........................................................................
+#define RESET_PIN  A4                       // Used to trigger board Reset
 
 /* Constants for Timing (per file) */
 unsigned long startTime = 0;               // Micros and Milis requires unsigned long
 unsigned long currentTime = 0;
 
-/* Send A0 Voltage to Serial Monitor */
+/* Send A0 Voltage to Serial Monitor: initial testing */
 float VLo = 0.0;
 float Vref = 3.29;                         // Provide highest/ref voltage of circuit [0-3.29]V
 
@@ -126,7 +126,10 @@ void loop() {
   /* Serial Print test:
     - This is a debug_ statement and is only active if 
       the debug file has APRINT set to 1 
-    - Try not to run this with while creating files 
+    - Do not run this with while creating files 
+    - Do run if you want a preliminary test of the board 
+        - 1. Set filePrint = false on line 86
+        - 2. Set APRINT to 1 in Debug.h
   */
   debug_serialPrintA0(Vref, VLo); 
 
@@ -185,7 +188,6 @@ void loop() {
 }
 
 
-
 /* Notes
 micros() does not keep time properly if interupts are turned off
 if board is put to sleep the clock stops 
@@ -195,29 +197,3 @@ using while(1) in the loop without a condiional will not allow the loop to
 execute 
 
 */
-
-
-// // Callback invoked when received READ10 command.
-// // Copy disk's data to buffer (up to bufsize) and
-// // return number of copied bytes (must be multiple of block size)
-// int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
-// {
-//   (void) bufsize;
-//   return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
-// }
-
-// // Callback invoked when received WRITE10 command.
-// // Process data in buffer to disk's storage and 
-// // return number of written bytes (must be multiple of block size)
-// int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
-// {
-//   (void) bufsize;
-//   return card.writeBlock(lba, buffer) ? 512 : -1;
-// }
-
-// // Callback invoked when WRITE10 command is completed (status received and accepted by host).
-// // used to flush any pending cache.
-// void msc_flush_cb (void)
-// {
-//   // nothing to do
-// }
