@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
-/* Test8.ino
+/* Test8.ino https://arduino.stackexchange.com/questions/38354/data-logging-speed-with-arduino
 
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
@@ -68,6 +68,7 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 
 /* Declarations/classes specific to SD card */           
 File dataFile;
+   
 
 // ##########################################################################################
 
@@ -137,7 +138,7 @@ void loop() {
   if (filePrint){
 
     // Turn on LED while writing
-    digitalWrite(greenLEDpin, HIGH);
+    digitalWrite(REDLEDpin, LOW);
 
     // Create File: MMDDXXXX.tmp 
     dataFile = open_SD_tmp_File(fileCounter,&myDate);
@@ -183,7 +184,7 @@ void loop() {
     if (fileCounter > maxFiles){
 
       //Turn off LED 
-      digitalWrite(greenLEDpin, LOW);
+      digitalWrite(REDLEDpin, HIGH);
       // Debug prints 
       debugln("Maximum number of files created. Data logging stopped.");
       debugf("File count: %i", fileCounter-1);
@@ -201,3 +202,6 @@ void loop() {
 
 
 }
+
+
+

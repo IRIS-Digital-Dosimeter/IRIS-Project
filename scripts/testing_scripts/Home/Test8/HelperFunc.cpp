@@ -264,6 +264,49 @@ String fourDigits(int digits)
 // #############################################################################
 // SD card block of functions 
 
+/*Setup: 
+- Sets up the USB Mass Storage 
+- Sets up the Serial communication; baudRate is meant for this connection
+- Set DEBUG to 1 to view information about the card 
+*/
+void USB_SPI_initialization(const int baudRate){
+  usb_msc.setID("Adafruit", "SD Card", "1.0");
+  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
+  usb_msc.setUnitReady(false);
+  usb_msc.begin();
+
+  // Set up Serial Monitor communication  
+  SPI_initialization(baudRate);
+
+  debugln("\nInitializing external USB drive...");
+
+  // Prints and Flags //////////////////////////////////////////////////////////////////
+  if ( !card.init(SPI_HALF_SPEED, chipSelect) )
+  {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("* is a card inserted?");
+    Serial.println("* is your wiring correct?");
+    Serial.println("* did you change the chipSelect pin to match your shield or module?");
+    while (1) delay(1);
+  }
+
+  if (!volume.init(card)) {
+    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+    while (1) delay(1);
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
+
+  // Prints  ////////////////////////
+  debug("Volume size (MB):  ");
+  debugln((block_count/2) / 1024);
+  ///////////////////////////////////
+
+  usb_msc.setCapacity(block_count, 512);
+  usb_msc.setUnitReady(true);
+}
+
 // Callback invoked when received READ10 command.
 // Copy disk's data to buffer (up to bufsize) and
 // return number of copied bytes (must be multiple of block size)
@@ -287,40 +330,6 @@ int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
 void msc_flush_cb (void)
 {
   // nothing to do
-}
-
-void USB_SPI_initialization(const int baudRate){
-  usb_msc.setID("Adafruit", "SD Card", "1.0");
-  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
-  usb_msc.setUnitReady(false);
-  usb_msc.begin();
-
-  // Set up Serial Monitor communication  
-  SPI_initialization(baudRate);
-
-  debugln("\nInitializing external USB drive...");
-
-  if ( !card.init(SPI_HALF_SPEED, chipSelect) )
-  {
-    debugln("initialization failed. Things to check:");
-    debugln("* is a card inserted?");
-    debugln("* is your wiring correct?");
-    debugln("* did you change the chipSelect pin to match your shield or module?");
-    while (1) delay(1);
-  }
-
-  if (!volume.init(card)) {
-    debugln("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    while (1) delay(1);
-  }
-
-  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
-
-  debug("Volume size (MB):  ");
-  debugln((block_count/2) / 1024);
-
-  usb_msc.setCapacity(block_count, 512);
-  usb_msc.setUnitReady(true);
 }
 
 // #############################################################################
