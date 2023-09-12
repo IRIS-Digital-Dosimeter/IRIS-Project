@@ -69,7 +69,6 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 /* Declarations/classes specific to SD card */           
 File dataFile;
    
-
 // ##########################################################################################
 
 // OPEN TO CHANGES ..........................................................................
@@ -110,13 +109,15 @@ void setup(){
   SD_initialization(chipSelect);
   // Set the analog pin resolution 
   analogReadResolution(12);
-  // Ask for the date: MM/DD
-  extractDateFromInput();    
+  // Ask for session value
+  extractSessionNameFromInput();
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
-  // Set up Green LED pin
-
-  delay(5000);
+  // Advise the user
+  Serial.println("\nInitiating data logging, Red LED = LOW");
+  Serial.println("After logging the board will reset. Check files after reset.");
+  // Pause for a moment before collecting 
+  delay(3000);
   }
 
 }
@@ -141,7 +142,7 @@ void loop() {
     digitalWrite(REDLEDpin, LOW);
 
     // Create File: MMDDXXXX.tmp 
-    dataFile = open_SD_tmp_File(fileCounter,&myDate);
+    dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
 
     // Checks 
     debug("File Created: ");

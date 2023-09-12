@@ -59,6 +59,7 @@ class MyDate {
 
 // Global Variables ------------------------------------------------------
 extern MyDate myDate;
+extern unsigned long session_val;
 extern unsigned long desiredInterval_s;
 extern unsigned long desiredInterval_ms;
 extern unsigned long desiredInterval_us;
@@ -69,6 +70,7 @@ extern const int chipSelect;
 // Function Prototypes ------------------------------------------------------
 
 // For Testing 
+void extractSessionNameFromInput();
 void printSerial_A0(float VHi, float VLo);
 String getTimeStamp_XXXX_us(unsigned long currentTime);
 void myDelay_us(unsigned long us);             
@@ -76,7 +78,8 @@ void myDelay_ms(unsigned long ms);
 
 // Permanent 
 void extractIntervalFromInput();
-File open_SD_tmp_File(int fileIndex, MyDate* myDate);
+File open_SD_tmp_File_Date(int fileIndex, MyDate* myDate);
+File open_SD_tmp_File_sessionFile(int fileIndex, int session);
 void extractDateFromInput(); 
 void SPI_initialization(const int baudRate); 
 void SD_initialization(const int chipSelect);

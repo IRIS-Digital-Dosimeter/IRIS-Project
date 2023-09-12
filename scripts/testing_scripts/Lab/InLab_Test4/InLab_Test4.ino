@@ -50,12 +50,14 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 // Header Files: Contains namespaces 
-#include "SPI.h"
+#include "SPI.h" 
 #include "SD.h"
+#include "Adafruit_TinyUSB.h"
+// #include "Adafruit_BMP085"
+
+// self made header files
 #include "HelperFunc.h"
 #include "Debug.h"
-// #include "Adafruit_BMP085"
-#include "Adafruit_TinyUSB.h"
 
 // DO NOT CHANGE WITHIN THIS ###############################################################
 
@@ -98,6 +100,7 @@ void setup(){
 
   // Expose M0 as external USB and set up serial monitor communication
   USB_SPI_initialization(baudRate);
+  debugln("Hello World!");
 
   // Set up Reset pin 
   digitalWrite(RESET_PIN, HIGH);
@@ -138,6 +141,9 @@ void loop() {
     // Turn on LED whie writing
     digitalWrite(REDLEDpin, LOW);
 
+    unsigned long start; 
+    unsigned long end; 
+    start = micros(); 
     // Create File: MMDDXXXX.tmp 
     dataFile = open_SD_tmp_File(fileCounter,&myDate);
 
@@ -171,6 +177,8 @@ void loop() {
 
     if (fileCounter > maxFiles){
       //Turn off LED 
+      end = micros() - start; 
+      Serial.println(end);
       digitalWrite(REDLEDpin, HIGH);
       debugln("Maximum number of files created. Data logging stopped.");
       debugf("File count: %i", fileCounter-1);

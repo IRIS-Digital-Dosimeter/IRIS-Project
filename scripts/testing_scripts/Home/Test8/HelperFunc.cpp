@@ -18,6 +18,7 @@ Details:
 MyDate myDate = MyDate(10, 10);
 
 /* Defaults for Files */
+unsigned long session_val = 1;                // default trial is 1
 unsigned long desiredInterval_s = 1;        // 1 min = 60 s  
 unsigned long desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
 unsigned long desiredInterval_us = 1000000; // 1 ms  = 1_000_000 us
@@ -29,6 +30,42 @@ Adafruit_USBD_MSC usb_msc;
 
 
 // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
+
+/*Sets global session_value (session_val); this is used to name the files created 
+**e.g.: if trail value entered = 2 the file name is 00020001.txt
+**File Format: SSSSXXXX.txt T= session number X=File created 
+**00020001.txt = session 2 file 1 
+*/
+void extractSessionNameFromInput() {
+  
+  Serial.println("\n###########################################\n\tSession Request\n");
+  Serial.println("Please check your previous session and ensure\nyou pick a different number for this session.");
+  Serial.print("Enter a session number between [1,9999]: ");
+  while (true) {
+    if (Serial.available() > 0) {
+      String userInput = Serial.readStringUntil('\n');
+
+      if (sscanf(userInput.c_str(), "%d", &session_val) == 1) {
+
+        if (session_val > 9999){
+          Serial.print("\nInvalid input range.\nPlease enter a session number between [1,9999]: ");
+          continue;
+        }
+        break;
+        } else {
+        Serial.print("\nInvalid input format. Please enter an integer:");
+      }
+    }
+    // Add a small delay between checks to avoid excessive processor load
+    delay(100);
+  }
+  Serial.println(session_val);
+  Serial.println("\nFile Format:\nSSSSXXXX.txt S=session number, X=File count for session S");
+  Serial.println("E.g., 00020010.txt = session 2 file 10");
+  Serial.println("###########################################");
+
+  return;
+}
 
 /*Sets desired file time length
 **e.g.: interval = 5s creates files that collect for 5s each*/
@@ -109,11 +146,12 @@ String getTimeStamp_XXXX_us(unsigned long currentTime)
 }
 
 
-/*open_SD_tmp_File:
+/*open_SD_tmp_File_Date:
   **Opens/Creates a file in the SD card
   **Required: The file must be closed manually 
+  **File name format: MMDDXXXX.txt M:month,D:day,X:file count
 */
-File open_SD_tmp_File(int fileIndex, MyDate* myDate)
+File open_SD_tmp_File_Date(int fileIndex, MyDate* myDate)
 {
   debug("\nInitilizing write to file... "); 
 
@@ -132,6 +170,33 @@ File open_SD_tmp_File(int fileIndex, MyDate* myDate)
   }
   return newFile;
 }
+
+/*open_SD_tmp_File_sessionFile:
+  **Opens/Creates a file in the SD card
+  **Required: The file must be closed manually 
+  **File name format: SSSSXXXX.txt S:session,X:file count
+*/
+File open_SD_tmp_File_sessionFile(int fileIndex, int session)
+{
+  debug("\nInitilizing write to file... "); 
+
+  //.tmp
+  String fileName = fourDigits(session) + fourDigits(fileIndex) + ".txt";
+
+  File newFile = SD.open(fileName, FILE_WRITE);
+  if (newFile)
+  {
+    debugln("File created successfully!");
+  }
+  else
+  {
+    Serial.println("Error creating file!");
+    while(1); // Stop recording if the file creation fails 
+  }
+  return newFile;
+}
+
+
 
 /*Set Global date to one provided by user
 **Takes serial input */
@@ -206,7 +271,7 @@ void SPI_initialization(const int baudRate)
   {
     ;
   }
-  Serial.println("\n\n---New Serial Communication Secured---");
+  Serial.println("\n\n-----New Serial Communication Secured-----");
 }
 
 
@@ -222,7 +287,7 @@ void SD_initialization(const int chipSelect)
     while (1)
       ; // endless loop which "stops" any useful function
   }
-  Serial.println("initialization done.");
+  Serial.println("initialization done.\n");
 }
 
 /* Format function; adds leading zeros;
