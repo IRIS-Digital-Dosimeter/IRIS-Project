@@ -31,21 +31,24 @@
     - Contents: 
       - Debug.h: 
           - Removes print statements; see file for notes
-          - Test program: printSerial_A0 is an available debug feature 
+          - Test program: printSerial_A0() is an available debug feature 
       - HelperFunc.cpp: 
           Contains full functions and external Constants
       - HelperFunc.h:
+        Global variables:
           unsigned long desiredInterval_(s,ms,us); 
           float scale_12bit = 4096;
           const int chipSelect = 4;
-          void printSerial_A0(float VHi, float VLo);
+        Functions: 
+          void extractSessionNameFromInput();
+          void printSerial_A0(float VHi, float VLo); <- See Debug.h file
           String getTimeStamp_XXXX_us(unsigned long currentTime);
-          File open_SD_tmp_File(int fileIndex, MyDate* myDate);
+          File open_SD_tmp_File_sessionFile(int fileIndex, int session);
           void myDelay_ms(unsigned long ms);
           void myDelay_us(unsigned long us);
+          void USB_SPI_initialization(const int baudRate);
           void SPI_initialization(const int baudRate);
           void SD_initialization(const int chipSelect);
-
 
   Notes:
     - Timing: No timing optimization is currently considered 
@@ -207,7 +210,6 @@ void loop() {
       }
    
    }
-
 
 }
 
