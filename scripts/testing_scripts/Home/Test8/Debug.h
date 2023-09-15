@@ -47,10 +47,12 @@ Reson:
 
 #if TIMER == 1
 #define timerPrint(x) Serial.print(x)
+#define timerPrintln(x) Serial.println(x)
 #define timerStartUS()  micros()
 #define timerEndUS() micros()-timerStartUS()
 #else 
 #define timerPrint(x)
+#define timerPrintln(x)
 #define timerStartUS()
 #define timerEnd()
 #endif

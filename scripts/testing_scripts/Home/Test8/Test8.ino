@@ -86,7 +86,7 @@ float VLo = 0.0;
 float Vref = 3.29;                         // Provide highest/ref voltage of circuit [0-3.29]V
 
 /* Create Files variables */
-bool filePrint = false; 
+bool filePrint = true; 
 unsigned long maxFiles = 3;               // Maximum number of files to write
 unsigned long fileCounter = 1; 
 
@@ -122,7 +122,7 @@ void setup(){
   Serial.println("-> Files store { " + String(desiredInterval_s) + "s } worth of data");
   Serial.println("- Red LED = LOW: LED will turn off during collection");
   Serial.println("- After logging the file(s), the board will reset");
-  Serial.println("- Only after this reset will the files be visible on the disk");
+  Serial.println("- Only after this reset will the files be visible on the disk\n");
   // Pause for a moment before collecting 
   delay(2000);
 
@@ -193,8 +193,8 @@ void loop() {
     dataFile.close();
 
     // Send timer 
-    timePrint("Time to create file { " + String(fileCounter) + " } using micros(): " + String(endAnalogTimer));
-    timePrint("This does not include file-Open, file-header, file-close");
+    timerPrintln("\nTime to create file { " + String(fileCounter) + " } using micros(): " + String(endAnalogTimer));
+    timerPrintln("- This does not include file-Open, file-header, file-close");
 
     Serial.println("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
 
@@ -206,13 +206,13 @@ void loop() {
 
       // send timer 
       endFileTimer = micros() - startFileTimer; 
-      timerPrint("Time to complete { " + String(fileCounter -1) + " } files: " + String(endFileTimer));
-      timerPrint("This does not include setup. This contains overhead from prints and timer calls"); 
+      timerPrintln("\n\nTime to complete { " + String(fileCounter -1) + " } files using micros(): " + String(endFileTimer));
+      timerPrintln("- This does not include setup. This contains overhead from prints and timer calls"); 
 
       //Turn off LED 
       digitalWrite(REDLEDpin, HIGH);
       // Debug prints 
-      Serial.println("Maximum number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
+      Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
       debugf("File count: %i", fileCounter-1);
       
       // Change Condition 
