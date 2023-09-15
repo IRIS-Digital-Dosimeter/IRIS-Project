@@ -21,11 +21,13 @@ Reson:
 // OPEN TO CHANGES ........................................
 #define DEBUG 0   
 #define APRINT 0
+#define TIMER 1
 // ........................................................
 
 
 // DO NOT CHNAGE WITHIN THIS ##############################
 #include "HelperFunc.h"
+
 
 #if DEBUG == 1
 #define debug(x) Serial.print(x)
@@ -41,6 +43,16 @@ Reson:
 #define debug_serialPrintA0(x,y) printSerial_A0(x,y)
 #else
 #define debug_serialPrintA0(x,y)
+#endif
+
+#if TIMER == 1
+#define timerPrint(x) Serial.print(x)
+#define timerStartUS()  micros()
+#define timerEndUS() micros()-timerStartUS()
+#else 
+#define timerPrint(x)
+#define timerStartUS()
+#define timerEnd()
 #endif
 
 // #########################################################

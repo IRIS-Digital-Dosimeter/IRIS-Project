@@ -1,83 +1,82 @@
-#include <Adafruit_TinyUSB.h>
-// #include <Adafruit_USBD_MSC.h>
 #include <SPI.h>
-#include <SD.h>
-
-const int chipSelect = 4; // Adjust this to your SD card's chip select pin
-const int numFiles = 10;
-
-Adafruit_USBD_MSC usb_msc;
+// Micros2 function
+volatile unsigned long timer2Counter;
 
 void setup() {
-  USB_SPI_initialization();
+  Serial.begin(115200);                           // Set up the serial port for test purposes
+  delay(1000);
+  // Set up the generic clock (GCLK4) used to clock timers
+  REG_GCLK_GENDIV = GCLK_GENDIV_DIV(3) |          // Divide the 48MHz clock source by divisor 3: 48MHz/3=16MHz
+                    GCLK_GENDIV_ID(4);            // Select Generic Clock (GCLK) 4
+  while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
+
+  REG_GCLK_GENCTRL = GCLK_GENCTRL_IDC |           // Set the duty cycle to 50/50 HIGH/LOW
+                     GCLK_GENCTRL_GENEN |         // Enable GCLK4
+                     GCLK_GENCTRL_SRC_DFLL48M |   // Set the 48MHz clock source
+                     GCLK_GENCTRL_ID(4);          // Select GCLK4
+  while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
+  
+  // Feed GCLK4 to TCC2 (and TC3)
+  REG_GCLK_CLKCTRL = GCLK_CLKCTRL_CLKEN |         // Enable GCLK4 to TCC2 (and TC3)
+                     GCLK_CLKCTRL_GEN_GCLK4 |     // Select GCLK4
+                     GCLK_CLKCTRL_ID_TCC2_TC3;    // Feed GCLK4 to TCC2 (and TC3)
+  while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
+
+  REG_TC3_COUNT8_PER = 0xFF;                      // Set period register to 255
+  while (TC3->COUNT8.STATUS.bit.SYNCBUSY);        // Wait for synchronization
+
+  REG_TC3_INTENSET = /*TC_INTENSET_MC1 | TC_INTENSET_MC0 |*/ TC_INTENSET_OVF; // Enable TC3 interrupts
+  
+  //NVIC_DisableIRQ(TC3_IRQn);
+  //NVIC_ClearPendingIRQ(TC3_IRQn);
+  NVIC_SetPriority(TC3_IRQn, 0);    // Set the Nested Vector Interrupt Controller (NVIC) priority for TC3 to 0 (highest) 
+  NVIC_EnableIRQ(TC3_IRQn);         // Connect TC3 to Nested Vector Interrupt Controller (NVIC)
+
+  // Set the TC3 timer to tick at 2MHz, or in other words a period of 0.5us - timer overflows every 128us 
+  // timer counts up to (up to 255 in 128us)
+  REG_TC3_CTRLA |= TC_CTRLA_PRESCALER_DIV8 |      // Set prescaler to 8, 16MHz/8 = 2MHz
+                   TC_CTRLA_MODE_COUNT8 |         // Set the counter to 8-bit mode
+                   TC_CTRLA_ENABLE;               // Enable TC3
+  while (TC3->COUNT8.STATUS.bit.SYNCBUSY);        // Wait for synchronization
+
+  REG_TC3_READREQ = TC_READREQ_RCONT |            // Enable a continuous read request
+                    TC_READREQ_ADDR(0x10);        // Offset of the 8 bit COUNT register
+  while (TC3->COUNT8.STATUS.bit.SYNCBUSY);        // Wait for (read) synchronization
 }
 
 void loop() {
-  // Your main program logic goes here
+  // Serial.println(micros2());                      // Testing the micros2() function
+  unsigned long startT, endT; 
+  startT = micros2();
+  delay(1);                                    // Wait 1 second
+  endT= micros2();
+  Serial.println(endT);
 }
 
-void USB_SPI_initialization() {
-  usb_msc.setID("Adafruit", "SD Card", "1.0");
-  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
-  usb_msc.setUnitReady(false);
-  usb_msc.begin();
+// Micros2 is used to measure the receiver pulsewidths down to 1us accuracy
+uint32_t micros2() 
+{
+  uint32_t m;
+  uint8_t t;
+     
+  noInterrupts();                                 // Disable interrupts
+  m = timer2Counter;                              // Get the number of overflows
+  t = REG_TC3_COUNT8_COUNT;                       // Get the current TC3 count value
 
-  SPI.begin();
+  if (TC3->COUNT8.INTFLAG.bit.OVF && (t < 255))   // Check if the timer has just overflowed (and we've missed it)
+  {
+    m++;                                          // Then in this case increment the overflow counter
+  }  
+  interrupts();                                   // Enable interrupts
+  return ((m << 8) + t) / 2;                      // Return the number of microseconds that have occured since the timer started
+}
 
-  if (!SD.begin(chipSelect)) {
-    Serial.println("SD card initialization failed.");
-    while (1);
+// This ISR is called every 128us
+void TC3_Handler()           // ISR TC3 overflow callback function
+{
+  if (TC3->COUNT8.INTFLAG.bit.OVF)
+  {
+    timer2Counter++;           // Increment the overflow counter
   }
-
-  Serial.println("Initializing external USB drive...");
-
-  for (int i = 1; i <= numFiles; i++) {
-    createLogFile(i);
-  }
-
-  usb_msc.setUnitReady(true);
-}
-
-int32_t msc_read_cb(uint32_t lba, void* buffer, uint32_t bufsize) {
-  // Read data from the SD card into the buffer
-  File file = SD.open(getFileName(lba), FILE_READ);
-  if (!file) {
-    return -1;
-  }
-
-  int bytesRead = file.read((uint8_t*)buffer, bufsize);
-  file.close();
-
-  return bytesRead;
-}
-
-int32_t msc_write_cb(uint32_t lba, uint8_t* buffer, uint32_t bufsize) {
-  // Write data from the buffer to the SD card
-  File file = SD.open(getFileName(lba), FILE_WRITE);
-  if (!file) {
-    return -1;
-  }
-
-  int bytesWritten = file.write(buffer, bufsize);
-  file.close();
-
-  return bytesWritten;
-}
-
-void msc_flush_cb(void) {
-  // Flush any pending data (if needed)
-  // No action required for this example
-}
-
-void createLogFile(int fileNumber) {
-  String fileName = getFileName(fileNumber);
-  File file = SD.open(fileName, FILE_WRITE);
-  if (file) {
-    file.println("Log data for file " + fileName);
-    file.close();
-  }
-}
-
-String getFileName(int fileNumber) {
-  return "LOG" + String(fileNumber) + ".TXT";
+  REG_TC3_INTFLAG = TC_INTFLAG_OVF;   // Rest the overflow interrupt flag
 }

@@ -31,6 +31,7 @@ Adafruit_USBD_MSC usb_msc;
 
 // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
 
+
 /*Sets global session_value (session_val); this is used to name the files created 
 **e.g.: if trail value entered = 2 the file name is 00020001.txt
 **File Format: SSSSXXXX.txt T= session number X=File created 
@@ -38,8 +39,11 @@ Adafruit_USBD_MSC usb_msc;
 */
 void extractSessionNameFromInput() {
   
-  Serial.println("\n###########################################\n\tSession Request\n");
-  Serial.println("Please check your previous session and ensure\nyou pick a different number for this session.");
+  Serial.println("#############################################\n\tSession Request\n");
+  Serial.println("The session number is used to name our files.");
+  Serial.println("\nFile Format:\n\tSSSSXXXX.txt\n\tS: Session number\n\tX: File count for session S");
+  Serial.println("Example:\n\t00020010.txt -> Session 2 file 10");
+  Serial.println("\nPlease check your previous session and ensure\nyou pick a different number for this session.");
   Serial.print("Enter a session number between [1,9999]: ");
   while (true) {
     if (Serial.available() > 0) {
@@ -48,21 +52,19 @@ void extractSessionNameFromInput() {
       if (sscanf(userInput.c_str(), "%d", &session_val) == 1) {
 
         if (session_val > 9999){
-          Serial.print("\nInvalid input range.\nPlease enter a session number between [1,9999]: ");
+          Serial.print("\nInvalid input range.\nEnter a session number between [1,9999]: ");
           continue;
         }
         break;
         } else {
-        Serial.print("\nInvalid input format. Please enter an integer:");
+        Serial.print("\nInvalid input format.\nEnter an integer:");
       }
     }
     // Add a small delay between checks to avoid excessive processor load
     delay(100);
   }
   Serial.println(session_val);
-  Serial.println("\nFile Format:\nSSSSXXXX.txt S=session number, X=File count for session S");
-  Serial.println("E.g., 00020010.txt = session 2 file 10");
-  Serial.println("###########################################");
+  Serial.println("#############################################");
 
   return;
 }
@@ -71,7 +73,7 @@ void extractSessionNameFromInput() {
 **e.g.: interval = 5s creates files that collect for 5s each*/
 void extractIntervalFromInput() {
 
-  Serial.println("\nEnter desired file interval as an integer (s): ");
+  Serial.println("Enter desired file interval as an integer (s): ");
   while (true) {
     if (Serial.available() > 0) {
       String userInput = Serial.readStringUntil('\n');
@@ -279,7 +281,7 @@ void SPI_initialization(const int baudRate)
 //  - Chipselect pin is different per board
 void SD_initialization(const int chipSelect)
 {
-  Serial.print("Initializing SD card... ");
+  debug("Initializing SD card... ");
 
   if (!SD.begin(chipSelect))
   {
@@ -287,7 +289,7 @@ void SD_initialization(const int chipSelect)
     while (1)
       ; // endless loop which "stops" any useful function
   }
-  Serial.println("initialization done.\n");
+  debugln("initialization done.\n");
 }
 
 /* Format function; adds leading zeros;
@@ -342,6 +344,7 @@ void USB_SPI_initialization(const int baudRate){
 
   // Set up Serial Monitor communication  
   SPI_initialization(baudRate);
+  Serial.println("\nSD contents are available check explorer/finder\n")
 
   debugln("\nInitializing external USB drive...");
 

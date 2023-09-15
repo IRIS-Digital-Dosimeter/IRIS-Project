@@ -32,7 +32,7 @@
           float scale_12bit = 4096;
           const int chipSelect = 4;
           void printSerial_A0(float VHi, float VLo);
-          String getTimeStamp_XXXX_us(unsigned long currentTime);
+          String getTimeStamp_XXXX_us(unsigned long endAnalogTimer);
           File open_SD_tmp_File(int fileIndex, MyDate* myDate);
           void myDelay_ms(unsigned long ms);
           void myDelay_us(unsigned long us);
@@ -72,19 +72,22 @@ File dataFile;
 // ##########################################################################################
 
 // OPEN TO CHANGES ..........................................................................
-#define RESET_PIN  A4                       // Used to trigger board Reset
+#define RESET_PIN  A3                       // Used to trigger board Reset
 
-/* Constants for Timing (per file) */
-unsigned long startTime = 0;               // Micros and Milis requires unsigned long
-unsigned long currentTime = 0;
+/* Constants for Timing */
+unsigned long startAnalogTimer = 0;               // Micros and Milis requires unsigned long
+unsigned long endAnalogTimer = 0;
+unsigned long startFileTimer = 0; 
+unsigned long endFileTimer = 0; 
+
 
 /* Send A0 Voltage to Serial Monitor: initial testing */
 float VLo = 0.0;
 float Vref = 3.29;                         // Provide highest/ref voltage of circuit [0-3.29]V
 
 /* Create Files variables */
-bool filePrint = true; 
-unsigned long maxFiles = 10;               // Maximum number of files to write
+bool filePrint = false; 
+unsigned long maxFiles = 3;               // Maximum number of files to write
 unsigned long fileCounter = 1; 
 
 /* Fast Board */
@@ -109,16 +112,23 @@ void setup(){
   SD_initialization(chipSelect);
   // Set the analog pin resolution 
   analogReadResolution(12);
-  // Ask for session value
-  extractSessionNameFromInput();
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
+  // Ask for session value
+  extractSessionNameFromInput();
   // Advise the user
-  Serial.println("\nInitiating data logging, Red LED = LOW");
-  Serial.println("After logging the board will reset. Check files after reset.");
+  Serial.println("\n\n\tSESSION "+ String(session_val) + " STARTING\n");
+  Serial.println("-> Creating { " + String(maxFiles) + " } files");
+  Serial.println("-> Files store { " + String(desiredInterval_s) + "s } worth of data");
+  Serial.println("- Red LED = LOW: LED will turn off during collection");
+  Serial.println("- After logging the file(s), the board will reset");
+  Serial.println("- Only after this reset will the files be visible on the disk");
   // Pause for a moment before collecting 
-  delay(3000);
+  delay(2000);
+
+  startFileTimer = micros(); 
   }
+
 
 }
 
@@ -155,10 +165,10 @@ void loop() {
     dataFile.println("Samples averaged: " + String(numSamples));    
 
     // Store start Time
-    startTime = millis();
+    startAnalogTimer = micros();
 
     // Gather data over a determined time interval 
-    while (millis() - startTime < desiredInterval_ms){
+    while (micros() - startAnalogTimer < desiredInterval_us){
 
       // Declare local variable/Buffer 
       unsigned long sum_sensorValue = 0; 
@@ -173,34 +183,48 @@ void loop() {
       // Write to file 
       dataFile.println(String(micros()) + "," + String(sum_sensorValue));
       // Pause for stability 
-      myDelay_us(interaverageDelay);
+      myDelay_us(interaverageDelay);      
+
     }
+    // log anaglog timer 
+    endAnalogTimer = micros() - startAnalogTimer;
 
     // Close the file 
     dataFile.close();
+
+    // Send timer 
+    timePrint("Time to create file { " + String(fileCounter) + " } using micros(): " + String(endAnalogTimer));
+    timePrint("This does not include file-Open, file-header, file-close");
+
+    Serial.println("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+
     // Incriment file counter 
     fileCounter++;
 
     // Condition when we've reached max files 
     if (fileCounter > maxFiles){
 
+      // send timer 
+      endFileTimer = micros() - startFileTimer; 
+      timerPrint("Time to complete { " + String(fileCounter -1) + " } files: " + String(endFileTimer));
+      timerPrint("This does not include setup. This contains overhead from prints and timer calls"); 
+
       //Turn off LED 
       digitalWrite(REDLEDpin, HIGH);
       // Debug prints 
-      debugln("Maximum number of files created. Data logging stopped.");
+      Serial.println("Maximum number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
       debugf("File count: %i", fileCounter-1);
-      debugln(" ");
       
       // Change Condition 
       filePrint = false; 
-
+      // Pause
       delay(3000);
       // Reset the board to view new files 
       digitalWrite(RESET_PIN, LOW);
+
       }
    
    }
-
 
 }
 
