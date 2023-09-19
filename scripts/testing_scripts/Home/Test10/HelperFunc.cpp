@@ -10,6 +10,7 @@ Details:
 // HEADER FILES
 #include "SPI.h"
 #include "SD.h"
+#include "SdFat.h"
 #include "HelperFunc.h"
 #include "Debug.h"
 #include "Adafruit_TinyUSB.h"
@@ -23,7 +24,7 @@ unsigned long desiredInterval_s = 1;        // 1 min = 60 s
 unsigned long desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
 unsigned long desiredInterval_us = 1000000; // 1 ms  = 1_000_000 us
 float scale_12bit = 4096;                   // digital Hi value for 12 bit
-const int chipSelect = 4;                   // M0 pin for SD card use
+// const int chipSelect = 4;                   // M0 pin for SD card use
 Sd2Card card;
 SdVolume volume;
 Adafruit_USBD_MSC usb_msc;     

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
-/* Test8.ino  https://arduino.stackexchange.com/questions/38354/data-logging-speed-with-arduino
+/* Test8.ino --> InLab_Test6.ino
 
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
