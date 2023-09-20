@@ -77,6 +77,7 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 
 // Analog Pins 
 #define ANALOG0 A0                          // Analog probe for this sketch
+#define ANALOG1 A1                          // Analog probe for this sketch
 #define REDLEDpin 13                        // Red
 
 /* Declarations/classes specific to SD card */           
@@ -86,6 +87,7 @@ File dataFile;
 
 // OPEN TO CHANGES ..........................................................................
 #define RESET_PIN  A3                       // Used to trigger board Reset
+int Pin_Val = 0; 
 
 /* Constants for Timing */
 unsigned long startAnalogTimer = 0;               // Micros and Milis requires unsigned long
@@ -103,9 +105,9 @@ unsigned long maxFiles = 3;               // Maximum number of files to write
 unsigned long fileCounter = 1; 
 
 /* Fast Board */
-const unsigned int intersampleDelay = 20; 
-const unsigned int interaverageDelay = 1000; 
-const unsigned int numSamples = 12; 
+unsigned int intersampleDelay = 20; 
+unsigned int interaverageDelay = 1000; 
+unsigned int numSamples = 12; 
 
 
 // Main Program (Runs once) ------------------------------------------------------------------
@@ -124,8 +126,42 @@ void setup(){
   SD_initialization(chipSelect);
   // Set the analog pin resolution 
   analogReadResolution(12);
+
+  Serial.println("Parameter Setup...");
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
+
+  Serial.print("Enter Pin (0,1): ");
+  while (!Serial.available());
+  Pin_Val = Serial.parseInt();
+  Serial.println("A"+ String(Pin_Val));
+  while (Serial.read() != '\n');
+
+  Serial.print("Enter Max Files: ");
+  while (!Serial.available());
+  maxFiles = Serial.parseInt();
+  Serial.println(maxFiles);
+  while (Serial.read() != '\n');
+
+  Serial.print("Enter inter sample delay: ");
+  while (!Serial.available());
+  intersampleDelay = Serial.parseInt();
+  Serial.println(intersampleDelay);
+  while (Serial.read() != '\n');
+
+  Serial.print("Enter inter average delay: ");
+  while (!Serial.available());
+  interaverageDelay = Serial.parseInt();
+  Serial.println(interaverageDelay);
+  while (Serial.read() != '\n');
+
+  Serial.print("Enter number of samples to average: ");
+  while (!Serial.available());
+  numSamples = Serial.parseInt();
+  Serial.println(numSamples);
+  while (Serial.read() != '\n');
+
+
   // Ask for session value
   extractSessionNameFromInput();
   // Advise the user
@@ -158,7 +194,7 @@ void loop() {
   */
   debug_serialPrintA0(Vref, VLo); 
 
-  if (filePrint){
+  if (filePrint && Pin_Val == 0){
 
     // Turn on LED while writing
     digitalWrite(REDLEDpin, LOW);
@@ -237,6 +273,86 @@ void loop() {
       }
    
    }
+   if (filePrint && Pin_Val == 1){
+
+    // Turn on LED while writing
+    digitalWrite(REDLEDpin, LOW);
+
+    // Create File: MMDDXXXX.tmp 
+    dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
+
+    // Checks 
+    debug("File Created: ");
+    debugln(dataFile.name());
+
+    // Header
+    dataFile.println("File time length (us): " + String(desiredInterval_us));
+    dataFile.println("Interaverage gap (us): " + String(interaverageDelay));
+    dataFile.println("Intersample gap (us): " + String(intersampleDelay));
+    dataFile.println("Samples averaged: " + String(numSamples));    
+
+    // Store start Time
+    startAnalogTimer = micros();
+
+    // Gather data over a determined time interval 
+    while (micros() - startAnalogTimer < desiredInterval_us){
+
+      // Declare local variable/Buffer 
+      unsigned long sum_sensorValue = 0; 
+
+      // Build buffer: read sensor value then sum it to the previous sensor value 
+      for (unsigned int counter = 1; counter <= numSamples; counter++){
+        sum_sensorValue += analogRead(ANALOG1);
+        // Pause for stability 
+        // myDelay_us(intersampleDelay);
+      }
+
+      // Write to file 
+      dataFile.println(String(micros()) + "," + String(sum_sensorValue));
+      // Pause for stability 
+      // myDelay_us(interaverageDelay);      
+
+    }
+    // log anaglog timer 
+    endAnalogTimer = micros() - startAnalogTimer;
+
+    // Close the file 
+    dataFile.close();
+
+    // Send timer 
+    timerPrintln("\nTime to create file { " + String(fileCounter) + " } using micros(): " + String(endAnalogTimer));
+    timerPrintln("- This does not include file-Open, file-header, file-close");
+
+    Serial.println("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+
+    // Incriment file counter 
+    fileCounter++;
+
+    // Condition when we've reached max files 
+    if (fileCounter > maxFiles){
+
+      // send timer 
+      endFileTimer = micros() - startFileTimer; 
+      timerPrintln("\n\nTime to complete { " + String(fileCounter -1) + " } files using micros(): " + String(endFileTimer));
+      timerPrintln("- This does not include setup. This contains overhead from prints and timer calls"); 
+
+      //Turn off LED 
+      digitalWrite(REDLEDpin, HIGH);
+      // Debug prints 
+      Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
+      debugf("File count: %i", fileCounter-1);
+      
+      // Change Condition 
+      filePrint = false; 
+      // Pause
+      delay(3000);
+      // Reset the board to view new files 
+      digitalWrite(RESET_PIN, LOW);
+
+      }
+   
+   }
+   
 
 }
 
