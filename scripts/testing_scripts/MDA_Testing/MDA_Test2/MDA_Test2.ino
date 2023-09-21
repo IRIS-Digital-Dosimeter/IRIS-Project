@@ -52,7 +52,7 @@ unsigned long endFileTimer = 0;
 
 /* Send A0 Voltage to Serial Monitor: initial testing */
 float VLo = 0.0;
-float Vref = 3.3;                         // Provide highest/ref voltage of circuit [0-3.29]V
+float Vref = 3.29;                         // Provide highest/ref voltage of circuit [0-3.29]V
 
 /* Create Files variables */
 bool filePrint = true; 
@@ -127,7 +127,8 @@ void loop() {
     dataFile.println("File time length (us): " + String(desiredInterval_us));
     dataFile.println("Interaverage gap (us): " + String(interaverageDelay));
     dataFile.println("Intersample gap (us): " + String(intersampleDelay));
-    dataFile.println("Samples averaged: " + String(numSamples));    
+    dataFile.println("Samples averaged: " + String(numSamples));
+    dataFile.println("Time just B4 collection (us)" + String(micros()));    
 
     // Store start Time
     startAnalogTimer = micros();
@@ -146,15 +147,15 @@ void loop() {
       }
 
       // Write to file 
-      dataFile.println(String(micros()) + "," + String(sum_sensorValue));
+      dataFile.println(sum_sensorValue);
 
       // Pause for stability 
       myDelay_us(interaverageDelay);      
 
     }
     // log anaglog timer 
+    dataFile.println("Time just after collection" + String(micros()));
     endAnalogTimer = micros() - startAnalogTimer;
-
     // Close the file 
     dataFile.close();
 
@@ -179,7 +180,6 @@ void loop() {
       digitalWrite(REDLEDpin, HIGH);
       // Debug prints 
       Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
-      Serial.println("\n\nSession {"+ String(session_val) +"} Complete on Pin: A{" + String(Pin_Val) + "}");
       debugf("File count: %i", fileCounter-1);
       
       // Change Condition 

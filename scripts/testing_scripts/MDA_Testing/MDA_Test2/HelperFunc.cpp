@@ -193,7 +193,7 @@ void printSerial_A0(float VHi, float VLo) {
   Serial.print(VHi);
   Serial.print(" ");
 
-  V_A0 = analogRead(A1)*(VHi/scale_12bit);
+  V_A0 = analogRead(A0)*(VHi/scale_12bit);
   Serial.println(V_A0,3);
 
 }
