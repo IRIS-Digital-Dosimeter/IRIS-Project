@@ -58,6 +58,7 @@ float Vref = 3.3;                         // Provide highest/ref voltage of circ
 bool filePrint = true; 
 unsigned long fileCounter = 1; 
 volatile unsigned long timer2Counter;
+int HeathersDelay = 5000; 
 
 // Main Program (Runs once) ------------------------------------------------------------------
 void setup(){
@@ -90,10 +91,14 @@ void setup(){
   Serial.println("- Red LED = LOW: LED will turn off during collection");
   Serial.println("- After logging the file(s), the board will reset");
   Serial.println("- Only after this reset will the files be visible on the disk\n");
+  // Turn on LED while writing
+  digitalWrite(REDLEDpin, LOW);
   // Pause for a moment before collecting 
-  delay(3000);
+  delay(HeathersDelay); // delay: ms 
 
   startFileTimer = micros(); 
+  Serial.println(String(HeathersDelay) + "us delay complete logging comencing... ");
+  delay(500);
   }
 
 }
@@ -116,8 +121,6 @@ void loop() {
 
     // Set pin from users input
     uint8_t pin = getPin();
-    // Turn on LED while writing
-    digitalWrite(REDLEDpin, LOW);
     // Create File: MMDDXXXX.tmp 
     dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
     // Checks 

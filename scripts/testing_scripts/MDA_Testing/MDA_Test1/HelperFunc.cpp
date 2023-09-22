@@ -75,19 +75,21 @@ void extractParameters(){
   Serial.println(maxFiles);
   while (Serial.read() != '\n');
 
-  Serial.print("Enter inter sample delay: ");
+  Serial.print("Enter inter sample delay (us): ");
   while (!Serial.available());
   intersampleDelay = Serial.parseInt();
   Serial.println(intersampleDelay);
   while (Serial.read() != '\n');
 
-  Serial.print("Enter inter average delay: ");
+  Serial.print("Enter inter average delay (us): ");
   while (!Serial.available());
   interaverageDelay = Serial.parseInt();
   Serial.println(interaverageDelay);
   while (Serial.read() != '\n');
 
-  Serial.print("Enter number of samples to average: ");
+  Serial.print("\nWARNING: Do not enter 1 for the following\nsamples to average it will crash the program.");
+  Serial.print("\tIf you do averge over value 1- remove enclosure\ncover and reset the board manually.");
+  Serial.println("\nEnter number of samples to average: ");
   while (!Serial.available());
   numSamples = Serial.parseInt();
   Serial.println(numSamples);
