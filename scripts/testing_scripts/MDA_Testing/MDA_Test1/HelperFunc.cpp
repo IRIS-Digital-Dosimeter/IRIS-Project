@@ -41,9 +41,10 @@ const int chipSelect = 4;                   // M0 pin for SD card use
 uint8_t Pin_Val = 0;                        // Default pin = A0
 unsigned long maxFiles = 3;                 // Maximum number of files to write
 
-Sd2Card card;
-SdVolume volume;
-Adafruit_USBD_MSC usb_msc;  
+// Sd2Card card;
+// SdVolume volume;
+// Adafruit_USBD_MSC usb_msc;  
+
 /* Fast Board */
 unsigned int intersampleDelay = 20; 
 unsigned int interaverageDelay = 1000; 
@@ -418,68 +419,68 @@ String fourDigits(int digits)
 - Sets up the Serial communication; baudRate is meant for this connection
 - Set DEBUG to 1 to view information about the card 
 */
-void USB_SPI_initialization(const int baudRate){
-  usb_msc.setID("Adafruit", "SD Card", "1.0");
-  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
-  usb_msc.setUnitReady(false);
-  usb_msc.begin();
+// void USB_SPI_initialization(const int baudRate){
+//   usb_msc.setID("Adafruit", "SD Card", "1.0");
+//   usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
+//   usb_msc.setUnitReady(false);
+//   usb_msc.begin();
 
-  // Set up Serial Monitor communication  
-  SPI_initialization(baudRate);
-  Serial.println("\nSD contents are available check explorer/finder\n")
+//   // Set up Serial Monitor communication  
+//   SPI_initialization(baudRate);
+//   Serial.println("\nSD contents are available check explorer/finder\n")
 
-  debugln("\nInitializing external USB drive...");
+//   debugln("\nInitializing external USB drive...");
 
-  // Prints and Flags //////////////////////////////////////////////////////////////////
-  if ( !card.init(SPI_HALF_SPEED, chipSelect) )
-  {
-    Serial.println("initialization failed. Things to check:");
-    Serial.println("* is a card inserted?");
-    Serial.println("* is your wiring correct?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module?");
-    while (1) delay(1);
-  }
+//   // Prints and Flags //////////////////////////////////////////////////////////////////
+//   if ( !card.init(SPI_HALF_SPEED, chipSelect) )
+//   {
+//     Serial.println("initialization failed. Things to check:");
+//     Serial.println("* is a card inserted?");
+//     Serial.println("* is your wiring correct?");
+//     Serial.println("* did you change the chipSelect pin to match your shield or module?");
+//     while (1) delay(1);
+//   }
 
-  if (!volume.init(card)) {
-    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
-    while (1) delay(1);
-  }
-  ///////////////////////////////////////////////////////////////////////////////////////
+//   if (!volume.init(card)) {
+//     Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+//     while (1) delay(1);
+//   }
+//   ///////////////////////////////////////////////////////////////////////////////////////
 
-  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
+//   uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
 
-  // Prints  ////////////////////////
-  debug("Volume size (MB):  ");
-  debugln((block_count/2) / 1024);
-  ///////////////////////////////////
+//   // Prints  ////////////////////////
+//   debug("Volume size (MB):  ");
+//   debugln((block_count/2) / 1024);
+//   ///////////////////////////////////
 
-  usb_msc.setCapacity(block_count, 512);
-  usb_msc.setUnitReady(true);
-}
+//   usb_msc.setCapacity(block_count, 512);
+//   usb_msc.setUnitReady(true);
+// }
 
-// Callback invoked when received READ10 command.
-// Copy disk's data to buffer (up to bufsize) and
-// return number of copied bytes (must be multiple of block size)
-int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
-{
-  (void) bufsize;
-  return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
-}
+// // Callback invoked when received READ10 command.
+// // Copy disk's data to buffer (up to bufsize) and
+// // return number of copied bytes (must be multiple of block size)
+// int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
+// {
+//   (void) bufsize;
+//   return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
+// }
 
-// Callback invoked when received WRITE10 command.
-// Process data in buffer to disk's storage and 
-// return number of written bytes (must be multiple of block size)
-int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
-{
-  (void) bufsize;
-  return card.writeBlock(lba, buffer) ? 512 : -1;
-}
+// // Callback invoked when received WRITE10 command.
+// // Process data in buffer to disk's storage and 
+// // return number of written bytes (must be multiple of block size)
+// int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
+// {
+//   (void) bufsize;
+//   return card.writeBlock(lba, buffer) ? 512 : -1;
+// }
 
-// Callback invoked when WRITE10 command is completed (status received and accepted by host).
-// used to flush any pending cache.
-void msc_flush_cb (void)
-{
-  // nothing to do
-}
+// // Callback invoked when WRITE10 command is completed (status received and accepted by host).
+// // used to flush any pending cache.
+// void msc_flush_cb (void)
+// {
+//   // nothing to do
+// }
 
 // #############################################################################

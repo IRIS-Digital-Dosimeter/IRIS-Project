@@ -80,8 +80,8 @@ Bus Contention
 - an issue that occurs if more than 2 devices try to communicate over UART
 - unusable data
 
-![Example of Bus Contention](../images/BusContention.png)
-![Example of Bus Contention 2](../images/BusContention2.png)
+![Example of Bus Contention](../../images/BusContention.png)
+![Example of Bus Contention 2](../../images/BusContention2.png)
 
 Advanced UARTs
 
@@ -93,8 +93,8 @@ Wiring
 - `RX`: Receiving
 - Serial port
 
-![UART](../images/UARTSimpleCir.png)
-![UART Parallel & Serial](../images/UARTParallelSerial.png)
+![UART](../../images/UARTSimpleCir.png)
+![UART Parallel & Serial](../../images/UARTParallelSerial.png)
 
 # SPI Communication Protocol
 
@@ -126,8 +126,8 @@ Wiring
 - `MISO`: Master in slave out
   - Transmission line from slave
 
-![SPI Hardware](../images/SPIComm.png)
-![SPI Multiple](../images/SPIMultSlave.png)
+![SPI Hardware](../../images/SPIComm.png)
+![SPI Multiple](../../images/SPIMultSlave.png)
 
 Multi-Slave and `GPIO`
 

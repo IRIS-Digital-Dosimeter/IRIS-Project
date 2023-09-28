@@ -18,12 +18,14 @@
 */
 //////////////////////////////////////////////////////////////////////////////////////////
 
-// Header Files: Contains namespaces 
+// Libraries
 #include "SPI.h"
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Debug.h"
 #include "Adafruit_TinyUSB.h"
+// #include "millisDelay.h"
+// #include "loopTimer.h"
 // #include "Adafruit_BMP085"
 
 // DO NOT CHANGE WITHIN THIS ###############################################################
@@ -34,15 +36,17 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 // Analog Pins 
 #define ANALOG0 A0                          // Analog probe for this sketch
 #define ANALOG1 A1                          // Analog probe for this sketch
-#define REDLEDpin 13                        // Red
+#define REDLEDpin 13                        // RED PIN
 
 /* Declarations/classes specific to SD card */           
 File dataFile;
+Adafruit_USBD_MSC usb_msc;  
+Sd2Card card;
+SdVolume volume;
    
 // ##########################################################################################
 
 // OPEN TO CHANGES ..........................................................................
-#define RESET_PIN  A3                       // Used to trigger board Reset
 
 /* Constants for Timing */
 unsigned long startAnalogTimer = 0;               // Micros and Milis requires unsigned long
@@ -65,10 +69,6 @@ void setup(){
 
   // Expose M0 as external USB and set up serial monitor communication
   USB_SPI_initialization(baudRate);
-
-  // Set up Reset pin 
-  digitalWrite(RESET_PIN, HIGH);
-  pinMode(RESET_PIN, OUTPUT);
 
   // Setup to create files: Set filePrint = true
   if (filePrint){
@@ -118,7 +118,10 @@ void loop() {
   debug_serialPrintA0(Vref, VLo); 
 
   if (filePrint){
+    // loopTimer.check();
 
+    // Turn USB Function off while files are writing 
+    usb_msc.setUnitReady(false);
     // Set pin from users input
     uint8_t pin = getPin();
     // Create File: MMDDXXXX.tmp 
@@ -160,7 +163,7 @@ void loop() {
 
     // Close the file 
     dataFile.close();
-
+    
     // Send timer 
     timerPrintln("\nTime to create file { " + String(fileCounter) + " } using micros(): " + String(endAnalogTimer));
     timerPrintln("- This does not include file-Open, file-header, file-close");
@@ -172,7 +175,10 @@ void loop() {
 
     // Condition when we've reached max files 
     if (fileCounter > maxFiles){
+      // loopTimer.check(Serial);
 
+      // Reset the USB to view new files 
+      usb_msc.setUnitReady(true);
       // send timer 
       endFileTimer = micros() - startFileTimer; 
       timerPrintln("\n\nTime to complete { " + String(fileCounter -1) + " } files using micros(): " + String(endFileTimer));
@@ -189,8 +195,7 @@ void loop() {
       filePrint = false; 
       // Pause
       delay(3000);
-      // Reset the board to view new files 
-      digitalWrite(RESET_PIN, LOW);
+
 
       }
    
@@ -198,4 +203,66 @@ void loop() {
  
 }
 
+void USB_SPI_initialization(const int baudRate){
+  usb_msc.setID("Adafruit", "SD Card", "1.0");
+  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
+  usb_msc.setUnitReady(false);
+  usb_msc.begin();
 
+  // Set up Serial Monitor communication  
+  SPI_initialization(baudRate);
+  Serial.println("\nSD contents are available check explorer/finder\n")
+
+  debugln("\nInitializing external USB drive...");
+
+  // Prints and Flags //////////////////////////////////////////////////////////////////
+  if ( !card.init(SPI_HALF_SPEED, chipSelect) )
+  {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("* is a card inserted?");
+    Serial.println("* is your wiring correct?");
+    Serial.println("* did you change the chipSelect pin to match your shield or module?");
+    while (1) delay(1);
+  }
+
+  if (!volume.init(card)) {
+    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+    while (1) delay(1);
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
+
+  // Prints  ////////////////////////
+  debug("Volume size (MB):  ");
+  debugln((block_count/2) / 1024);
+  ///////////////////////////////////
+
+  usb_msc.setCapacity(block_count, 512);
+  usb_msc.setUnitReady(true);
+}
+
+// Callback invoked when received READ10 command.
+// Copy disk's data to buffer (up to bufsize) and
+// return number of copied bytes (must be multiple of block size)
+int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
+{
+  (void) bufsize;
+  return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
+}
+
+// Callback invoked when received WRITE10 command.
+// Process data in buffer to disk's storage and 
+// return number of written bytes (must be multiple of block size)
+int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
+{
+  (void) bufsize;
+  return card.writeBlock(lba, buffer) ? 512 : -1;
+}
+
+// Callback invoked when WRITE10 command is completed (status received and accepted by host).
+// used to flush any pending cache.
+void msc_flush_cb (void)
+{
+  // nothing to do
+}

@@ -1,4 +1,4 @@
-# Current Trials
+# Old Trials
 
 ## Results of 2/10/22 Trail
 
@@ -14,11 +14,14 @@
 
 > - Blink
 > - [Measuring Battery](https://learn.adafruit.com/adafruit-feather-m0-adalogger/power-management)
-> - use TinyUSB as MassStorage
+
+![Output of Measuring Battery](../images/MeasuringBatteryPin7.png)
+
+> - use TinyUSB as MassStorage using [msc_ramdisk.ino](https://github.com/adafruit/Adafruit_TinyUSB_Arduino/tree/master/examples/MassStorage/msc_ramdisk)
 
 ![TinyUSB](../images/TinyUSBMassStorageAttempt1.png)
 
-![Output of Measuring Battery](../images/MeasuringBatteryPin7.png)
+
 
 ## Write/Read/Read Card Contents
 
