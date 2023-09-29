@@ -34,7 +34,7 @@ Bytes - Base 2 system
 - each digit can be either `1 or 0`
   > `10100001` \
   > $1*2^7, 0 * 2^6, 1* 2^5,...,1 * 2^0$ \
-  > $1*2^7+1*2^5+1\*2^0 = 161 $
+  > $1*2^7+1*2^5+1*2^0 = 161 $
 
 Prefixes
 
@@ -179,7 +179,7 @@ Types of Serial Protocols
 - SPI (sync)
 - $I^2C$ (sync)
 
-![Serial Hardware](../images/serialHardware.png)
+![Serial Hardware](../../images/serialHardware.png)
 
 ## Baud Rate
 
