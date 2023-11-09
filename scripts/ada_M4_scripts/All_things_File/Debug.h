@@ -31,11 +31,15 @@ Reson:
 
 #if DEBUG == 1
 #define debug(x) Serial.print(x)
+#define debugP(x,y) Serial.print(x,y)
 #define debugln(x) Serial.println(x)
+#define debugPln(x,y) Serial.println(x,y)
 #define debugf(x,y) Serial.printf(x,y)
 #else
 #define debug(x)
+#define debugP(x,y)
 #define debugln(x)
+#define debugPln(x)
 #define debugf(x,y)
 #endif
 
