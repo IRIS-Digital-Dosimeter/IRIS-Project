@@ -13,12 +13,15 @@ REQUIRED HARDWARE:
 /////////////////////////////////////////////////////////////////////////////////////////*/
 
 // HEADER FILES
-#include "SPI.h"
+#include <SPI.h>
+#include <SdFat.h>
+#include <Adafruit_TinyUSB.h>
+#include <Adafruit_SPIFlash.h>
 #include "HelperFunc.h"
 #include "Debug.h"
+#include "flash_config.h"
 
 // Constants //////////////////////////////////////////////////////////////////////////////
-MyDate myDate = MyDate(10, 10);
 
 /* Defaults for Files: unsigned int 8bytes/64 bits */
 int32_t session_val = 1;              // default trial is 1
@@ -36,7 +39,48 @@ int32_t intersampleDelay = 20;
 int32_t interaverageDelay = 1000; 
 int32_t numSamples = 12;    
 
+/* USB mass storage objects */
+Adafruit_USBD_MSC usb_msc;
+
+/* SDFat objects */
+FatVolume fatfs;
+FatFile root;
+
+
+/* QSPI Flash */
+Adafruit_SPIFlash flash(&flashTransport);   // flash transport definition
+bool fs_formatted = false;                  // Check if flash is formatted
+bool fs_changed = true;                     // Set to true when PC write to flash
+
 // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
+
+/*open_SD_tmp_File_sessionFile:
+  **Opens/Creates a file in the SD card
+  **Required: The file must be closed manually 
+  **File name format: SSSSXXXX.txt S:session,X:file count
+*/
+File open_SD_tmp_File_sessionFile(int fileIndex, int session)
+{
+  debug("\nInitilizing write to file... "); 
+  //.tmp
+
+  char fileName[13]; 
+  fourDigits(session, fileName);
+  fourDigits(fileIndex, fileName + 4);
+  snprintf(fileName + 8, 5, ".txt");
+
+  File newFile = fatfs.open(fileName, FILE_WRITE);
+  if (newFile)
+  {
+    debugln("File created successfully!");
+  }
+  else
+  {
+    Serial.println("Error creating file!");
+    while(1); // Stop recording if the file creation fails 
+  }
+  return newFile;
+}
 
 /*
 ** Takes input form users and sets global parameters
@@ -297,42 +341,6 @@ String getTimeStamp_XXXX_us(uint32_t currentTime)
   return timeStamp;
 }
 
-
-/*extractDateFromInput:
-** Set Global date to one provided by user
-**Takes serial input
-*/
-void extractDateFromInput() {
-  int32_t day;
-  int32_t month;
-  Serial.println("\nEnter date in format: MM/DD");
-
-  while (true) {
-    if (Serial.available() > 0) {
-      String userInput = Serial.readStringUntil('\n');
-
-      if (sscanf(userInput.c_str(), "%lu/%lu", &month, &day) == 2) {
-
-        // Successfully extracted both month and day, break the loop
-        if (!(myDate.setDay(day) && myDate.setMonth(month))) {
-          Serial.println("Invalid date range. Please enter a valid date: MM/DD");
-          continue;
-        }
-
-        break;
-      } else {
-        Serial.println("Invalid input format. Please enter in format: MM/DD");
-      }
-    }
-    // Add a small delay between checks to avoid excessive processor load
-    delay(100);
-  }
-
-  Serial.print("Date entered: ");
-  Serial.printf("%02d/%02d", myDate.getMonth(), myDate.getDay());
-  return;
-}
-
 /* myDelay removes overflow issue by converting negatives to unsigned long */
 void myDelay_ms(uint32_t ms)             // ms: duration (use instaed of block func delay())
 {   
@@ -376,24 +384,6 @@ void SPI_initialization(const uint32_t baudRate)
   Serial.println("\n\n-----New Serial Communication Secured-----");
 }
 
-
-/* Format function:  adds leading zeros
-** Required input: 
-*** char formattedNumber[3]; ensures space for format & null
-** retruns formattedNumber*/
-char* twoDigits(int32_t digits, char* result) // used to format file name
-{
-  if (digits < 10)
-  {
-    sprintf(result, "0%d", digits);
-  }
-  else
-  {
-    sprintf(result, "%d", digits);
-  }
-  return result; 
-}
-
 /* Format function:  adds leading zeros
 ** Required input: 
 *** char formattedNumber[5]; ensures space for format & null
@@ -402,20 +392,100 @@ char* fourDigits(int32_t digits, char* result)
 {
   if (digits < 10)
   {
-    sprintf(result, "000%d", digits);
+    sprintf(result, "000%ld", digits);
   }
   else if (digits < 100)
   {
-    sprintf(result, "00%d", digits);
+    sprintf(result, "00%ld", digits);
   }
   else if (digits < 1000)
   {
-    sprintf(result, "0%d", digits);
+    sprintf(result, "0%ld", digits);
   }
   else
   {
-    sprintf(result, "%d", digits);
+    sprintf(result, "%ld", digits);
   }
 
   return result;
 }
+
+/* SDFat Flash Initialize */
+void FatFlash(){
+  // Setup QSPI Flash
+  Serial.print("Starting up onboard QSPI Flash...");
+  flash.begin();
+  // Init file system on the flash
+  fs_formatted = fatfs.begin(&flash);
+  // Open file system on the flash
+  if (!fs_formatted) {
+    Serial.println("Error: filesystem is not existed. Please try SdFat_format "
+                   "example to make one.");
+    while (1) {
+      yield();
+      delay(1);
+    }
+  }
+  debugln("Done");
+  debugln("Onboard Flash information");
+  debugln("JEDEC ID: 0x");
+  debugP(flash.getJEDECID(), HEX);
+  debugln("Flash size: ");
+  debug(flash.size() / 1024);
+  debugln(" KB");
+}
+
+
+// ----------------- USB ------------------------------------------------------------
+
+/* Initialize USB Mass storage protocol for QSPI Flash */
+void USB_initialization(){
+  flash.begin();
+  // Set disk vendor id, product id and revision with string up to 8, 16, 4 characters respectively
+  usb_msc.setID("Adafruit", "External Flash", "1.0");
+  // Set callback
+  usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
+  // Set disk size, block size should be 512 regardless of spi flash page size
+  usb_msc.setCapacity(flash.size()/512, 512);
+  // MSC is ready for read/write; can be used to turn feature off while writing
+  usb_msc.setUnitReady(true);
+  usb_msc.begin();
+}
+
+// Callback invoked when received READ10 command.
+// Copy disk's data to buffer (up to bufsize) and 
+// return number of copied bytes (must be multiple of block size) 
+int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
+{
+  // Note: SPIFLash Block API: readBlocks/writeBlocks/syncBlocks
+  // already include 4K sector caching internally. We don't need to cache it, yahhhh!!
+  return flash.readBlocks(lba, (uint8_t*) buffer, bufsize/512) ? bufsize : -1;
+}
+
+// Callback invoked when received WRITE10 command.
+// Process data in buffer to disk's storage and 
+// return number of written bytes (must be multiple of block size)
+int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
+{
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  // Note: SPIFLash Block API: readBlocks/writeBlocks/syncBlocks
+  // already include 4K sector caching internally. We don't need to cache it, yahhhh!!
+  return flash.writeBlocks(lba, buffer, bufsize/512) ? bufsize : -1;
+}
+
+// Callback invoked when WRITE10 command is completed (status received and accepted by host).
+// used to flush any pending cache.
+void msc_flush_cb (void)
+{
+  // sync with flash
+  flash.syncBlocks();
+
+  // clear file system's cache to force refresh
+  fatfs.cacheClear();
+
+  fs_changed = true;
+
+  digitalWrite(LED_BUILTIN, LOW);
+}
+// ----------------- USB - End ------------------------------------------------------------
