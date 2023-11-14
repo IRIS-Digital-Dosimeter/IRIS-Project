@@ -25,7 +25,11 @@
 #include "flash_config.h"           // for flashTransport definition
 
 /* SdFat objects */
-FatFile datafile;
+File32 dataFile;
+
+/* SDFat objects */
+FatVolume fat_fs;
+
 
 /* Constants for communication */
 const uint32_t baudRate = 115200;   // bit per second (9600,115200)
@@ -38,9 +42,12 @@ float VLo = 0.0;
 float Vref = 3.3;                    // Provide highest/ref voltage of circuit [0-3.3]V
 
 /* Files variables */
-uint32_t fileCounter = 1; 
+int32_t fileCounter = 1; 
 bool filePrint = true; 
 
+/* Testing buffer */
+String buffer; 
+uint32_t bufferTimer_interval =  5000; // 5000us = 5ms 
 
 void setup() {
   // indicate setup with red LED
@@ -66,12 +73,60 @@ void setup() {
   // Turn on LED while writing
   digitalWrite(REDLEDpin, LOW);
 
+  // Reserve 1kB
+  buffer.reserve(1024);
 
 }
 
 void loop() {
   if (filePrint){
 
-  }  
+    dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val); 
+
+    dataFile.println("File time length (s): " + String(desiredInterval_s));
+    dataFile.println("File time length (us): " + String(desiredInterval_us));
+    dataFile.println("Analong time length (us): " + String(bufferTimer_interval));
+
+    uint32_t startFileTimer = millis(); 
+    while ((millis() - startFileTimer) <= desiredInterval_ms) // 1s of data 
+    {
+      uint32_t startAnalogTimer = micros(); 
+      while ((micros() - startAnalogTimer) < bufferTimer_interval)
+      {
+        buffer += micros() - startAnalogTimer; 
+        buffer += ","; 
+        buffer += analogRead(getPin()); 
+        buffer += "\r\n";
+        debugln(buffer);
+      }
+      
+      // Get the free space on the SD card
+      uint32_t freeSpace = fat_fs.freeClusterCount() * 512; // Each cluster is 512 bytes
+      if (freeSpace && buffer.length() >= freeSpace)
+      {
+        debugln("Writing to file...");
+        dataFile.write(buffer.c_str(), freeSpace);
+        buffer.remove(0, freeSpace);
+      }
+    }
+
+
+    debugln("Closing File"); 
+    dataFile.close(); 
+    fileCounter++;
+
+    if (fileCounter > maxFiles) 
+    {
+      //Turn off LED 
+      digitalWrite(REDLEDpin, HIGH);
+      Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
+      Serial.println("\n\nSession {"+ String(session_val) +"} Complete on Pin: A{" + String(Pin_Val) + "}");
+
+      // Change Condition 
+      filePrint = false;
+    }
+  }
+
 
 }
+

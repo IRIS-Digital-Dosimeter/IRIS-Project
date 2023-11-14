@@ -14,17 +14,17 @@ Details:
 #include <Adafruit_TinyUSB.h>
 // Global Variables ------------------------------------------------------
 extern int32_t session_val;
-extern int32_t desiredInterval_s;
-extern int32_t desiredInterval_ms;
-extern int32_t desiredInterval_us;
+extern uint32_t desiredInterval_s;
+extern uint32_t desiredInterval_ms;
+extern uint32_t desiredInterval_us;
 extern int32_t maxFiles;   
 
 extern float scale_12bit;
 extern uint8_t Pin_Val; 
 /* Fast Board */
-extern int32_t intersampleDelay; 
-extern int32_t interaverageDelay; 
-extern int32_t numSamples; 
+extern uint32_t intersampleDelay; 
+extern uint32_t interaverageDelay; 
+extern uint32_t numSamples; 
 
 // Function Prototypes ------------------------------------------------------
 
@@ -44,6 +44,7 @@ int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize);
 int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize);
 
 // Permanent 
+File32 open_SD_tmp_File_sessionFile(int fileIndex, int session);
 uint8_t getPin();
 void extractSessionNameFromInput();
 void extract_Board_Parameters();

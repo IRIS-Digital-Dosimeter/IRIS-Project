@@ -24,20 +24,20 @@ REQUIRED HARDWARE:
 // Constants //////////////////////////////////////////////////////////////////////////////
 
 /* Defaults for Files: unsigned int 8bytes/64 bits */
-int32_t session_val = 1;              // default trial is 1
-int32_t desiredInterval_s = 1;        // 1 min = 60 s  
-int32_t desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
-int32_t desiredInterval_us = 1000000; // 1 ms  = 1_000_000 us
-int32_t maxFiles = 3;                 // Maximum number of files to write
+int32_t session_val = 1;               // default trial is 1
+uint32_t desiredInterval_s = 1;        // 1 min = 60 s  
+uint32_t desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
+uint32_t desiredInterval_us = 1000000; // 1 ms  = 1_000_000 us
+int32_t maxFiles = 3;                  // Maximum number of files to write
 
 /*Defaults for Pins & Voltage conversion*/
 float scale_12bit = 4096;              // digital Hi value for 12 bit scale, 4bytes/32bits
 uint8_t Pin_Val = 0;                   // Default pin = A0, unsiged int 1bytes/8 bits
 
 /* Fast Board Defaults: 2bytes/16bits */
-int32_t intersampleDelay = 20; 
-int32_t interaverageDelay = 1000; 
-int32_t numSamples = 12;    
+uint32_t intersampleDelay = 20; 
+uint32_t interaverageDelay = 1000; 
+uint32_t numSamples = 12;    
 
 /* USB mass storage objects */
 Adafruit_USBD_MSC usb_msc;
@@ -59,7 +59,7 @@ bool fs_changed = true;                     // Set to true when PC write to flas
   **Required: The file must be closed manually 
   **File name format: SSSSXXXX.txt S:session,X:file count
 */
-File open_SD_tmp_File_sessionFile(int fileIndex, int session)
+File32 open_SD_tmp_File_sessionFile(int fileIndex, int session)
 {
   debug("\nInitilizing write to file... "); 
   //.tmp
@@ -287,11 +287,11 @@ void extractIntervalFromInput() {
     delay(100);
   }
   Serial.print("Interval entered (s) : ");
-  Serial.println(desiredInterval_s);
-  Serial.print("Interval entered (ms): ");
-  Serial.println(desiredInterval_s * 1000UL);
-  Serial.print("Interval entered (us): ");
-  Serial.println(desiredInterval_us);
+  debugln(desiredInterval_s);
+  debug("Interval entered (ms): ");
+  debugln(desiredInterval_s * 1000UL);
+  debug("Interval entered (us): ");
+  debugln(desiredInterval_us);
 
 }
 
