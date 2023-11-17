@@ -13,7 +13,7 @@ jupyter = "^1.0.0"
 notebook = "^6.5.2"
 matplotlib = "^3.7.2"
 progressbar = "^2.5"
-ipympl = "^0.9.3"
+# ipympl = "^0.9.3"
 
 
 [build-system]
