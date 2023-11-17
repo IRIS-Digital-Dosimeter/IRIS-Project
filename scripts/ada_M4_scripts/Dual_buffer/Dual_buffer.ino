@@ -43,8 +43,14 @@ int32_t fileCounter = 1;
 bool filePrint = true;
 
 /* Testing buffer */
-String buffer;
-uint32_t bufferTimer_interval = 10000;  // 5000us = 5ms
+const int BUFFER_SIZE = 1024;  // Adjust the size based on your requirements
+
+String buffer1 = "";
+String buffer2 = "";
+String* activeBuffer = &buffer1;
+String* inactiveBuffer = &buffer2;
+
+uint32_t bufferTimer_interval = 5000;  // 10ms
 
 void setup() {
   // indicate setup with red LED
@@ -69,13 +75,13 @@ void setup() {
   extractSessionNameFromInput();
   // Turn on LED while writing
   digitalWrite(REDLEDpin, LOW);
-
-  // Reserve 1kB
-  buffer.reserve(1024);
 }
 
 void loop() {
-  if (filePrint) {
+  if (filePrint) 
+  {
+    uint8_t pin = getPin();
+    setUSB(false);
 
     dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
 
@@ -90,42 +96,52 @@ void loop() {
       uint32_t startAnalogTimer = micros();
       while ((micros() - startAnalogTimer) < bufferTimer_interval) 
       {
-        buffer += micros();
-        buffer += ",";
-        buffer += analogRead(getPin());
-        buffer += "\r\n";
-        // debugln(buffer);
+        (*activeBuffer) += micros();
+        (*activeBuffer) += ",";
+        (*activeBuffer) += analogRead(pin);
+        (*activeBuffer) += "\r\n";
+        myDelay_us(30);
       }
-      // debugln(micros() - startAnalogTimer);
 
-      // Get the free space on the SD card
-      uint32_t freeSpace = fat_fs.freeClusterCount() * 512;  // Each cluster is 512 bytes
-      if (freeSpace && buffer.length() >= freeSpace) {
-        debugln("Writing to file...");
-        dataFile.write(buffer.c_str(), freeSpace);
-        buffer.remove(0, freeSpace);
+      // Switch buffers if the active buffer is full
+      if ((*activeBuffer).length() >= BUFFER_SIZE)
+      {
+        // Swap active and inactive buffers
+        String* temp = activeBuffer;
+        activeBuffer = inactiveBuffer;
+        inactiveBuffer = temp;
+
+        // Get the free space on the SD card
+        uint32_t freeSpace = fat_fs.freeClusterCount() * 512;  // Each cluster is 512 bytes
+        // Check if the inactive buffer is not empty, then write to the file
+        if ((*inactiveBuffer).length() > 0 && freeSpace >= (*inactiveBuffer).length()) 
+        {
+          debugln("Writing to file...");
+          dataFile.write((*inactiveBuffer).c_str(), (*inactiveBuffer).length());
+          inactiveBuffer->remove(0, (*inactiveBuffer).length());
+        }
       }
     }
 
-    // Write any remaining data and close the file
-    if (buffer.length() > 0)
-    {
-        debugln("Writing remaining data to file...");
-        dataFile.write(buffer.c_str(), buffer.length());
-        buffer = "";  // Clear the buffer
-    }
+
+    // // Write any remaining data from the inactive buffer and close the file
+    // if ((*inactiveBuffer).length() > 0) 
+    // {
+    //   Serial.println("Writing remaining data to file...");
+    //   dataFile.write((*inactiveBuffer).c_str(), (*inactiveBuffer).length());
+    //   inactiveBuffer->remove(0, dataFile.position());
+    // }
 
     debugln("Closing File");
     dataFile.close();
     fileCounter++;
 
-    if (fileCounter > maxFiles) {
+    if (fileCounter > maxFiles) 
+    {
       //Turn off LED
       digitalWrite(REDLEDpin, HIGH);
       Serial.println("MAX number of files (" + String(fileCounter - 1) + ") created. Comencing RESET protocol.");
       Serial.println("\n\nSession {" + String(session_val) + "} Complete on Pin: A{" + String(Pin_Val) + "}");
-      setUSB(false);
-      delay(3000);
       setUSB(true);
 
       // Change Condition

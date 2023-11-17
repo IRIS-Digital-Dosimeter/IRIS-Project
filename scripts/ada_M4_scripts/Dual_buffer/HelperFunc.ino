@@ -287,7 +287,7 @@ void extractIntervalFromInput() {
     delay(100);
   }
   Serial.print("Interval entered (s) : ");
-  debugln(desiredInterval_s);
+  Serial.println(desiredInterval_s);
   debug("Interval entered (ms): ");
   debugln(desiredInterval_s * 1000UL);
   debug("Interval entered (us): ");
@@ -413,7 +413,7 @@ char* fourDigits(int32_t digits, char* result)
 /* SDFat Flash Initialize */
 void FatFlash(){
   // Setup QSPI Flash
-  Serial.print("Starting up onboard QSPI Flash...");
+  Serial.println("Starting up onboard QSPI Flash...");
   flash.begin();
   // Init file system on the flash
   fs_formatted = fatfs.begin(&flash);
