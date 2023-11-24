@@ -1,24 +1,25 @@
 """
 readSerialLine.py
 
- - The following requires an install: pyserial 
+Description: 
+- reads incoming serial communication from the adafruit microcontroller
+
+Required installs: pyserial 
     - https://pyserial.readthedocs.io/en/latest/shortintro.html
 
- - Reference video series: https://www.youtube.com/@von14
+Reference: https://www.youtube.com/@von14
 
- - This works in tandem with: any .ino file that sends over serial monitor
-
- - Process: 
+ Process: 
     - Run the .ino file on the logger 
     - In terminal run this .py file 
     - It will list the COM's available, select the one associated to the logger (typically COM4)
-    - Command line will output serial communication from Adalogger
- - Communication requirements:
+    - Serial line will output serial communication from Adalogger
+ Communication requirements:
     - The Adalogger has the TSAMD21G18 ARM Cortex M0 processor same as Arduino Zero
     - The Arduino Zero takes utf-8 communication
     - utf-8: UNICODE Universal Coded Character Set Transformation Format - 8-bit
 
- - Selecting ports: 
+ Selecting ports: 
     - When running serial.tools.list_ports.comports() and viewing the list of ports we
         want to select the USB Serial Device associated to our Adalogger
 
@@ -62,7 +63,7 @@ while True:                                     # listen to incoming data until 
         - Decode the incoming strings from the arduino (coming in as unicode)
         The following is specific to character strings
 
-        - to stop the stream of data hit (CNTL C) in terminal
+        - to stop the stream of data hit (CNTL+C) in terminal
         """
         print(packet.decode("utf-8").rstrip("\n"))  # remove endline characters
 

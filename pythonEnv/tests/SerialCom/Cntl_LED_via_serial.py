@@ -1,14 +1,15 @@
 """
 serial_send_LED.py
 
- - The following requires an install: pyserial 
+Description: 
+Control the LED on a microcontroller with serial communication from your computer. 
+
+ Required installs: pyserial 
     - https://pyserial.readthedocs.io/en/latest/shortintro.html
 
- - Reference video series: https://www.youtube.com/@von14
+ Reference: https://www.youtube.com/@von14
 
- - This works in tandem with: any .ino file that takes input from serial
-
- - Process: 
+ Process: 
     - Run the .ino file on the logger 
     - In terminal run this .py file 
     - It will list the COM's available, select the one associated to the logger (typically COM4)
@@ -18,12 +19,12 @@ serial_send_LED.py
         - exit: exit the python script 
     - Any user input other than the ones provided will cause the green LED to light up 
 
- - Communication requirements:
+ Communication requirements:
     - The Adalogger has the TSAMD21G18 ARM Cortex M0 processor same as Arduino Zero
     - The Arduino Zero takes utf-8 communication
     - utf-8: UNICODE Universal Coded Character Set Transformation Format - 8-bit
 
- - Selecting ports: 
+ Selecting ports: 
     - When running serial.tools.list_ports.comports() and viewing the list of ports we
         want to select the USB Serial Device associated to our Adalogger
 

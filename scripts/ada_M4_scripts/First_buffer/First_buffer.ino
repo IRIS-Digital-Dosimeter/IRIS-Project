@@ -15,8 +15,7 @@
 */
 //////////////////////////////////////////////////////////////////////////////////////////
 
-/* Libraries */
-#include <SPI.h>                // Serial communication
+/* Libraries */ 
 #include <SdFat.h>              // File formating
 #include <Adafruit_SPIFlash.h>  // Using Flash
 #include <Adafruit_TinyUSB.h>   // Expose Flash as USB Mass Storage

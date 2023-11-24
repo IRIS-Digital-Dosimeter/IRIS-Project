@@ -13,7 +13,6 @@ REQUIRED HARDWARE:
 /////////////////////////////////////////////////////////////////////////////////////////*/
 
 // HEADER FILES
-#include <SPI.h>
 #include <SdFat.h>
 #include <Adafruit_TinyUSB.h>
 #include <Adafruit_SPIFlash.h>
