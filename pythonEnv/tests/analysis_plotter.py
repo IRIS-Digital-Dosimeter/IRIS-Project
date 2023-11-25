@@ -4,19 +4,21 @@
 Created by: David Smith & Michelle Pichardo
 Helper file containing useful functions 
 - Extract time and voltage
-- Analysis 
 - Plotters
+- Analysis 
 """
 import matplotlib.pyplot as plt 
 import numpy as np
+import pandas as pd
 
 def extract_time_and_voltage(infile, delimiter=','):
     """
-    Inputs: File
-    Output: 
+    Parameter: File
+    Returns: 
     - Time in microseconds starting at zero
     - Voltage = (digital value/samples averaged) * (3.3/4095)
         - The value 4095 depends on analog resolution set to 12 bits
+    - Samples averaged
     """
     # Default unless overwritten 
     samples_to_av=1
@@ -56,8 +58,8 @@ def extract_time_and_voltage(infile, delimiter=','):
 def quickLook(infile, delimiter=','): 
 
     """
-    Input: File 
-    Output: Scatter plot and histogram of gaps 
+    Parameter: File 
+    Returns: Scatter plot and histogram of gaps 
     """
     # Default unless overwritten 
     samples_to_av=1
@@ -127,14 +129,27 @@ def quickLook(infile, delimiter=','):
     return 
 
 
-def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',', loc_prints= False):
+def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',', loc_prints= False, prints=False):
 
     """
-    Inputs: File 
+    Parameter: File 
     Optional parameters: 
         - gap_sizeL_us: largest gap size of interest in (us)
         - gap_sizeS_us: smallest gap size of interest in (us)
         - loc_prints: bool, this prints additional info regarding gap locations/durations
+        - prints: bool, this prints values for 1 file
+    Returns: 
+        - dictionary of values
+            - samples averaged default/input
+            - sample freq
+            - median gap
+            - large gap default/input
+            - count of long gaps
+            - largest gap
+            - small gap default/input
+            - sum of durations larger than small gap 
+            - time length of file in ms,s
+            - dead time percentage
     """
     # Default unless overwritten 
     samples_to_av=1
@@ -179,15 +194,26 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
     ts = t/1e6
     ##  -------------------
 
+    # Store to dictionary & Print ----
+    results_dict = {} 
+    results_dict['Samples_Averaged'] = samples_to_av
+
     # Sample Frequency 
     #  num of samples/1s = (1 sample/ gap us) *(1us/10^-6)
     #  gap: amount of time taken per sample stored 
     sample_freq = (1/np.median(dt))*(1e6)
-    print(f'Sample Frequency from Median gap (KHz): {sample_freq/1e3:.2f}')
+    if prints == True: 
+        print(f'Sample Frequency from Median gap (KHz): {sample_freq/1e3:.2f}')
+    results_dict['Sample_Frequency_KHz'] = round(sample_freq / 1e3,2)
 
     # Gaps
-    print('Median gap (us): ', np.median(dt))
-    print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.0f} ms")
+    if prints == True: 
+        print('Median gap (us): ', np.median(dt))
+    results_dict['Median_Gap_us'] = round(np.median(dt),2)
+    if prints == True: 
+        print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.0f} ms")
+    results_dict['Large_Gap_Analysis_ms'] = gap_sizeL_us / 1e3
+
     gap_index_L = np.where(dt > gap_sizeL_us)
     gap_index_L=gap_index_L[0]
 
@@ -196,23 +222,39 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
         print('Times of long gaps (ms): ',ts[gap_index_L])
         print('Durations of long gaps (ms): ',dt[gap_index_L]/1e3)
 
-    print('Count of long gaps: ',len(dt[gap_index_L]))
-    print('Largest gaps (ms): ',max(dt[gap_index_L])/1e3)
+    if prints == True: 
+        print('Count of long gaps: ',len(dt[gap_index_L]))
+    results_dict['Count_of_Long_Gaps'] = len(dt[gap_index_L])
+    if prints == True: 
+        print('Largest gaps (ms): ',max(dt[gap_index_L])/1e3)
+    results_dict['Largest_Gaps_ms'] = round(max(dt[gap_index_L]) / 1e3,2)
 
-    print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.0f} ms")
+    if prints == True: 
+        print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.0f} ms")
+    results_dict['Small_Gap_Analysis_ms'] = gap_sizeS_us / 1e3
+
     gap_index_S = np.where(dt > gap_sizeS_us)
     gap_index_S = gap_index_S[0]
     sum_small_gaps = np.sum(dt[gap_index_S])
     sum_small_gaps_ms = np.sum(dt[gap_index_S])/1e3
-    print(f"Sum of durations larger than {gap_sizeS_us/1e3:.0f} ms (ms): {sum_small_gaps_ms:.2f}")
 
-    print('\nFile info & Dead Time')
+    if prints == True: 
+        print(f"Sum of durations larger than {gap_sizeS_us/1e3:.0f} ms (ms): {sum_small_gaps_ms:.2f}")
+    results_dict['Sum_of_Durations_Larger_than_Small_Gap_ms'] = round(sum_small_gaps_ms,2)
+
+    if prints == True: 
+        print('\nFile info & Dead Time')
     tot_len_file = t[-1]
-    print(f"Time Length of file (ms,s): {tot_len_file/1e3:.2f} , {tot_len_file/1e6:.2f}")
+    if prints == True: 
+        print(f"Time Length of file (ms,s): {tot_len_file/1e3:.2f} , {tot_len_file/1e6:.2f}")
+    results_dict['Time_Length_of_File_ms'] =  round(tot_len_file / 1e3,2)
+    results_dict['Time_Length_of_File_s'] =  round(tot_len_file / 1e6,2)
 
     dead_time = (sum_small_gaps/tot_len_file)*100
-    print(f'Dead time = (sum durations > {gap_sizeS_us/1e3:.0f} ms/Time length of file)')
-    print(f'Dead time %: {dead_time:.2f} \n')
+    if prints == True: 
+        print(f'Dead time = (sum durations > {gap_sizeS_us/1e3:.0f} ms/Time length of file)')
+        print(f'Dead time %: {dead_time:.2f} \n')
+    results_dict['Dead_Time_Percentage'] =  round(dead_time,2)
 
-    return 
+    return results_dict
 
