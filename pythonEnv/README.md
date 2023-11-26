@@ -1,8 +1,9 @@
-# Poetry Enviornment Directory
+# Python Environment  
 
-- allows users to use several different enviornment packages required for python interface
+Dependencies are managed via [Poetry](https://python-poetry.org/docs/). A full list of current dependencies is located in this directory's [toml](https://github.com/Drixitel/Iris-Adafruit-GPS/blob/main/pythonEnv/pyproject.toml) file. 
 
-Enviornment Software: `Poetry`
-Command: `poetry install`, `poetry update`
+For users with poetry, the following are useful commands: 
+- `poetry install`: This will install all dependencies found in the toml file 
+- `poetry update`: updates dependencies
 
-- Currect all efforts to communicate with arduino have proved successful
+For more information, see my [Poetry Document](https://github.com/Drixitel/Poetry)
