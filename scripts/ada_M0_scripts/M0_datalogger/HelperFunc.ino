@@ -6,32 +6,27 @@ Details:
   - this file contains helper functions in all their glory 
   - comments found b4 the function are docstrings which show up on hover
   
-REQUIRED HARDWARE: 
-  - The reset pin RST must be connected to a digital pin for this program 
-    to work. This program is using A3 as the digital pin controlling RST. 
-
 /////////////////////////////////////////////////////////////////////////////////////////*/
 
 // HEADER FILES
 #include <SdFat.h>
 #include <Adafruit_TinyUSB.h>
-#include <Adafruit_SPIFlash.h>
 #include "HelperFunc.h"
 #include "Debug.h"
-#include "flash_config.h"
 
 // Constants //////////////////////////////////////////////////////////////////////////////
 
-/* Defaults for Files: unsigned int 8bytes/64 bits */
-int32_t session_val = 1;               // default trial is 1
-uint32_t desiredInterval_s = 1;        // 1 min = 60 s  
-uint32_t desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
-uint32_t desiredInterval_us = 1000000; // 1 ms  = 1_000_000 us
-int32_t maxFiles = 3;                  // Maximum number of files to write
+/* Defaults for Files */
+int32_t session_val = 1;                // default trial is 1
+uint32_t desiredInterval_s = 1;         // 1 min = 60 s  
+uint32_t desiredInterval_ms = 1000;     // 1 s   = 1_000 ms 
+uint32_t desiredInterval_us = 1000000;  // 1 ms  = 1_000_000 us
+int32_t maxFiles = 3;                   // Maximum number of files to write
 
 /*Defaults for Pins & Voltage conversion*/
-float scale_12bit = 4096;              // digital Hi value for 12 bit scale, 4bytes/32bits
-uint8_t Pin_Val = 0;                   // Default pin = A0, unsiged int 1bytes/8 bits
+float scale_12bit = 4096;               // digital Hi value for 12 bit scale, 4bytes/32bits
+uint8_t Pin_Val = 0;                    // Default pin = A0, unsiged int 1bytes/8 bits
+const int32_t chipSelect = 4;           // M0 pin for SD card use
 
 /* Fast Board Defaults: 2bytes/16bits */
 uint32_t intersampleDelay = 20; 
@@ -41,45 +36,12 @@ uint32_t numSamples = 12;
 /* USB mass storage objects */
 Adafruit_USBD_MSC usb_msc;
 
-/* SDFat objects */
-FatVolume fatfs;
-FatFile root;
+/* SD objects */
+Sd2Card card;
+SdVolume volume;
 
-
-/* QSPI Flash */
-Adafruit_SPIFlash flash(&flashTransport);   // flash transport definition
-bool fs_formatted = false;                  // Check if flash is formatted
-bool fs_changed = true;                     // Set to true when PC write to flash
 
 // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
-
-/*open_SD_tmp_File_sessionFile:
-  **Opens/Creates a file in the SD card
-  **Required: The file must be closed manually 
-  **File name format: SSSSXXXX.txt S:session,X:file count
-*/
-File32 open_SD_tmp_File_sessionFile(int fileIndex, int session)
-{
-  debug("\nInitilizing write to file... "); 
-  //.tmp
-
-  char fileName[13]; 
-  fourDigits(session, fileName);
-  fourDigits(fileIndex, fileName + 4);
-  snprintf(fileName + 8, 5, ".txt");
-
-  File newFile = fatfs.open(fileName, FILE_WRITE);
-  if (newFile)
-  {
-    debugln("File created successfully!");
-  }
-  else
-  {
-    Serial.println("Error creating file!");
-    while(1); // Stop recording if the file creation fails 
-  }
-  return newFile;
-}
 
 /*
 ** Takes input form users and sets global parameters
@@ -92,27 +54,27 @@ File32 open_SD_tmp_File_sessionFile(int fileIndex, int session)
 */
 void extract_Board_Parameters(){ 
 
-  Serial.print("Enter Pin (0,1): ");
-  while (true) {
-      while (!Serial.available()) {
-        delay(100);
-      }
+  // Serial.print("Enter Pin (0,1): ");
+  // while (true) {
+  //     while (!Serial.available()) {
+  //       delay(100);
+  //     }
 
-      Pin_Val = Serial.parseInt();
+  //     Pin_Val = Serial.parseInt();
 
-      if (Serial.read() == '\n') {
-        // if (Pin_Val >= 0 && Pin_Val < 2) {
-        if (Pin_Val < 2) {
-          break;
-        } else {
-          Serial.print("\nInvalid input range.\nEnter 0 or 1: ");
-        }
-      } else {
-        Serial.print("\nInvalid input format.\nEnter an integer: ");
-      }
-    }
-  delay(500);
-  Serial.println("A"+ String(Pin_Val));
+  //     if (Serial.read() == '\n') {
+  //       // if (Pin_Val >= 0 && Pin_Val < 2) {
+  //       if (Pin_Val < 2) {
+  //         break;
+  //       } else {
+  //         Serial.print("\nInvalid input range.\nEnter 0 or 1: ");
+  //       }
+  //     } else {
+  //       Serial.print("\nInvalid input format.\nEnter an integer: ");
+  //     }
+  //   }
+  // delay(500);
+  // Serial.println("A"+ String(Pin_Val));
 
   Serial.print("Enter Max Files: ");
   while (true) {
@@ -255,7 +217,8 @@ void extractSessionNameFromInput() {
   Serial.println("-> Creating { " + String(maxFiles) + " } files");
   Serial.println("-> Files store { " + String(desiredInterval_s) + "s } worth of data");
   Serial.println("- Red LED = LOW: LED will turn off during collection");
-
+  delay(500); 
+  
   return;
 }
 
@@ -313,32 +276,6 @@ void printSerial_A0(float VHi, float VLo, uint8_t A_pin) {
 
 }
 
-/*getTimeStamp_XXXX_us:
- does not use modulo to compute values 
-     ** 1 min = 60_000_000 us 
-     ** 1 sec = 1_000_000  us 
-     ** 1 ms  = 1_000 us
-     ** us range: [0 - 1000]
-  Power of 2 seems to be a sweet spot so alternative range
-     ** us : [0 - 2^13] = [0 - 8192] ~ 8 ms before resetting 
-  No need for modulo if it's a power of 2 
-     ** us : [0 - 8191] ; % -> & 
-*/
-String getTimeStamp_XXXX_us(uint32_t currentTime) 
-{
-  // unsigned long microseconds = currentTime % 8192; 
-  uint32_t microseconds = currentTime % 8192; 
-
-  String timeStamp = "";
-  timeStamp += "Time Stamp (XXXX): ";
-  timeStamp += String(microseconds);
-  // timeStamp += "\tRaw(us):";
-  // timeStamp += String(currentTime);
-  // timeStamp += "\tModulo:";
-  // timeStamp += String(currentTime % 1000);
-
-  return timeStamp;
-}
 
 /* myDelay removes overflow issue by converting negatives to unsigned long */
 void myDelay_ms(uint32_t ms)             // ms: duration (use instaed of block func delay())
@@ -409,63 +346,100 @@ char* fourDigits(int32_t digits, char* result)
   return result;
 }
 
-/* SDFat Flash Initialize */
-void FatFlash(){
-  // Setup QSPI Flash
-  Serial.println("Starting up onboard QSPI Flash...");
-  flash.begin();
-  // Init file system on the flash
-  fs_formatted = fatfs.begin(&flash);
-  // Open file system on the flash
-  if (!fs_formatted) {
-    Serial.println("Error: filesystem is not existed. Please try SdFat_format "
-                   "example to make one.");
-    while (1) {
-      yield();
-      delay(1);
-    }
+
+/*open_SD_tmp_File_sessionFile:
+  **Opens/Creates a file in the SD card
+  **Required: The file must be closed manually 
+  **File name format: SSSSXXXX.txt S:session,X:file count
+*/
+File open_SD_txt_File_sessionFile(int32_t fileIndex, int32_t session)
+{
+  debug("\nInitilizing write to file... "); 
+
+  //.tmp
+  char fileName[13]; 
+  fourDigits(session, fileName);
+  fourDigits(fileIndex, fileName + 4);
+  snprintf(fileName + 8, 5, ".txt");
+
+  File newFile = SD.open(fileName, FILE_WRITE);
+  if (newFile)
+  {
+    debugln("File created successfully!");
   }
-  debugln("Done");
-  debugln("Onboard Flash information");
-  debugln("JEDEC ID: 0x");
-  debugP(flash.getJEDECID(), HEX);
-  debugln("Flash size: ");
-  debug(flash.size() / 1024);
-  debugln(" KB");
+  else
+  {
+    Serial.println("Error creating file!");
+    while(1); // Stop recording if the file creation fails 
+  }
+  return newFile;
 }
 
+
+// Check access to SD card "Initialize the SD card"
+//  - Chipselect pin is different per board
+void SD_initialization(const int32_t chipSelect)
+{
+  debug("Initializing SD card... ");
+
+  if (!SD.begin(chipSelect))
+  {
+    Serial.println("initialization failed!");
+    while (1)
+      ; // endless loop which "stops" any useful function
+  }
+  debugln("initialization done.\n");
+}
 
 // ----------------- USB ------------------------------------------------------------
 
-/*usb_msc.setUnitReady()*/
-void setUSB(bool state){
-  // MSC is ready for read/write; can be used to turn feature off while writing
-  usb_msc.setUnitReady(state);
-}
 
-
-/* Initialize USB Mass storage protocol for QSPI Flash */
-void USB_initialization(){
-  flash.begin();
-  // Set disk vendor id, product id and revision with string up to 8, 16, 4 characters respectively
-  usb_msc.setID("Adafruit", "External Flash", "1.0");
-  // Set callback
+void USB_SPI_initialization(const int32_t baudRate){
+  usb_msc.setID("Adafruit", "SD Card", "1.0");
   usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
-  // Set disk size, block size should be 512 regardless of spi flash page size
-  usb_msc.setCapacity(flash.size()/512, 512);
-  // MSC is ready for read/write; can be used to turn feature off while writing
-  usb_msc.setUnitReady(true);
+  usb_msc.setUnitReady(false);
   usb_msc.begin();
+
+  // Set up Serial Monitor communication  
+  SPI_initialization(baudRate);
+  Serial.println("\nSD contents are available check explorer/finder\n");
+
+  debugln("\nInitializing external USB drive...");
+
+  // Prints and Flags //////////////////////////////////////////////////////////////////
+  if ( !card.init(SPI_HALF_SPEED, chipSelect) )
+  {
+    Serial.println("initialization failed. Things to check:");
+    Serial.println("* is a card inserted?");
+    Serial.println("* is your wiring correct?");
+    Serial.println("* did you change the chipSelect pin to match your shield or module?");
+    while (1) delay(1);
+  }
+
+  if (!volume.init(card)) {
+    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+    while (1) delay(1);
+  }
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  uint32_t block_count = volume.blocksPerCluster()*volume.clusterCount();
+
+  // Prints  ////////////////////////
+  debug("Volume size (MB):  ");
+  debugln((block_count/2) / 1024);
+  ///////////////////////////////////
+
+  usb_msc.setCapacity(block_count, 512);
+  usb_msc.setUnitReady(true);
 }
 
 // Callback invoked when received READ10 command.
-// Copy disk's data to buffer (up to bufsize) and 
-// return number of copied bytes (must be multiple of block size) 
+// Copy disk's data to buffer (up to bufsize) and
+// return number of copied bytes (must be multiple of block size)
 int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
 {
-  // Note: SPIFLash Block API: readBlocks/writeBlocks/syncBlocks
-  // already include 4K sector caching internally. We don't need to cache it, yahhhh!!
-  return flash.readBlocks(lba, (uint8_t*) buffer, bufsize/512) ? bufsize : -1;
+  (void) bufsize;
+  return card.readBlock(lba, (uint8_t*) buffer) ? 512 : -1;
 }
 
 // Callback invoked when received WRITE10 command.
@@ -473,25 +447,14 @@ int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize)
 // return number of written bytes (must be multiple of block size)
 int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize)
 {
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  // Note: SPIFLash Block API: readBlocks/writeBlocks/syncBlocks
-  // already include 4K sector caching internally. We don't need to cache it, yahhhh!!
-  return flash.writeBlocks(lba, buffer, bufsize/512) ? bufsize : -1;
+  (void) bufsize;
+  return card.writeBlock(lba, buffer) ? 512 : -1;
 }
 
 // Callback invoked when WRITE10 command is completed (status received and accepted by host).
 // used to flush any pending cache.
 void msc_flush_cb (void)
 {
-  // sync with flash
-  flash.syncBlocks();
-
-  // clear file system's cache to force refresh
-  fatfs.cacheClear();
-
-  fs_changed = true;
-
-  digitalWrite(LED_BUILTIN, LOW);
+  // nothing to do
 }
-// ----------------- USB - End ------------------------------------------------------------
+// ----------------- USB END ------------------------------------------------------------

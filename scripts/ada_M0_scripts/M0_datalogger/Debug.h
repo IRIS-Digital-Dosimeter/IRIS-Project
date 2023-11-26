@@ -21,26 +21,20 @@ Reson:
 #define DEBUG_H
 
 // OPEN TO CHANGES ........................................
-#define DEBUG 0  
+#define DEBUG 1   
 #define APRINT 0
-#define TIMER 0
 // ........................................................
 
 
 // DO NOT CHNAGE WITHIN THIS ##############################
 
-
 #if DEBUG == 1
 #define debug(x) Serial.print(x)
-#define debugP(x,y) Serial.print(x,y)
 #define debugln(x) Serial.println(x)
-#define debugPln(x,y) Serial.println(x,y)
 #define debugf(x,y) Serial.printf(x,y)
 #else
 #define debug(x)
-#define debugP(x,y)
 #define debugln(x)
-#define debugPln(x)
 #define debugf(x,y)
 #endif
 
@@ -50,13 +44,6 @@ Reson:
 #define debug_serialPrintA0(x,y,z)
 #endif
 
-#if TIMER == 1
-#define timerPrint(x) Serial.print(x)
-#define timerPrintln(x) Serial.println(x)
-#else 
-#define timerPrint(x)
-#define timerPrintln(x)
 
-#endif
 #endif
 // #########################################################

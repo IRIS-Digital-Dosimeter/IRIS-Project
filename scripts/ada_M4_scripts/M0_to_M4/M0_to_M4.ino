@@ -16,13 +16,12 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 /* Libraries */
-#include <SPI.h>                // Serial communication
 #include <SdFat.h>              // File formating
 #include <Adafruit_SPIFlash.h>  // Using Flash
 #include <Adafruit_TinyUSB.h>   // Expose Flash as USB Mass Storage
+#include "flash_config.h"       // for flashTransport definition
 #include "HelperFunc.h"
 #include "Debug.h"
-#include "flash_config.h"  // for flashTransport definition
 
 /* SdFat objects */
 File32 dataFile;

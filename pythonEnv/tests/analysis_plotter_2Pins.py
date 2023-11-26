@@ -1,8 +1,8 @@
-# analysis_plotter.py
+## analysis_plotter_2Pins.py
 
 """
 Created by: David Smith & Michelle Pichardo
-Helper file containing useful functions 
+Helper file containing useful functions for files running both pins
 - Extract time and voltage
 - Plotters
 - Analysis 
@@ -11,14 +11,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-def extract_time_and_voltage(infile, delimiter=','):
+def extract_time_and_voltage_2pins(infile, delimiter=','):
     """
     Parameter: File
     Returns: 
     - Time in microseconds starting at zero
-    - Voltage = (digital value/samples averaged) * (3.3/4095)
+    - Voltage: 
+        V = (digital value/samples averaged) * (3.3/4095)
+        - V0: Volts from A0
+        - V1: Volts from A1
         - The value 4095 depends on analog resolution set to 12 bits
     - Samples averaged
+        - extracted from file or returns default value 1 
     """
     # Default unless overwritten 
     samples_to_av=1
@@ -30,14 +34,14 @@ def extract_time_and_voltage(infile, delimiter=','):
             # Check if the line contains two columns of numbers separated by a comma
             try:
                 float_values = [float(val) for val in line.strip().split(delimiter)]
-                if len(float_values) == 2:
+                if len(float_values) == 3:
                     # It's a data line; break from the loop
                     break
             except ValueError:
                 # Not a line with two columns of numbers; continue reading headers
                 pass
 
-            # Check if the line contains parameters
+            # Check if "number of samples averaged" is in the header
             if ':' in line:
                 param_name, param_value = map(str.strip, line.split(':'))
                 if param_name.lower() == 'samples averaged':
@@ -45,16 +49,17 @@ def extract_time_and_voltage(infile, delimiter=','):
 
 
     # extract time and digital value
-    t, d = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
+    t, d0, d1 = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
 
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4095)
-    v = (d/samples_to_av)*(3.3/4095)
+    v0 = (d0/samples_to_av)*(3.3/4095)
+    v1 = (d1/samples_to_av)*(3.3/4095)
 
     # set time to start at zero 
     t = t - t[0]
 
-    return t, v, samples_to_av
+    return t, v0, v1, samples_to_av
 
 
 def quickLook(infile, delimiter=','): 
@@ -73,14 +78,14 @@ def quickLook(infile, delimiter=','):
             # Check if the line contains two columns of numbers separated by a comma
             try:
                 float_values = [float(val) for val in line.strip().split(',')]
-                if len(float_values) == 2:
+                if len(float_values) == 3:
                     # It's a data line; break from the loop
                     break
             except ValueError:
                 # Not a line with two columns of numbers; continue reading headers
                 pass
 
-            # Check if the line contains parameters
+            # Check if "number of samples averaged" is in the header
             if ':' in line:
                 param_name, param_value = map(str.strip, line.split(':'))
                 if param_name.lower() == 'samples averaged':
@@ -88,7 +93,7 @@ def quickLook(infile, delimiter=','):
 
 
     # extract time and digital value
-    t, d = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
+    t, d0, d1 = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
 
     # Make a list of the time differences (gaps) between adjacent points:
     dt = t - np.roll(t,1)
@@ -99,7 +104,8 @@ def quickLook(infile, delimiter=','):
     ## KEEP POST PROCESSING HERE -------------------
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4095)
-    v = (d/samples_to_av)*(3.3/4095)
+    v0 = (d0/samples_to_av)*(3.3/4095)
+    v1 = (d1/samples_to_av)*(3.3/4095)
 
     # set time to start at zero 
     t = t - t[0]
@@ -108,22 +114,29 @@ def quickLook(infile, delimiter=','):
     ##  -------------------
 
     #plot dataset
-    fig, axs = plt.subplots(2)
-    fig.set_size_inches(8,4)
+    
+    fig, axs = plt.subplots(3)
+    fig.set_size_inches(8,6)
 
-    axs[0].scatter(t,v,s=4)
-    axs[0].plot(t,v,alpha=0.5)
+    axs[0].scatter(t,v0,s=4)
+    axs[0].plot(t,v0,alpha=0.5, label ='A0')
     axs[0].set_xlabel('Time (seconds)')
     axs[0].set_ylabel('Volts')
-    # axs[0].grid()
+    axs[0].legend()
+
+    axs[1].scatter(t,v1,s=4, color ='C1')
+    axs[1].plot(t,v1,alpha=0.5, color ='C1', label= 'A1')
+    axs[1].set_xlabel('Time (seconds)')
+    axs[1].set_ylabel('Volts')
+    axs[1].legend()
 
     #plot histogram of gaps in milliseconds:
-    axs[1].plot(tax[1:]/1e3,h,alpha=0.5)
-    axs[1].scatter(tax[1:]/1e3,h,s=4)
-    axs[1].set_yscale('log')
-    axs[1].set_xlabel('Gap (milliseconds)')
-    axs[1].set_ylabel('Count')
-    axs[1].grid()
+    axs[2].plot(tax[1:]/1e3,h,alpha=0.5)
+    axs[2].scatter(tax[1:]/1e3,h,s=4)
+    axs[2].set_yscale('log')
+    axs[2].set_xlabel('Gap (milliseconds)')
+    axs[2].set_ylabel('Count')
+    axs[2].grid()
 
     fig.suptitle(f'{infile}, Samples Av:{samples_to_av}')
     fig.subplots_adjust(top=.93)
@@ -133,7 +146,7 @@ def quickLook(infile, delimiter=','):
     return 
 
 
-def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',', loc_prints= False, prints=False):
+def analyze_2pins(infile, gap_sizeL_us= 50000., gap_sizeS_us =20000., delimiter=',', loc_prints= False, prints=False):
 
     """
     Parameter: File 
@@ -167,7 +180,7 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
             # Check if the line contains two columns of numbers separated by a comma
             try:
                 float_values = [float(val) for val in line.strip().split(',')]
-                if len(float_values) == 2:
+                if len(float_values) == 3:
                     # It's a data line; break from the loop
                     break
             except ValueError:
@@ -185,8 +198,9 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
                 elif param_name.lower() == 'inter average delay':
                     inter_average_delay = float(param_value)
 
+
     # extract time and digital value
-    t, d = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
+    t, d0, d1 = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
 
     # Make a list of the time differences (gaps) between adjacent points:
     dt = t - np.roll(t,1)
@@ -196,7 +210,8 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
     ## KEEP POST PROCESSING HERE -------------------
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4095)
-    v = (d/samples_to_av)*(3.3/4095)
+    v0 = (d0/samples_to_av)*(3.3/4095)
+    v1 = (d1/samples_to_av)*(3.3/4095)
 
     # set time to start at zero 
     t = t - t[0]
@@ -206,7 +221,7 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
     ts = t/1e6
     ##  -------------------
 
-    # Store to dictionary & Prints -------------------------------------------------------
+    # Store to dictionary & Print ----
     results_dict = {} 
     results_dict['Samples_Averaged'] = samples_to_av
     results_dict['Inter_Sample_delay'] = inter_sample_delay
