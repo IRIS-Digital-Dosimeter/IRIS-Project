@@ -21,7 +21,7 @@ Reson:
 #define DEBUG_H
 
 // OPEN TO CHANGES ........................................
-#define DEBUG 1   
+#define DEBUG 0   
 #define APRINT 0
 // ........................................................
 

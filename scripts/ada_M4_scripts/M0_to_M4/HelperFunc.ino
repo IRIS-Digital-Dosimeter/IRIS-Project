@@ -66,7 +66,7 @@ File32 open_SD_tmp_File_sessionFile(int fileIndex, int session)
   char fileName[13]; 
   fourDigits(session, fileName);
   fourDigits(fileIndex, fileName + 4);
-  snprintf(fileName + 8, 5, ".txt");
+  snprintf(fileName + 8, 5, ".TXT");
 
   File newFile = fatfs.open(fileName, FILE_WRITE);
   if (newFile)

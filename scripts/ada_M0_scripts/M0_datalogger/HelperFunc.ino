@@ -392,8 +392,13 @@ void SD_initialization(const int32_t chipSelect)
 }
 
 // ----------------- USB ------------------------------------------------------------
+/**/
+void setUSB(bool ready)
+{
+  usb_msc.setUnitReady(ready);
+}
 
-
+/**/
 void USB_SPI_initialization(const int32_t baudRate){
   usb_msc.setID("Adafruit", "SD Card", "1.0");
   usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);

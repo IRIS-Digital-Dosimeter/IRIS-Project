@@ -70,34 +70,40 @@ void setup() {
 void loop() {
   if (filePrint) 
   {
-    uint8_t pin = getPin();
+    // uint8_t pin = getPin();
     setUSB(false);
 
     dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
 
-    dataFile.println("File time length (s): " + String(desiredInterval_s));
-    dataFile.println("File time length (us): " + String(desiredInterval_us));
-    dataFile.println("Interaverage gap (us): " + String(interaverageDelay));
-    dataFile.println("Intersample gap (us): " + String(intersampleDelay));
-    dataFile.println("Samples averaged: " + String(numSamples)); 
+    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
+    dataFile.println("Inter-sample gap (us): " + String(intersampleDelay));
+    dataFile.println("Samples averaged: " + String(numSamples));    
+    dataFile.println("Format: micros(), A0, A1 ");   
 
     // Store start Time
     uint32_t startAnalogTimer = micros();
+
     // Gather data over a determined time interval 
     while (micros() - startAnalogTimer < desiredInterval_us){
 
       // Declare local variable/Buffer 
-      uint32_t sum_sensorValue = 0; 
+      uint16_t sum_sensorValue_A0 = 0; 
+      uint16_t sum_sensorValue_A1 = 0; 
 
       // Build buffer: read sensor value then sum it to the previous sensor value 
       for (uint32_t counter = 1; counter <= numSamples; counter++){
-        sum_sensorValue += analogRead(pin);
+        sum_sensorValue_A0 += analogRead(A0);
+        sum_sensorValue_A1 += analogRead(A1);
         // Pause for stability 
         myDelay_us(intersampleDelay);
       }
 
       // Write to file 
-      dataFile.println(String(micros()) + "," + String(sum_sensorValue));
+      dataFile.print(micros());
+      dataFile.print(',');
+      dataFile.print(sum_sensorValue_A0);
+      dataFile.print(',');
+      dataFile.println(sum_sensorValue_A1);
 
       // Pause for stability 
       myDelay_us(interaverageDelay);      
@@ -115,10 +121,14 @@ void loop() {
     {
       //Turn off LED
       digitalWrite(REDLEDpin, HIGH);
+
       Serial.println("MAX number of files (" + String(fileCounter - 1) + ") created. Comencing RESET protocol.");
       Serial.println("\n\nSession {" + String(session_val) + "} Complete on Pin: A{" + String(Pin_Val) + "}");
-      setUSB(true);
 
+      // Reset the USB to view new files 
+      setUSB(true);
+      // Pause
+      delay(5000);
       // Change Condition
       filePrint = false;
     }

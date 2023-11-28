@@ -33,7 +33,7 @@ const int32_t baudRate = 115200;                // Speed of printing to serial m
 
 /* Declarations/classes specific to SD card */           
 File dataFile;
-Adafruit_USBD_MSC usb_msc_main;  
+// Adafruit_USBD_MSC usb_msc_main;  
 
 /* Constants for Timing */
 uint32_t startAnalogTimer = 0;              // Micros and Milis requires unsigned long
@@ -72,6 +72,7 @@ void setup(){
   extractSessionNameFromInput();
   // Turn on LED while writing
   digitalWrite(REDLEDpin, LOW);
+
   
   }
 
@@ -90,24 +91,27 @@ void loop() {
     - To zoom into a region change the values of Vref and Vlo
   */
   debug_serialPrintA0(Vref, VLo, getPin()); 
+  
 
   if (filePrint)
   {
-    // Turn USB Function off while files are writing 
-    usb_msc_main.setUnitReady(false);
+    setUSB(false);
+
     // Set pin from users input
     // uint8_t pin = getPin();
 
     // Create File: MMDDXXXX.tmp 
     dataFile = open_SD_txt_File_sessionFile(fileCounter, session_val);
+
     // Checks 
     debug("File Created: ");
     debugln(dataFile.name());
     
     // Header
-    dataFile.println("Interaverage gap (us): " + String(interaverageDelay));
-    dataFile.println("Intersample gap (us): " + String(intersampleDelay));
+    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
+    dataFile.println("Inter-sample gap (us): " + String(intersampleDelay));
     dataFile.println("Samples averaged: " + String(numSamples));    
+    dataFile.println("Format: micros(), A0, A1 ");    
 
     // Store start Time
     startAnalogTimer = micros();
@@ -152,23 +156,23 @@ void loop() {
 
       //Turn off LED 
       digitalWrite(REDLEDpin, HIGH);
-      // Reset the USB to view new files 
-      usb_msc_main.setUnitReady(true);
-      // Pause
-      delay(5000);
-
+      
       // Debug prints 
       Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
       Serial.println("\n\nSession {"+ String(session_val) +"} Complete on Pin: A{" + String(Pin_Val) + "}");
       debugf("File count: %i", fileCounter-1);
-      
+
+      // Reset the USB to view new files 
+      setUSB(true);
+      // Pause
+      delay(5000);
       // Change Condition 
       filePrint = false; 
-
 
       }
    
    }
+
  
 }
 

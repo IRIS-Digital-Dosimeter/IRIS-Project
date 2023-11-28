@@ -133,7 +133,7 @@ def quickLook(infile, delimiter=','):
     return 
 
 
-def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',', loc_prints= False, prints=False):
+def analyze(infile, gap_sizeL_us= 50000., gap_sizeS_us =20000., delimiter=',', loc_prints= False, prints=False):
 
     """
     Parameter: File 
@@ -174,15 +174,15 @@ def analyze(infile, gap_sizeL_us= 50_000., gap_sizeS_us =20_000., delimiter=',',
                 # Not a line with two columns of numbers; continue reading headers
                 pass
 
-            # Check if the line contains parameters
+           # Check if the line contains parameters
             if ':' in line:
                 param_name, param_value = map(str.strip, line.split(':'))
                 if param_name.lower() == 'samples averaged':
                     samples_to_av = int(param_value)
                 # Uncomment and modify the following lines if other parameters are present
-                elif param_name.lower() == 'inter sample delay':
+                elif param_name.lower() == 'inter-sample gap (us)':
                     inter_sample_delay = float(param_value)
-                elif param_name.lower() == 'inter average delay':
+                elif param_name.lower() == 'inter-average gap (us)':
                     inter_average_delay = float(param_value)
 
     # extract time and digital value

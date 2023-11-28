@@ -62,7 +62,7 @@ def extract_time_and_voltage_2pins(infile, delimiter=','):
     return t, v0, v1, samples_to_av
 
 
-def quickLook(infile, delimiter=','): 
+def quickLook_2pins(infile, delimiter=','): 
 
     """
     Parameter: File 
@@ -193,9 +193,9 @@ def analyze_2pins(infile, gap_sizeL_us= 50000., gap_sizeS_us =20000., delimiter=
                 if param_name.lower() == 'samples averaged':
                     samples_to_av = int(param_value)
                 # Uncomment and modify the following lines if other parameters are present
-                elif param_name.lower() == 'inter sample delay':
+                elif param_name.lower() == 'inter-sample gap (us)':
                     inter_sample_delay = float(param_value)
-                elif param_name.lower() == 'inter average delay':
+                elif param_name.lower() == 'inter-average gap (us)':
                     inter_average_delay = float(param_value)
 
 
@@ -276,14 +276,14 @@ def analyze_2pins(infile, gap_sizeL_us= 50000., gap_sizeS_us =20000., delimiter=
     tot_len_file = t[-1]
     if prints == True: 
         print(f"Time Length of file (ms,s): {tot_len_file/1e3:.2f} , {tot_len_file/1e6:.2f}")
-    results_dict['Time_Length_of_File_ms'] =  round(tot_len_file / 1e3,2)
-    results_dict['Time_Length_of_File_s'] =  round(tot_len_file / 1e6,2)
+    results_dict['Time_Length_of_File_ms'] =  round(tot_len_file / 1e3,3)
+    results_dict['Time_Length_of_File_s'] =  round(tot_len_file / 1e6,3)
 
     dead_time = (sum_small_gaps/tot_len_file)*100
     if prints == True: 
         print(f'Dead time = (sum durations > {gap_sizeS_us/1e3:.0f} ms/Time length of file)')
-        print(f'Dead time %: {dead_time:.2f} \n')
-    results_dict['Dead_Time_Percentage'] =  round(dead_time,2)
+        print(f'Dead time %: {dead_time:.3f} \n')
+    results_dict['Dead_Time_Percentage'] =  round(dead_time,3)
 
     return results_dict
 
