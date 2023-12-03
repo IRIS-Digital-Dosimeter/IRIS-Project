@@ -1,7 +1,8 @@
 // serial_log.ino
 
 // Created by: Aidan Zinn
-// github: https://github.com/aidanzinn/Adafruit_Constant_Log/blob/master/import_serial.py
+// Github: https://github.com/aidanzinn/Adafruit_Constant_Log/blob/master/import_serial.py
+// Works on M0 and M4
 
 #include "HelperFuncs.h"
 
