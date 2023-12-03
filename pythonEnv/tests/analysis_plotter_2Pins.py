@@ -35,6 +35,7 @@ def extract_time_and_voltage_2pins(infile, delimiter=','):
             try:
                 float_values = [float(val) for val in line.strip().split(delimiter)]
                 if len(float_values) == 3:
+                    header_lines -= 1
                     # It's a data line; break from the loop
                     break
             except ValueError:
@@ -79,6 +80,7 @@ def quickLook_2pins(infile, delimiter=','):
             try:
                 float_values = [float(val) for val in line.strip().split(',')]
                 if len(float_values) == 3:
+                    header_lines -= 1
                     # It's a data line; break from the loop
                     break
             except ValueError:
@@ -181,6 +183,7 @@ def analyze_2pins(infile, gap_sizeL_us= 50000., gap_sizeS_us =20000., delimiter=
             try:
                 float_values = [float(val) for val in line.strip().split(',')]
                 if len(float_values) == 3:
+                    header_lines -= 1
                     # It's a data line; break from the loop
                     break
             except ValueError:
