@@ -78,6 +78,11 @@ File dataFile;
 unsigned long startTime = 0;               // Micros and Milis requires unsigned long
 unsigned long currentTime = 0;
 
+unsigned long delta = 0;
+unsigned long fileClose = 0; 
+
+
+
 /* Send A0 Voltage to Serial Monitor: initial testing */
 float VLo = 0.0;
 float Vref = 3.29;                         // Provide highest/ref voltage of circuit [0-3.29]V
@@ -152,9 +157,9 @@ void loop() {
     dataFile.println("Samples averaged: " + String(numSamples));    
 
     // Store start Time
-    startTime = millis();
+    startTime = micros();
 
-    while (millis() - startTime < desiredInterval_ms){
+    while (micros() - startTime < desiredInterval_ms){
 
       unsigned long sensorValue = 0; 
       for (unsigned int counter = 1; counter <= numSamples; counter++){
@@ -165,9 +170,14 @@ void loop() {
       dataFile.println(String(micros()) + "," + String(sensorValue));
       myDelay_us(interaverageDelay);
     }
+    file_close = micros();
+    delta = startTime - file_close;
 
     dataFile.close();
     fileCounter++;
+
+    Serial.println("Closing File & Printing time to collect data & save to SD")
+    Serial.println(delta);
 
     if (fileCounter > maxFiles){
       //Turn off LED 
