@@ -5,6 +5,7 @@
     "datalogging",
     "microcontroller",
     "microcontrollers",
+    "photodiodes",
     "Pichardo",
     "pyserial",
     "Realterm",
@@ -13,5 +14,9 @@
     "TSAMD",
     "veralog",
     "verilog"
+  ],
+  "python.analysis.extraPaths": [
+    "./Data",
+    "./pythonEnv/tests"
   ]
 }

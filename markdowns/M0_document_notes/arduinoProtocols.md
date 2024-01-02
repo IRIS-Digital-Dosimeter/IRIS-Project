@@ -34,7 +34,7 @@ Bytes - Base 2 system
 - each digit can be either `1 or 0`
   > `10100001` \
   > $1*2^7, 0 * 2^6, 1* 2^5,...,1 * 2^0$ \
-  > $1*2^7+1*2^5+1\*2^0 = 161 $
+  > $1*2^7+1*2^5+1*2^0 = 161 $
 
 Prefixes
 
@@ -80,8 +80,8 @@ Bus Contention
 - an issue that occurs if more than 2 devices try to communicate over UART
 - unusable data
 
-![Example of Bus Contention](../images/BusContention.png)
-![Example of Bus Contention 2](../images/BusContention2.png)
+![Example of Bus Contention](../../images/BusContention.png)
+![Example of Bus Contention 2](../../images/BusContention2.png)
 
 Advanced UARTs
 
@@ -93,8 +93,8 @@ Wiring
 - `RX`: Receiving
 - Serial port
 
-![UART](../images/UARTSimpleCir.png)
-![UART Parallel & Serial](../images/UARTParallelSerial.png)
+![UART](../../images/UARTSimpleCir.png)
+![UART Parallel & Serial](../../images/UARTParallelSerial.png)
 
 # SPI Communication Protocol
 
@@ -126,8 +126,8 @@ Wiring
 - `MISO`: Master in slave out
   - Transmission line from slave
 
-![SPI Hardware](../images/SPIComm.png)
-![SPI Multiple](../images/SPIMultSlave.png)
+![SPI Hardware](../../images/SPIComm.png)
+![SPI Multiple](../../images/SPIMultSlave.png)
 
 Multi-Slave and `GPIO`
 
@@ -179,7 +179,7 @@ Types of Serial Protocols
 - SPI (sync)
 - $I^2C$ (sync)
 
-![Serial Hardware](../images/serialHardware.png)
+![Serial Hardware](../../images/serialHardware.png)
 
 ## Baud Rate
 

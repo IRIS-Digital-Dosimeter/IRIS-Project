@@ -1,41 +1,54 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
-/* Test8.ino https://arduino.stackexchange.com/questions/38354/data-logging-speed-with-arduino
+/* Test8.ino  https://arduino.stackexchange.com/questions/38354/data-logging-speed-with-arduino
 
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
 
-  Created: 8/17/23
+  Created: 9/19/23
   Michelle Pichardo
   David Smith
 
+  Updates:
+  - Debug.h now has timer prints
+    - Prints time to store data in a buffer and write to file
+    - Prints time to create all the files
+  - Information prints are added to help the user navigate the program
+  - Precision timer changed slightly 
+
   REQUIRED HARDWARE: 
     - The reset pin RST must be connected to a digital pin for this program 
-      to work. This program is using A4 as the digital pin controlling RST. 
+      to work. This program is using A3 as the digital pin controlling RST. 
 
   Details: 
     - Exposes M0 as an external USB; Check that it does 
       - The process is slow; be patient; check light indicators 
     - Asks for user input over the serial monitor 
-    - Creates 10 files 
-    - Naming is determined by input (Date)
-    - 10 points are summed and stored to file
-    - Green LED indicates when writing is active 
+    - Creates 3 files 
+    - Naming is determined by session input
+    - 12 points are summed and stored to file
+    - RED LED turn OFF while files are writing
 
   Helper FILES: Debug.h, HelperFunc.h, HelperFunc.cpp
     - Required: Compile on Arduino IDE
     - Contents: 
-      - Debug.h: Removes print statements; see file for notes
+      - Debug.h: 
+          - Removes print statements; see file for notes
+          - Test program: printSerial_A0() is an available debug feature 
       - HelperFunc.cpp: 
           Contains full functions and external Constants
       - HelperFunc.h:
+        Global variables:
           unsigned long desiredInterval_(s,ms,us); 
           float scale_12bit = 4096;
           const int chipSelect = 4;
-          void printSerial_A0(float VHi, float VLo);
+        Functions: 
+          void extractSessionNameFromInput();
+          void printSerial_A0(float VHi, float VLo); <- See Debug.h file
           String getTimeStamp_XXXX_us(unsigned long currentTime);
-          File open_SD_tmp_File(int fileIndex, MyDate* myDate);
+          File open_SD_tmp_File_sessionFile(int fileIndex, int session);
           void myDelay_ms(unsigned long ms);
           void myDelay_us(unsigned long us);
+          void USB_SPI_initialization(const int baudRate);
           void SPI_initialization(const int baudRate);
           void SD_initialization(const int chipSelect);
 
@@ -54,8 +67,8 @@
 #include "SD.h"
 #include "HelperFunc.h"
 #include "Debug.h"
-// #include "Adafruit_BMP085"
 #include "Adafruit_TinyUSB.h"
+// #include "Adafruit_BMP085"
 
 // DO NOT CHANGE WITHIN THIS ###############################################################
 
@@ -69,15 +82,16 @@ const int baudRate = 115200;                // Speed of printing to serial monit
 /* Declarations/classes specific to SD card */           
 File dataFile;
    
-
 // ##########################################################################################
 
 // OPEN TO CHANGES ..........................................................................
-#define RESET_PIN  A4                       // Used to trigger board Reset
+#define RESET_PIN  A3                       // Used to trigger board Reset
 
-/* Constants for Timing (per file) */
-unsigned long startTime = 0;               // Micros and Milis requires unsigned long
-unsigned long currentTime = 0;
+/* Constants for Timing */
+unsigned long startAnalogTimer = 0;               // Micros and Milis requires unsigned long
+unsigned long endAnalogTimer = 0;
+unsigned long startFileTimer = 0; 
+unsigned long endFileTimer = 0; 
 
 /* Send A0 Voltage to Serial Monitor: initial testing */
 float VLo = 0.0;
@@ -85,13 +99,13 @@ float Vref = 3.29;                         // Provide highest/ref voltage of cir
 
 /* Create Files variables */
 bool filePrint = true; 
-unsigned long maxFiles = 10;               // Maximum number of files to write
+unsigned long maxFiles = 3;               // Maximum number of files to write
 unsigned long fileCounter = 1; 
 
 /* Fast Board */
-const unsigned long intersampleDelay = 25; 
-const unsigned long interaverageDelay = 1000; 
-const unsigned int numSamples = 10; 
+const unsigned int intersampleDelay = 20; 
+const unsigned int interaverageDelay = 1000; 
+const unsigned int numSamples = 12; 
 
 
 // Main Program (Runs once) ------------------------------------------------------------------
@@ -110,14 +124,23 @@ void setup(){
   SD_initialization(chipSelect);
   // Set the analog pin resolution 
   analogReadResolution(12);
-  // Ask for the date: MM/DD
-  extractDateFromInput();    
   // Ask for the desired file (time) length  
   extractIntervalFromInput();
-  // Set up Green LED pin
+  // Ask for session value
+  extractSessionNameFromInput();
+  // Advise the user
+  Serial.println("\n\n\tSESSION "+ String(session_val) + " STARTING\n");
+  Serial.println("-> Creating { " + String(maxFiles) + " } files");
+  Serial.println("-> Files store { " + String(desiredInterval_s) + "s } worth of data");
+  Serial.println("- Red LED = LOW: LED will turn off during collection");
+  Serial.println("- After logging the file(s), the board will reset");
+  Serial.println("- Only after this reset will the files be visible on the disk\n");
+  // Pause for a moment before collecting 
+  delay(3000);
 
-  delay(5000);
+  startFileTimer = micros(); 
   }
+
 
 }
 
@@ -141,7 +164,7 @@ void loop() {
     digitalWrite(REDLEDpin, LOW);
 
     // Create File: MMDDXXXX.tmp 
-    dataFile = open_SD_tmp_File(fileCounter,&myDate);
+    dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
 
     // Checks 
     debug("File Created: ");
@@ -154,10 +177,10 @@ void loop() {
     dataFile.println("Samples averaged: " + String(numSamples));    
 
     // Store start Time
-    startTime = millis();
+    startAnalogTimer = micros();
 
     // Gather data over a determined time interval 
-    while (millis() - startTime < desiredInterval_ms){
+    while (micros() - startAnalogTimer < desiredInterval_us){
 
       // Declare local variable/Buffer 
       unsigned long sum_sensorValue = 0; 
@@ -166,40 +189,54 @@ void loop() {
       for (unsigned int counter = 1; counter <= numSamples; counter++){
         sum_sensorValue += analogRead(ANALOG0);
         // Pause for stability 
-        myDelay_us(intersampleDelay);
+        // myDelay_us(intersampleDelay);
       }
 
       // Write to file 
       dataFile.println(String(micros()) + "," + String(sum_sensorValue));
       // Pause for stability 
-      myDelay_us(interaverageDelay);
+      // myDelay_us(interaverageDelay);      
+
     }
+    // log anaglog timer 
+    endAnalogTimer = micros() - startAnalogTimer;
 
     // Close the file 
     dataFile.close();
+
+    // Send timer 
+    timerPrintln("\nTime to create file { " + String(fileCounter) + " } using micros(): " + String(endAnalogTimer));
+    timerPrintln("- This does not include file-Open, file-header, file-close");
+
+    Serial.println("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+
     // Incriment file counter 
     fileCounter++;
 
     // Condition when we've reached max files 
     if (fileCounter > maxFiles){
 
+      // send timer 
+      endFileTimer = micros() - startFileTimer; 
+      timerPrintln("\n\nTime to complete { " + String(fileCounter -1) + " } files using micros(): " + String(endFileTimer));
+      timerPrintln("- This does not include setup. This contains overhead from prints and timer calls"); 
+
       //Turn off LED 
       digitalWrite(REDLEDpin, HIGH);
       // Debug prints 
-      debugln("Maximum number of files created. Data logging stopped.");
+      Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
       debugf("File count: %i", fileCounter-1);
-      debugln(" ");
       
       // Change Condition 
       filePrint = false; 
-
+      // Pause
       delay(3000);
       // Reset the board to view new files 
       digitalWrite(RESET_PIN, LOW);
+
       }
    
    }
-
 
 }
 

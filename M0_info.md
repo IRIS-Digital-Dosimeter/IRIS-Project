@@ -1,4 +1,4 @@
-# IRIS: GPS Project
+#  Adafruit M0 Adalogger
 
 This project is done on a Windows computer using powershell. Previous attempts at using WSL required a more involved process of communication.
 
@@ -25,12 +25,13 @@ Protocols: `UART`, `SPI`, `I2C`\
 4.  [Download additional drivers: adafruit_drivers_2.5.0.0.exe](https://github.com/adafruit/Adafruit_Windows_Drivers/releases)
 5.  Use a `Micro-B USB to USB-A` cable to connect the Adalogger to a computer
     - Arduino IDE should identify the Adalogger board automatically
+6. Install necessary Libraries
 
 ## Adalogger Testing
 
-> `Important`: Arduino Integrated Development Environment (IDE) comes with several example code files ready to run.
+> `Important`: Arduino Integrated Development Environment (IDE) comes with several example code files ready to run. Use (.ino) files over (.cpp) files when using the IDE to prevent linking issues
 
-Testing blink
+Test blink
 
 1.  Run Arduino IDE
 2.  File > Examples > 01.Basics > Blink
@@ -41,4 +42,4 @@ Testing blink
 
 > Arduino `does not` provide any way of stopping the void loop function. Besides Arduino there is no such thing to exist in microcontrollers in the first place. Technically all the techniques we used are just to halt the Arduino loop functionality. It does not stop completely, we either send void loop to an infinite condition using while or use an exit statement to halt its process. By doing this Arduino loop stuck inside an infinite loop without executing instructions, `the only way to get it back is by resetting; through a button or by uploading a new sketch`. So technically the Arduino void loop does not stop.
 
-- [Resource Link: Linuxhint.com](https://linuxhint.com/stop-void-loop-function-arduino/)
+- Reference: [Linuxhint.com](https://linuxhint.com/stop-void-loop-function-arduino/)
