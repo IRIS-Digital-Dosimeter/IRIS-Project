@@ -135,7 +135,7 @@ def quickLook(infile, delimiter=','):
     return 
 
 
-def analyze(infile, gap_sizeL_us= 50000., gap_sizeS_us =20000., delimiter=',', loc_prints= False, prints=False):
+def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_prints= False, prints=False):
 
     """
     Parameter: File 

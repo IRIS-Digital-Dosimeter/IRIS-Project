@@ -30,6 +30,7 @@ const int32_t baudRate = 115200;                // Speed of printing to serial m
 #define ANALOG0 A0                          // Analog probe for this sketch
 #define ANALOG1 A1                          // Analog probe for this sketch
 #define REDLEDpin 13                        // RED PIN
+#define RESET_PIN  A3                       // Used to trigger board Reset
 
 /* Declarations/classes specific to SD card */           
 File dataFile;
@@ -53,6 +54,9 @@ void setup(){
   // indicate setup with red LED
   pinMode(REDLEDpin, OUTPUT);
   digitalWrite(REDLEDpin, HIGH);
+  // Set up Reset pin 
+  digitalWrite(RESET_PIN, HIGH);
+  pinMode(RESET_PIN, OUTPUT);
   // Expose M0 as external USB and set up serial monitor communication
   USB_SPI_initialization(baudRate);
 
@@ -108,8 +112,8 @@ void loop() {
     debugln(dataFile.name());
     
     // Header
-    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
     dataFile.println("Inter-sample gap (us): " + String(intersampleDelay));
+    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
     dataFile.println("Samples averaged: " + String(numSamples));    
     dataFile.println("Format: micros(), A0, A1 ");    
 
@@ -122,6 +126,7 @@ void loop() {
       // Declare local variable/Buffer 
       uint16_t sum_sensorValue_A0 = 0; 
       uint16_t sum_sensorValue_A1 = 0; 
+
 
       // Build buffer: read sensor value then sum it to the previous sensor value 
       for (unsigned int counter = 1; counter <= numSamples; counter++){
@@ -168,6 +173,9 @@ void loop() {
       delay(5000);
       // Change Condition 
       filePrint = false; 
+
+      // Reset the board to view new files 
+      digitalWrite(RESET_PIN, LOW);
 
       }
    

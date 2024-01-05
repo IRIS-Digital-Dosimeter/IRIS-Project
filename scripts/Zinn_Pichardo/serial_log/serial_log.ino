@@ -10,7 +10,7 @@ uint32_t startAnalogTimer = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  Serial.begin(500000);
 
 }
 
@@ -30,19 +30,21 @@ void loop() {
     sum_sensorValue0 += analogRead(A0);
     sum_sensorValue1 += analogRead(A1);
     // Pause for stability 
-    myDelay_us(interSampleDelay);
+    // myDelay_us(interSampleDelay);
   }
   uint32_t timeAfter = micros();
+
+  // uint32_t timesum = timeBefore + timeAfter;
   // Pause for stability 
-  myDelay_us(interAverageDelay);
+  // myDelay_us(interAverageDelay);
 
   // Send the summed data via Serial
   Serial.print(timeBefore);
-  Serial.print(",");
+  Serial.print(',');
   Serial.print(timeAfter);
-  Serial.print(",");
+  Serial.print(',');
   Serial.print(sum_sensorValue0);
-  Serial.print(",");
+  Serial.print(',');
   Serial.println(sum_sensorValue1);
 
 

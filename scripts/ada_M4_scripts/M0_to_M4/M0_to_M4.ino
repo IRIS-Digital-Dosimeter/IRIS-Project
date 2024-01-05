@@ -75,8 +75,8 @@ void loop() {
 
     dataFile = open_SD_tmp_File_sessionFile(fileCounter, session_val);
 
-    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
     dataFile.println("Inter-sample gap (us): " + String(intersampleDelay));
+    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
     dataFile.println("Samples averaged: " + String(numSamples));    
     dataFile.println("Format: micros(), A0, A1 ");   
 
@@ -95,7 +95,7 @@ void loop() {
         sum_sensorValue_A0 += analogRead(A0);
         sum_sensorValue_A1 += analogRead(A1);
         // Pause for stability 
-        myDelay_us(intersampleDelay);
+        // myDelay_us(intersampleDelay);
       }
 
       // Write to file 
@@ -106,7 +106,7 @@ void loop() {
       dataFile.println(sum_sensorValue_A1);
 
       // Pause for stability 
-      myDelay_us(interaverageDelay);      
+      // myDelay_us(interaverageDelay);      
 
     }
     // Close the file 

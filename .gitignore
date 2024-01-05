@@ -2,3 +2,4 @@
 scripts/**/libraries/*
 **/libraries/*
 Textbooks/
+*__pycache__/*
