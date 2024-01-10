@@ -5,24 +5,34 @@ Programs used to generate these files:
 
 ## Data Folders Format 
 ```
-Board <M0, M4>
+Board_timing
+Boards: <M0, M4>
+Timing: t1, tLinear 
+    t1: txt file only captures one micros() call 
+    tLinear: txt file captures two micros() calls and their average is used in analysis 
+
+Subdirectories are titled by parameters used: 
+
+Example directory: 
+
+M4_tLinear
  -- 50_50_4
+    -- .txt
+    -- .txt
+    -- .txt
     -- .txt
 
  -- 50_500_20
  -- 50_1500_20
- -- no_inter_1
- -- no_inter_4
- -- no_inter_20
 ```
 
 ```
+Naming of subdirectories: 
 50_50_4 = interSample_interAverage_numSamples 
     -- interSample (us)
     -- interAverage (us)
     -- numSamples: # of samples averaged over
 
-no_inter_2 = file has interSample and interAverage set to 2 
-
-no_inter_4 = "... set to 0" and is averaging over 4 values
+This folder has txt files with 50 us inter-sample delays, 50 us inter-average delays, 
+and sums over 4 data points
 ```
