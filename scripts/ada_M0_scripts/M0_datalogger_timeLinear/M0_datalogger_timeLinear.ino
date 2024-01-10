@@ -124,8 +124,8 @@ void loop() {
     while (micros() - startAnalogTimer < desiredInterval_us){
 
       // Declare local variable/Buffer 
-      uint16_t sum_sensorValue_A0 = 0; 
-      uint16_t sum_sensorValue_A1 = 0; 
+      uint32_t sum_sensorValue_A0 = 0; 
+      uint32_t sum_sensorValue_A1 = 0; 
 
       uint32_t timeBefore = micros();
       // Build buffer: read sensor value then sum it to the previous sensor value 
@@ -133,11 +133,11 @@ void loop() {
         sum_sensorValue_A0 += analogRead(A0);
         sum_sensorValue_A1 += analogRead(A1);
         // Pause for stability 
-        // myDelay_us(intersampleDelay);
+        myDelay_us(intersampleDelay);
       }
       uint32_t timeAfter = micros();
       // Pause for stability 
-      // myDelay_us(interaverageDelay);      
+      myDelay_us(interaverageDelay);      
 
       // Write to file 
       dataFile.print(timeBefore);
@@ -167,7 +167,8 @@ void loop() {
       
       // Debug prints 
       Serial.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
-      Serial.println("\n\nSession {"+ String(session_val) +"} Complete on Pin: A{" + String(Pin_Val) + "}");
+      // Serial.println("\n\nSession {"+ String(session_val) +"} Complete on Pin: A{" + String(Pin_Val) + "}");
+      Serial.println("\n\nSession {"+ String(session_val) +"} Complete");
       debugf("File count: %i", fileCounter-1);
 
       // Reset the USB to view new files 

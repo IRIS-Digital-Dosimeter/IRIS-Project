@@ -9,7 +9,7 @@ Details:
 /////////////////////////////////////////////////////////////////////////////////////////*/
 
 // HEADER FILES
-#include <SdFat.h>
+#include <SD.h>
 #include <Adafruit_TinyUSB.h>
 #include "HelperFunc.h"
 #include "Debug.h"
@@ -29,9 +29,9 @@ uint8_t Pin_Val = 0;                    // Default pin = A0, unsiged int 1bytes/
 const int32_t chipSelect = 4;           // M0 pin for SD card use
 
 /* Fast Board Defaults: 2bytes/16bits */
-uint32_t intersampleDelay = 20; 
-uint32_t interaverageDelay = 1000; 
-uint32_t numSamples = 12;    
+uint32_t intersampleDelay = 100; 
+uint32_t interaverageDelay = 500; 
+uint32_t numSamples = 20;    
 
 /* USB mass storage objects */
 Adafruit_USBD_MSC usb_msc;
