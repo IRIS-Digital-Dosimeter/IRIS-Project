@@ -58,14 +58,13 @@ def extract_time_and_voltage(infile, delimiter=','):
     return t, v, samples_to_av
 
 
-def quickLook(infile, delimiter=','): 
+def quickLook(infile, delimiter=',', samples_to_av=1): 
 
     """
     Parameter: File 
     Returns: Scatter plot and histogram of gaps 
     """
-    # Default unless overwritten 
-    samples_to_av=1
+
     # Read the file to determine the number of header lines and extract parameters
     with open(infile, 'r') as file:
         header_lines = 0

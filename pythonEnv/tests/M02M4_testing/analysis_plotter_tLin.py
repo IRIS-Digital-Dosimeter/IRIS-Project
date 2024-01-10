@@ -72,8 +72,7 @@ def quickLook(infile,
     Parameter: File 
     Returns: Scatter plot and histogram of gaps 
     """
-    # Default unless overwritten 
-    samples_to_av=1
+
     # Read the file to determine the number of header lines and extract parameters
     with open(infile, 'r') as file:
         header_lines = 0
