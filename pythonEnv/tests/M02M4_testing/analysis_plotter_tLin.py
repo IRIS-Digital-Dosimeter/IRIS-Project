@@ -220,8 +220,7 @@ def analyze(infile,
     # extract time and digital value
     t1, t2, d0, d1 = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
     
-    t = (t2 - t1)/samples_to_av + t1
-    # t = t2
+    t = (t1 + t2)/2
 
     # Make a list of the time differences (gaps) between adjacent points:
     dt = t - np.roll(t,1)
@@ -251,7 +250,9 @@ def analyze(infile,
     # Sample Frequency 
     #  num of samples/1s = (1 sample/ gap us) *(1us/10^-6)
     #  gap: amount of time taken per sample stored 
-    sample_freq = ((1/np.median(dt))*(1e6))*samples_to_av
+    #  old: sample_freq = ((1/np.median(dt))*(1e6))*samples_to_av
+    
+    sample_freq = (len(t)/t[-1])*(1e6)
     if prints == True: 
         print(f'Sample Frequency from Median gap (KHz): {sample_freq/1e3:.2f}')
     results_dict['Sample_Frequency_KHz'] = round(sample_freq / 1e3,2)

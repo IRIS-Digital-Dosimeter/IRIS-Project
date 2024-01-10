@@ -17,10 +17,10 @@ def extract_time_and_voltage_2pins(infile, delimiter=','):
     Returns: 
     - Time in microseconds starting at zero
     - Voltage: 
-        V = (digital value/samples averaged) * (3.3/4095)
+        V = (digital value/samples averaged) * (3.3/4096)
         - V0: Volts from A0
         - V1: Volts from A1
-        - The value 4095 depends on analog resolution set to 12 bits
+        - The value 4096 depends on analog resolution set to 12 bits
     - Samples averaged
         - extracted from file or returns default value 1 
     """
@@ -53,9 +53,9 @@ def extract_time_and_voltage_2pins(infile, delimiter=','):
     t, d0, d1 = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
 
     # convert digital to voltage 
-    #   (digital sample / number of samples averaged) * (3.3/4095)
-    v0 = (d0/samples_to_av)*(3.3/4095)
-    v1 = (d1/samples_to_av)*(3.3/4095)
+    #   (digital sample / number of samples averaged) * (3.3/4096)
+    v0 = (d0/samples_to_av)*(3.3/4096)
+    v1 = (d1/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
     t = t - t[0]
@@ -106,8 +106,8 @@ def quickLook_2pins(infile, delimiter=','):
     ## KEEP POST PROCESSING HERE -------------------
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4095)
-    v0 = (d0/samples_to_av)*(3.3/4095)
-    v1 = (d1/samples_to_av)*(3.3/4095)
+    v0 = (d0/samples_to_av)*(3.3/4096)
+    v1 = (d1/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
     t = t - t[0]
@@ -212,9 +212,9 @@ def analyze_2pins(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',',
 
     ## KEEP POST PROCESSING HERE -------------------
     # convert digital to voltage 
-    #   (digital sample / number of samples averaged) * (3.3/4095)
-    v0 = (d0/samples_to_av)*(3.3/4095)
-    v1 = (d1/samples_to_av)*(3.3/4095)
+    #   (digital sample / number of samples averaged) * (3.3/4096)
+    v0 = (d0/samples_to_av)*(3.3/4096)
+    v1 = (d1/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
     t = t - t[0]
@@ -224,27 +224,23 @@ def analyze_2pins(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',',
     ts = t/1e6
     ##  -------------------
 
-    # Store to dictionary & Print ----
-    results_dict = {} 
-    results_dict['Samples_Averaged'] = samples_to_av
-    results_dict['Inter_Sample_delay'] = inter_sample_delay
-    results_dict['Inter_Average_delay'] = inter_average_delay
+
+    ### Prints ###
 
     # Sample Frequency 
     #  num of samples/1s = (1 sample/ gap us) *(1us/10^-6)
     #  gap: amount of time taken per sample stored 
-    sample_freq = (1/np.median(dt))*(1e6)
+    #  old: sample_freq = (1/np.median(dt))*(1e6)
+    
+    sample_freq = (len(t)/t[-1])*(1e6)
     if prints == True: 
         print(f'Sample Frequency from Median gap (KHz): {sample_freq/1e3:.2f}')
-    results_dict['Sample_Frequency_KHz'] = round(sample_freq / 1e3,2)
 
     # Gaps
     if prints == True: 
         print('Median gap (us): ', np.median(dt))
-    results_dict['Median_Gap_us'] = round(np.median(dt),2)
     if prints == True: 
         print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.0f} ms")
-    results_dict['Large_Gap_Analysis_ms'] = gap_sizeL_us / 1e3
 
     gap_index_L = np.where(dt > gap_sizeL_us)
     gap_index_L=gap_index_L[0]
@@ -256,14 +252,11 @@ def analyze_2pins(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',',
 
     if prints == True: 
         print('Count of long gaps: ',len(dt[gap_index_L]))
-    results_dict['Count_of_Long_Gaps'] = len(dt[gap_index_L])
     if prints == True: 
         print('Largest gaps (ms): ',max(dt[gap_index_L])/1e3)
-    results_dict['Largest_Gaps_ms'] = round(max(dt[gap_index_L]) / 1e3,2)
 
     if prints == True: 
         print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.0f} ms")
-    results_dict['Small_Gap_Analysis_ms'] = gap_sizeS_us / 1e3
 
     gap_index_S = np.where(dt > gap_sizeS_us)
     gap_index_S = gap_index_S[0]
@@ -272,21 +265,34 @@ def analyze_2pins(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',',
 
     if prints == True: 
         print(f"Sum of durations larger than {gap_sizeS_us/1e3:.0f} ms (ms): {sum_small_gaps_ms:.2f}")
-    results_dict['Sum_of_Durations_Larger_than_Small_Gap_ms'] = round(sum_small_gaps_ms,2)
 
     if prints == True: 
         print('\nFile info & Dead Time')
     tot_len_file = t[-1]
     if prints == True: 
         print(f"Time Length of file (ms,s): {tot_len_file/1e3:.2f} , {tot_len_file/1e6:.2f}")
-    results_dict['Time_Length_of_File_ms'] =  round(tot_len_file / 1e3,3)
-    results_dict['Time_Length_of_File_s'] =  round(tot_len_file / 1e6,3)
 
     dead_time = (sum_small_gaps/tot_len_file)*100
     if prints == True: 
         print(f'Dead time = (sum durations > {gap_sizeS_us/1e3:.0f} ms/Time length of file)')
         print(f'Dead time %: {dead_time:.3f} \n')
+
+    # Store to dictionary ----
+    results_dict = {} 
+    results_dict['Samples_Averaged'] = samples_to_av
+    results_dict['Inter_Sample_delay'] = inter_sample_delay
+    results_dict['Inter_Average_delay'] = inter_average_delay
+    results_dict['Sample_Frequency_KHz'] = round(sample_freq / 1e3,2)
+    results_dict['Median_Gap_us'] = round(np.median(dt),2)
+    results_dict['Large_Gap_Analysis_ms'] = gap_sizeL_us / 1e3
+    results_dict['Count_of_Long_Gaps'] = len(dt[gap_index_L])
+    results_dict['Largest_Gaps_ms'] = round(max(dt[gap_index_L]) / 1e3,2)
+    results_dict['Small_Gap_Analysis_ms'] = gap_sizeS_us / 1e3
+    results_dict['Sum_of_Durations_Larger_than_Small_Gap_ms'] = round(sum_small_gaps_ms,2)
+    results_dict['Time_Length_of_File_ms'] =  round(tot_len_file / 1e3,3)
+    results_dict['Time_Length_of_File_s'] =  round(tot_len_file / 1e6,3)
     results_dict['Dead_Time_Percentage'] =  round(dead_time,3)
+
 
     return results_dict
 
