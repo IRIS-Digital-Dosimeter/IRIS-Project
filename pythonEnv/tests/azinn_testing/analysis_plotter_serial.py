@@ -60,7 +60,7 @@ def extract_time_and_voltage(infile,
     v1 = (d1/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
-    t = t - t[0]
+    # t = t - t[0]
 
     return t, t1, t2, v0, v1, samples_to_av
 
@@ -115,7 +115,7 @@ def quickLook(infile,
     v1 = (d1/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
-    t = t - t[0]
+    # t = t - t[0]
     # convert us to s 
     t = t/1e6
     ##  -------------------
@@ -232,7 +232,7 @@ def analyze(infile,
     v1 = (d1/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
-    t = t - t[0]
+    # t = t - t[0]
     # convert to ms
     tms = t/1e3
     # convert us to s 

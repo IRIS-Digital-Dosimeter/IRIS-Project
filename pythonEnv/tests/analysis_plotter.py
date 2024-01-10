@@ -53,7 +53,7 @@ def extract_time_and_voltage(infile, delimiter=','):
     v = (d/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
-    t = t - t[0]
+    # t = t - t[0]
 
     return t, v, samples_to_av
 
@@ -103,7 +103,7 @@ def quickLook(infile, delimiter=',', samples_to_av=1):
     v = (d/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
-    t = t - t[0]
+    # t = t - t[0]
     # convert us to s 
     t = t/1e6
     ##  -------------------
@@ -182,9 +182,9 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
                 if param_name.lower() == 'samples averaged':
                     samples_to_av = int(param_value)
                 # Uncomment and modify the following lines if other parameters are present
-                elif param_name.lower() == 'inter-sample gap (us)':
+                elif param_name.lower() == 'intersample gap (us)':
                     inter_sample_delay = float(param_value)
-                elif param_name.lower() == 'inter-average gap (us)':
+                elif param_name.lower() == 'interaverage gap (us)':
                     inter_average_delay = float(param_value)
 
     # extract time and digital value
@@ -201,7 +201,7 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
     v = (d/samples_to_av)*(3.3/4096)
 
     # set time to start at zero 
-    t = t - t[0]
+    # t = t - t[0]
     # convert to ms
     tms = t/1e3
     # convert us to s 

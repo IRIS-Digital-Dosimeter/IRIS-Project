@@ -128,4 +128,5 @@ sum_small_gaps = np.sum(dt[gap_index_S])
 ## calculate the dead time
 dead_time = (sum_small_gaps/tot_len_file)*100
 ```
+
 > Q: what is an appropriate threshold for the smaller gaps? the median? 
