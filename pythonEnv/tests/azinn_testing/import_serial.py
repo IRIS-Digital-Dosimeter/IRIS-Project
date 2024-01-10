@@ -79,7 +79,7 @@ while True:
         
         # Check if line count has reached a million
         # if line_count >= 1_000_000:
-        if line_count >= 1_000:
+        if line_count >= 5_000:
             file.close()  # Close the current file
             file = create_new_file()  # Open a new file with a new timestamp
             line_count = 0  # Reset line count
