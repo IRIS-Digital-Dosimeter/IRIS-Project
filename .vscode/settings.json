@@ -12,6 +12,7 @@
     "SAMD",
     "SRAM",
     "TSAMD",
+    "unstaged",
     "veralog",
     "verilog"
   ],

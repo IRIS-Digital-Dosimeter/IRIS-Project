@@ -162,3 +162,15 @@ Three options
 - rebase merge
     - takes all dev branch commits and places them on main as is 
     - benefit: looks identical to working on main does not have noise about branches
+
+    
+## Git commands 
+> No pushing to main 
+
+### What to do if I forgot to make a branch 
+
+Step 1:\
+    Identify the work you need to move to a new branch
+```git
+
+```
