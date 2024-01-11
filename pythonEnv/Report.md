@@ -9,13 +9,15 @@ samples = 20
 Time Analysis on parameters\
 $n = 4$
 
-$$
+<!-- $$
 \begin{align*}
     
     (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \\
     (4 \times 100 \text{ us})+ 500\text{ us} &= 900 \text{ us}
 \end{align*}
-$$
+$$ -->
+![equation](https://latex.codecogs.com/png.image?\dpi{110}\begin{align*}n\times&space;100\text{us}&plus;500\text{us}&=\text{cycle&space;per&space;data&space;point}\\4\times&space;100\text{us}&plus;500\text{us}&=900\text{us}\end{align*})
+
 Assuming little to no overhead this is about $1\text{ KHz}$
 
 $n = 20$
