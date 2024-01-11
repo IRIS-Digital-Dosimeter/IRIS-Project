@@ -17,17 +17,16 @@ $n = 4$
 \end{align*}
 ```
 
-![equation](https://latex.codecogs.com/png.image?\dpi{110}\begin{align*}n\times&space;100\text{us}&plus;500\text{us}&=\text{cycle&space;per&space;data&space;point}\\4\times&space;100\text{us}&plus;500\text{us}&=900\text{us}\end{align*})
-
 Assuming little to no overhead this is about $1\text{ KHz}$
 
 $n = 20$
-$$
+```math
 \begin{align*}
     
     (20 \times 100 \text{ us})+ 500\text{ us} &= 20,500 \text{ us}
 \end{align*}
-$$
+```
+
 Assuming little to no overhead this is about $48\text{ Hz}$
 
 > As we increase the number of samples averaged the sample frequency decreases, as expected. We effectively have less samples per second but the samples are "steady" the averaging should work to reduce noise.
@@ -75,43 +74,43 @@ I tried setting up a voltage divider and some other tests to verify the values r
 # Calculations 
 Time\
 tBefore, tAfter: before summing and after summing but before writing
-$$
+```math
 \begin{align}
     t = \frac{tBefore + tAfter}{2}
 \end{align}
-$$
+```
 
 Voltage \
 d0: A0 analog value \
 d1: A1 analog value
-$$
+```math
 \begin{align}
     v_{A0} = \frac{d0}{\text{samples to average}}\times\frac{3.3}{4096}\\
     v_{A1} = \frac{d1}{\text{samples to average}}\times\frac{3.3}{4096}
 \end{align}
-$$
+```
 
 Theoretical Sample Frequency \
 n = samples to average 
 
-$$
+```math
 \begin{align*}
     \text{cycle per data point} &= (n \times \text{inter sample delay}) + \text{inter average delay}\\
     &= (n \times 100 \text{ us})+ 500\text{ us}\\
 \end{align*}
-$$
-$$
+```
+```math
 \begin{align}
     f \text{ Hz}= \frac{10^{-6}}{\text{cycle per data point us}}
 \end{align}
-$$
+```
 
 Sample Frequency 
-$$
+```math
 \begin{align}
     f_\text{actual} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{-6}
 \end{align}
-$$
+```
 
 Dead time 
 >Starting with $t$ found in Time calculations 
