@@ -31,31 +31,39 @@ Assuming little to no overhead this is about $48\text{ Hz}$
 
 > As we increase the number of samples averaged the sample frequency decreases, as expected. We effectively have less samples per second but the samples are "steady" the averaging should work to reduce noise.
 
-### Questions 
+### Questions on parameters
 1. What is the purpose of having half a ms pause between averaging? 
 > Originally we had it due to comments on stability but part of me feels the overhead + the high level functions we are using should be sufficient buffers that ensure stability of the unit.
 
 2. Do we have a desired sample frequency? If so, what is it and is it factoring in this averaging? 
 
 ## Analysis Program Update
+Analysis is up-to-date. I would like to go through one run in detail to be sure theoretical is matching up with expected. 
 
-1. Need to check the analysis file to ensure the sample frequency is calculated correctly 
-2. Need to include theoretical values based on the provided Time Analysis 
+1. Currently working the byte analysis 
+2. Will create a program to test faster collection and see if we can do away with inter-average-delay 
+
+### Questions 
+1. Could we set up a time to go over the calculations? 
+> I'm pressing this because as we move forward in the optimization I would like a baseline to compare.  
 
 ## Baud Rate Changes 
 
-Based on the M0 tests the frequency does increase with baud rate but now with the above issues, I'd like to reevaluate the analysis to have a better handle on the expected sample frequency 
+Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/main/pythonEnv/tests/azinn_testing/M0_baud_analysis.ipynb) 
+
 
 ## Binary Files 
-I'm able to store Binary data now. 
 
-> Q: we spoke on viewing the gaps in terms of bytes to see when they could be triggered but now I cannot wrap my head around this concept. See Binary.drawio
+M0 Binary storage program was successfully created. 
 
-> Issue: I cannot have different files in the SD card. Txt and dat files cannot be transferred; I would need to format the card to send it without issue. 
+> Issue: .bin caused issues when transferring from SD to computer. After reformating the issue disappeared. It reappeared when I started storing .txt files and again the unit needed to be reformatted. Conclusion: the binary data is now stored to .dat files and if I need to alternate between .dat or .txt a reformat needs to occur. 
 
-### Format 
+1. Next Analysis is outlined [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png).
+
+
+### Byte sizes  
 ```
-timeBefore (4 bytes) \
+timeBefore (4 bytes)
 timeAfter (4 bytes) 
 ```
 Changed the storage of a sum to 4 bytes 
@@ -65,13 +73,19 @@ sum_sensorValue_A1 (2 bytes) --> (4 bytes)
 ```
 
 ## DMA + Andrew 
+1. See [diagram](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Data_Transfer.png)
+2. Currently helping with DMA example programs; no POC is currently available 
 
-More time needs to be spent analyzing the DMA example we're working on 
-I tried setting up a voltage divider and some other tests to verify the values read by the ADC using the DMA program but the values were not matching up. 
+> DMA: Direct Memory Access. This should work independently of the CPU and is dedicated to data transfer. 
 
-> Still need to wrap my head around the use case here; we'll have data collected from the MDA but it wouldn't be averaged. It would instead be sent directly to the SD card? What would we have the CPU do? We could also find a way to have this instead send from the SD card to the computer while we let the CPU do the normal collection? 
+### Questions on DMA
+1. Do we let the CPU preform the summing and store to RAM and then allow the DMA to access RAM and transfer to SD? 
+> This might remove the gaps but it doesn't answer help with getting the files off of the unit 
+2. Do we instead have DMA send the SD files to the Computer and let the CPU control the writing? 
+> This would not remove the gap issue 
+3. Will the interrupts cause a larger gap than the one's we are experiencing?  
 
-# Calculations 
+# Calculations Used in Analysis
 Time\
 tBefore, tAfter: before summing and after summing but before writing
 ```math
@@ -130,5 +144,8 @@ sum_small_gaps = np.sum(dt[gap_index_S])
 ## calculate the dead time
 dead_time = (sum_small_gaps/tot_len_file)*100
 ```
+## Questions on Calculations 
+1. What is an appropriate threshold for the smaller gaps? the median?
+> this is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
 
-> Q: what is an appropriate threshold for the smaller gaps? the median? 
+2. Are the other calculations valid?
