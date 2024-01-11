@@ -115,7 +115,7 @@ Sample Frequency
 Dead time 
 >Starting with $t$ found in Time calculations 
 
-```
+```py
 # difference between adjacent points 
 dt = t - np.roll(t,1) 
 
