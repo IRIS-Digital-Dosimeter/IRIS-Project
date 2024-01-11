@@ -149,3 +149,16 @@ dead_time = (sum_small_gaps/tot_len_file)*100
 > this is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
 
 2. Are the other calculations valid?
+
+# Github Revamp 
+
+## PR Merge Strategy 
+Three options 
+- regular merge  
+    - takes all commits from dev branch and adds a merge commit on top 
+- squash and merge
+    - takes all dev branch commits and squashes them into one commit and puts it on main
+    - drawback: removes information on commits and moves them to a bloated commit
+- rebase merge
+    - takes all dev branch commits and places them on main as is 
+    - benefit: looks identical to working on main does not have noise about branches
