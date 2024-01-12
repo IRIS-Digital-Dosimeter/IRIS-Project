@@ -223,7 +223,7 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
     if prints == True: 
         print('Median gap (us): ', np.median(dt))
     if prints == True: 
-        print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.0f} ms")
+        print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.3f} ms")
 
     gap_index_L = np.where(dt > gap_sizeL_us)
     gap_index_L=gap_index_L[0]
@@ -239,7 +239,7 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
         print('Largest gaps (ms): ',max(dt[gap_index_L])/1e3)
 
     if prints == True: 
-        print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.0f} ms")
+        print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.3f} ms")
 
     gap_index_S = np.where(dt > gap_sizeS_us)
     gap_index_S = gap_index_S[0]
