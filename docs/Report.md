@@ -152,7 +152,7 @@ dead_time = (sum_small_gaps/tot_len_file)*100
 
 # Github Revamp 
 
-## PR Merge Strategy 
+## Pull Request (PR) Merge Strategy 
 Three options 
 - regular merge  
     - takes all commits from dev branch and adds a merge commit on top 
@@ -164,7 +164,7 @@ Three options
     - benefit: looks identical to working on main does not have noise about branches
 
     
-## Git Revamp
+## Git Commands
 > No pushing to main 
 
 1. Reformating the entire repo structure 
@@ -173,11 +173,11 @@ Three options
 
 ### What to do if I forgot to make a branch 
 
-Step 1:    Identify the work you need to move to a new branch.
+Step 1: Identify the work you need to move to a new branch.
 
 In the following example of `git log` we see a commit ahead of origin that we need to commit to a new branch. Unfortunately, we already committed to main so we need to reset it.  
 
-```git
+```bash
 git log 
 
 < This commit is ahead of origin >
@@ -202,9 +202,9 @@ Date:   Wed Jan 10 17:44:42 2024 -0800
 
 Step 2: Un commit \
     In order to undo the commit we use:
-```git
-git reset HEAD~1
 
+```bash
+git reset HEAD~1
 ```
 
 What this command does is reset our local main branch to the specified target (in this case `HEAD~1`).
@@ -213,7 +213,7 @@ What this command does is reset our local main branch to the specified target (i
 
 The reset command undoes the commits but leaves the work done intact. 
 
-```git
+```bash
 $ git reset HEAD~1
 
 Unstaged changes after reset:
@@ -235,12 +235,13 @@ no changes added to commit (use "git add" and/or "git commit -a")
 Step 3: Move changes to a new branch.\
 The following command will move all of your unstaged changes to a new branch `myNewBranch`. 
 
-```git
+```bash
 git switch -c myNewBranch
 ```
 
 For example
-```
+
+```bash
 $ git switch -c myNewBranch
 
 Switched to a new branch 'myNewBranch'
@@ -260,13 +261,13 @@ Step 4: Now get changes to github.
 
 Commit your changes 
 
-```git
+```bash
 $ git add step1.txt
 $ git commit -m "here we go again"
 ```
 And now we PUSH to github. Github does not know about our new local branch so we need to tell it the first time we push. 
 
-```git
+```bash
 $ git push -u origin HEAD
 ```
 - this pushes our current branch, the branch that HEAD is currently on, to origin, which is github in this case
@@ -278,3 +279,21 @@ About the command `git push -u origin HEAD`:
 
 
 Now we can `git pull` and `git push` as normal just as if we were on main. You can move between this branch and main by using `git checkout <branch name>`. To view your branches `git branch` lists the local branches only. Use `git fetch origin <remote branch name>` to grab non local branches. 
+
+### Removing Branches 
+Removing Local 
+```bash
+git branch -D <local branch>
+```
+
+Removing Remote
+
+```bash
+git push origin -d <remote branch>
+```
+
+### Adding your local branch to remote 
+Just do this command once: 
+```bash
+$ git push -u origin HEAD
+```
