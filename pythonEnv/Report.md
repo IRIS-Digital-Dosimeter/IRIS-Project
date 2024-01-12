@@ -152,7 +152,7 @@ dead_time = (sum_small_gaps/tot_len_file)*100
 
 # Github Revamp 
 
-## PR Merge Strategy 
+## Pull Request (PR) Merge Strategy 
 Three options 
 - regular merge  
     - takes all commits from dev branch and adds a merge commit on top 
@@ -162,3 +162,132 @@ Three options
 - rebase merge
     - takes all dev branch commits and places them on main as is 
     - benefit: looks identical to working on main does not have noise about branches
+
+    
+## Git Commands
+> No pushing to main 
+
+1. Reformating the entire repo structure 
+2. Adjusting rules for now, but eventually moving to an organization to add admin roles 
+3. Currently we will work on PR for verification and use releases
+
+### What to do if I forgot to make a branch 
+
+Step 1: Identify the work you need to move to a new branch.
+
+In the following example of `git log` we see a commit ahead of origin that we need to commit to a new branch. Unfortunately, we already committed to main so we need to reset it.  
+
+```bash
+git log 
+
+< This commit is ahead of origin >
+commit 7a198af75335a58e5fa6439ae6cbab4f37e65674 (HEAD -> main)
+Author: Drixitel <mpmunoz1993@gmail.com>
+Date:   Wed Jan 10 22:13:09 2024 -0800
+
+    step 1
+
+commit d77798ca76f53b24112bfc7b007ed30205289149 (origin/main, origin/HEAD)
+Author: Drixitel <mpmunoz1993@gmail.com>
+Date:   Wed Jan 10 21:54:53 2024 -0800
+
+    repo info
+
+commit fd65ff2d943db06a68b180b3a7bf1ec0542e1731
+Author: Drixitel <mpmunoz1993@gmail.com>
+Date:   Wed Jan 10 17:44:42 2024 -0800
+
+    report finalized
+```
+
+Step 2: Un commit \
+    In order to undo the commit we use:
+
+```bash
+git reset HEAD~1
+```
+
+What this command does is reset our local main branch to the specified target (in this case `HEAD~1`).
+- `HEAD`: the current commit we are on; in our example we are on commit `7a198af75335a58e5fa6439ae6cbab4f37e65674`
+- `~1`: one before; in our example it is `d77798ca76f53b24112bfc7b007ed30205289149`. In general, `<commit id>~X` : `X` commits behind `commit id`.
+
+The reset command undoes the commits but leaves the work done intact. 
+
+```bash
+$ git reset HEAD~1
+
+Unstaged changes after reset:
+M       step1.txt
+
+$ git status
+
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   step1.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Step 3: Move changes to a new branch.\
+The following command will move all of your unstaged changes to a new branch `myNewBranch`. 
+
+```bash
+git switch -c myNewBranch
+```
+
+For example
+
+```bash
+$ git switch -c myNewBranch
+
+Switched to a new branch 'myNewBranch'
+
+$ git status
+
+On branch myNewBranch
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   step1.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+Step 4: Now get changes to github.
+
+Commit your changes 
+
+```bash
+$ git add step1.txt
+$ git commit -m "here we go again"
+```
+And now we PUSH to github. Github does not know about our new local branch so we need to tell it the first time we push. 
+
+```bash
+$ git push -u origin HEAD
+```
+- this pushes our current branch, the branch that HEAD is currently on, to origin, which is github in this case
+- now github has a branch called `myNewBranch` (the remote branch) and we still have our local branch also called `myNewBranch`
+
+About the command `git push -u origin HEAD`:
+- Note when running `git pull` we are pulling from the "upstream branch" (the branch we are interested in pulling changes from, in this case github's remote branch)
+- `-u`: sets the `u`pstream branch as github's copy of `myNewBranch`
+
+
+Now we can `git pull` and `git push` as normal just as if we were on main. You can move between this branch and main by using `git checkout <branch name>`. To view your branches `git branch` lists the local branches only. Use `git fetch origin <remote branch name>` to grab non local branches. 
+
+### Removing Branches 
+Removing Local 
+```bash
+git branch -D <local branch>
+```
+
+Removing Remote
+
+```bash
+git push origin -d <remote branch>
+```
