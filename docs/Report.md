@@ -283,17 +283,27 @@ Now we can `git pull` and `git push` as normal just as if we were on main. You c
 ### Removing Branches 
 Removing Local 
 ```bash
-git branch -D <local branch>
+$ git branch -D <local branch>
 ```
 
 Removing Remote
 
 ```bash
-git push origin -d <remote branch>
+$ git push origin -d <remote branch>
 ```
 
 ### Adding your local branch to remote 
-Just do this command once: 
+This command needs to run once - the first time you push to upstream.
 ```bash
 $ git push -u origin HEAD
+```
+
+### Pulling a remote branch 
+Without fetching you run the risk of creating a detached HEAD state. Do this instead.
+```bash
+$ git branch -r # to see remote
+
+$ git fetch origin <branch_name>
+
+$ git checkout <branch_name>
 ```
