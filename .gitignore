@@ -1,7 +1,3 @@
-*libraries/*
-scripts/**/libraries/*
-**/libraries/*
-Textbooks/
 .vscode/
 
 # Byte-compiled / optimized / DLL files
@@ -17,3 +13,4 @@ __pycache__/
 .venv
 env/
 venv/
+libraries/
