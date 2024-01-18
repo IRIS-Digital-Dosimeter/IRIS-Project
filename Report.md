@@ -148,7 +148,7 @@ myDelay_us(interaverageDelay);
 ```
 ```math
 \begin{align}
-    t_{s} = \text{tBefore} - \text{tAfter} = \text{Time Spent Sampling}
+    t_{s} = \text{tAfter} - \text{tBefore} = \text{Time Spent Sampling}
 \end{align}
 ```
 > We expect $t_s$ to be a stable value. We should plot this distribution.
