@@ -1,8 +1,8 @@
 # M4 Active Programs 
 Contents 
 ```
-M0_to_M4
-M0_to_M4_timeAv
+M0_to_M4/
+M0_to_M4_timeAv/
 ```
 
 ## Run a program 

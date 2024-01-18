@@ -1,4 +1,11 @@
 # Report Update: 1/17/2024
+At a glance:
+1. Setting up new repo 
+2. Merging GUI 
+3. Adjusting Analysis program 
+4. Creating a Byte Analysis
+5. Helping Andrew parse DMA 
+6. Creating a doc for Andrew to review (msp430fr, STM32L4)
 
 ## Newest parameters 1/8/24
 ```
@@ -7,13 +14,13 @@ inter_average = 500 us --> testing removal of this parameter
 samples = 20 
 ```
 
-Time Analysis on parameters assuming little to no overhead.
+Time Analysis on parameters assuming little to no overhead.\
 $n = 4$
 
 ```math
 \begin{align*}
     
-    (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \text{(CPD)} \\
+    (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \text{ (CPD)} \\
     (4 \times 100 \text{ us})+ 500\text{ us} &= 900 \text{ us}
 \end{align*}
 ```
@@ -32,28 +39,27 @@ This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
 
 > As we increase the number of samples averaged the sample frequency decreases, as expected. We effectively have less samples per second but the samples are "steady" the averaging should work to reduce noise.
 
-### Questions on parameters
+### :question: Questions on parameters
 1. What is the purpose of having half a ms pause between averaging? 
-> Originally we had it due to comments on stability but part of me feels the overhead + the high level functions we are using should be sufficient buffers that ensure stability of the unit.
+    > Originally we had it due to comments on stability but part of me feels the overhead + the high level functions we are using should be sufficient buffers that ensure stability of the unit.
 
-:white_check_mark:
+    >:heavy_check_mark: D.S \
+    We shouldn't need to have the inter_average parameter
 
-> David: 
-A: no need to add the interaverage, 
 
 2. Do we have a desired sample frequency? If so, what is it and is it factoring in this averaging? 
-A: Time constant of the boards. Fast:1ms Med:10ms slow:150ms. we want about 3 data points per time constant. e.g. 10 ms we want 3ms apart data points ~300 Hz. This is 3ms per data records; average as many points between the averaging. 
+    > :heavy_check_mark: D.S \
+    The desired sample frequency depends on the boards, and yes these values are taking into account the averaging. 
+    >
+    > Time Constants \
+    >    a. Fast board: `1 ms` \
+    >    b. Medium Board: `10 ms` \
+    >    c. Slow Board: `150 ms` 
+    >
+    > E.g.: for the medium board with a time constant of `10 ms` we will aim for about `3 ms` between each **averaged** data point giving us about 3 points. Thus, the sample frequency is : $\frac{10^3}{3\text{ms}} \approx 300 \text{ Hz}$
 
-## Analysis Program Update
-Analysis is up-to-date. I would like to go through one run in detail to be sure theoretical is matching up with expected. 
-
-1. Currently working the byte analysis 
-2. Will create a program to test faster collection and see if we can do away with inter-average-delay 
-
-
-### Questions 
-1. Could we set up a time to go over the calculations? 
-> I'm pressing this because as we move forward in the optimization I would like a baseline to compare.  
+3. :warning: Follow up to question 2: :warning:\
+ We're sure that 3 points is enough? I might be misremembering how the time constant applies to the decay plot. 
 
 ## Baud Rate Changes 
 
@@ -66,7 +72,7 @@ M0 Binary storage program was successfully created.
 
 > Issue: .bin caused issues when transferring from SD to computer. After reformating the issue disappeared. It reappeared when I started storing .txt files and again the unit needed to be reformatted. Conclusion: the binary data is now stored to .dat files and if I need to alternate between .dat or .txt a reformat needs to occur. 
 
-1. Next Analysis is outlined [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png).
+Binary Analysis is outlined [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png).
 
 
 ### Byte sizes  
@@ -81,30 +87,69 @@ sum_sensorValue_A1 (2 bytes) --> (4 bytes)
 ```
 
 ## DMA + Andrew 
+> DMA: Direct Memory Access. \
+This should work independently of the CPU and is dedicated to data transfer. 
+
 1. See [diagram](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Data_Transfer.png)
 2. Currently helping with DMA example programs; no POC is currently available 
 
-> DMA: Direct Memory Access. This should work independently of the CPU and is dedicated to data transfer. 
 
-### Questions on DMA
+### :question: Questions on DMA
 1. Do we let the CPU preform the summing and store to RAM and then allow the DMA to access RAM and transfer to SD? 
-> This might remove the gaps but it doesn't answer help with getting the files off of the unit 
+    > This might remove the gaps but it doesn't answer help with getting the files off of the unit 
 2. Do we instead have DMA send the SD files to the Computer and let the CPU control the writing? 
-> This would not remove the gap issue 
+    > This would not remove the gap issue 
 3. Will the interrupts cause a larger gap than the one's we are experiencing?  
 
+## Analysis Program Update
+
+1. Currently working the byte analysis found [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png)
+2. Removing inter_average delays 
+3. Checking the accuracy of the functions  
+
 # Calculations Used in Analysis
-Time\
-tBefore, tAfter: before summing and after summing but before writing
+Code snippet to reference.
+```arduino
+// Declare local variable/Buffer 
+uint32_t sum_sensorValue_A0 = 0; 
+uint32_t sum_sensorValue_A1 = 0; 
+
+// Collect time before sampling 
+uint32_t timeBefore = micros();
+
+// Build buffer: read sensor value then sum it to the previous sensor value 
+for (unsigned int counter = 1; counter <= numSamples; counter++){
+    sum_sensorValue_A0 += analogRead(A0);
+    sum_sensorValue_A1 += analogRead(A1);
+    // Pause for stability 
+    myDelay_us(intersampleDelay);
+}
+// Collect time after sampling 
+uint32_t timeAfter = micros();
+
+// Pause for stability 
+myDelay_us(interaverageDelay);
+
+// Write to file commands 
+// ... 
+```
+
+## Time
+`tBefore`: before summing analog values \
+`tAfter`: after summing but before writing & `inter_average`
 ```math
 \begin{align}
-    t = \frac{tBefore + tAfter}{2}
+    t = \frac{tBefore + tAfter}{2} = \text{Time per averaged data point}
 \end{align}
 ```
-D: analyze t_after - t_before ~ time spent sampling ~ should be stable 
-Hopefully the gaps are the only unstable bit
+```math
+\begin{align}
+    t_{s} = \text{tBefore} - \text{tAfter} = \text{Time Spent Sampling}
+\end{align}
+```
+> We expect $t_s$ to be a stable value. We should plot this distribution.
 
-Voltage \
+## Voltage 
 d0: A0 analog value \
 d1: A1 analog value
 ```math
@@ -114,56 +159,42 @@ d1: A1 analog value
 \end{align}
 ```
 
-Theoretical Sample Frequency \
-n = samples to average 
-D: or n-1? does it do the delay after the last sample 
-D: set inter_average delay to zero 
-D: 10s of microseconds not a problem 
-D: plot distribution
+## Theoretical Sample Frequency 
+> See Code snippet found at the start of Calculations Used in Analysis; $n$ is matches the number of times `inter_sample` delay is called. 
 
-```math
-\begin{align*}
-    \text{cycle per data point} &= (n \times \text{inter sample delay}) + \text{inter average delay}\\
-    &= (n \times 100 \text{ us})+ 500\text{ us}\\
-\end{align*}
-```
-D: 10^6 silly both equations* 
+$n$ = samples to average 
 
 ```math
 \begin{align}
-    f \text{ Hz}= \frac{10^{-6}}{\text{cycle per data point us}}
+    \text{cycles per data point (CPD)} &= (n \times \text{inter sample delay}) + \text{inter average delay}\\
+    \text{New (CPD)} &= (n \times \text{inter sample delay}) 
 \end{align}
 ```
 
-Sample Frequency 
 ```math
 \begin{align}
-    f_\text{actual} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{-6}
+    f_{TH} = \frac{10^{6}}{\text{CPD us}} =\text{ Theoretical Frequency Hz}
 \end{align}
 ```
-D: CPD ~ 1/2 ms 
-cycle per data point cpd 
-    `expected duration = cpd*#data points`
-    gives_expected time of file 
+## Theoretical Sample Spacing
 
-    differnce of how long it took vs how long we expected it to take 
-    if this ration is .1 then it took 10% longer than expected 
-    2 = twice as long as expected 
-Theory
-    `deadtime vs. expectation = (duration - expected duration)/expected duration`
+```math
+\begin{align}
+    S_{TH} = \frac{1}{f_{TH}} =\text{ Theoretical Sample Spacing}
+\end{align}
+```
 
-    we don't know if the cause of that is due to (x,y,z)
+## Sample Frequency 
+```math
+\begin{align}
+    f_\text{actual} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{6}
+\end{align}
+```
 
-How much of it is gaps 
-    `deadtime due to gaps = (duration - #points*median dt) / (#points*median dt)`
-
-    median_dt = how long it takes to average all the sample (actual value)
-    `median dt = median(tAfter-tBefore)`
-
-
-Dead time 
+## Dead time 
 >Starting with $t$ found in Time calculations 
 
+Code Snippet from D.S's original program. 
 ```py
 # difference between adjacent points 
 dt = t - np.roll(t,1) 
@@ -186,11 +217,20 @@ sum_small_gaps = np.sum(dt[gap_index_S])
 ## calculate the dead time
 dead_time = (sum_small_gaps/tot_len_file)*100
 ```
-## Questions on Calculations 
+## :question: Questions on Calculations 
 1. What is an appropriate threshold for the smaller gaps? the median?
-> this is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
+    > This is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
 
-2. Are the other calculations valid?
+    > :heavy_check_mark: D.S \
+    The threshold should be calculated using the `Time Spent Sampling` aka Equation (2).\
+    Use the following for new calculations: \
+    Expected duration of file = CPD $\times$ #_of_points \
+    Dead time vs. Expectation = (actual duration - expected duration) / expected duration \
+    >---note: `.1 = 10% from expected`, `2 = took twice as long as expected `\
+    >New median dt = median(tAfter - tBefore) \
+    New DeadTime due to Gaps = (actual_duration - #_of_points $\times$ median_dt) / (#_of_points $\times$ median_dt)
+
+
 
 # Github Revamp 
 

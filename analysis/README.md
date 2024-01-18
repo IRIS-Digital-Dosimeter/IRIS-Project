@@ -1,5 +1,20 @@
-# Python Environment  
+# Postprocessing using Python 
+Here develop our analysis program and analyze IRIS output files. 
 
+## Content Format
+```
+analysis/
+    <test_name_1>/ 
+                data/
+                test_name.ipynb
+                analysis.py
+    <test_name_2>/ 
+                data/
+                test_name.ipynb
+                analysis.py
+```
+
+# Using Poetry
 Dependencies are managed via [Poetry](https://python-poetry.org/docs/). A full list of current dependencies is located in this directory's [toml](https://github.com/Drixitel/Iris-Adafruit-GPS/blob/main/pythonEnv/pyproject.toml) file. 
 
 For users with poetry, the following are useful commands: 
