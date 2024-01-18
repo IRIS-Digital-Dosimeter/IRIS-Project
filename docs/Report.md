@@ -1,23 +1,24 @@
-# Report 1/8/2024
+# Report Update: 1/17/2024
 
-## Implement new parameters / Theoretical Freq
+## Newest parameters 1/8/24
 ```
 inter_sample = 100 us
-inter_average = 500 us 
+inter_average = 500 us --> testing removal of this parameter
 samples = 20 
 ```
-Time Analysis on parameters\
+
+Time Analysis on parameters assuming little to no overhead.
 $n = 4$
 
 ```math
 \begin{align*}
     
-    (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \\
+    (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \text{(CPD)} \\
     (4 \times 100 \text{ us})+ 500\text{ us} &= 900 \text{ us}
 \end{align*}
 ```
 
-Assuming little to no overhead this is about $1\text{ KHz}$
+This is about $1\text{ KHz}$ sample frequency ($\frac{10^6}{900\text{us}}$).
 
 $n = 20$
 ```math
@@ -27,7 +28,7 @@ $n = 20$
 \end{align*}
 ```
 
-Assuming little to no overhead this is about $48\text{ Hz}$
+This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
 
 > As we increase the number of samples averaged the sample frequency decreases, as expected. We effectively have less samples per second but the samples are "steady" the averaging should work to reduce noise.
 
@@ -35,13 +36,20 @@ Assuming little to no overhead this is about $48\text{ Hz}$
 1. What is the purpose of having half a ms pause between averaging? 
 > Originally we had it due to comments on stability but part of me feels the overhead + the high level functions we are using should be sufficient buffers that ensure stability of the unit.
 
+:white_check_mark:
+
+> David: 
+A: no need to add the interaverage, 
+
 2. Do we have a desired sample frequency? If so, what is it and is it factoring in this averaging? 
+A: Time constant of the boards. Fast:1ms Med:10ms slow:150ms. we want about 3 data points per time constant. e.g. 10 ms we want 3ms apart data points ~300 Hz. This is 3ms per data records; average as many points between the averaging. 
 
 ## Analysis Program Update
 Analysis is up-to-date. I would like to go through one run in detail to be sure theoretical is matching up with expected. 
 
 1. Currently working the byte analysis 
 2. Will create a program to test faster collection and see if we can do away with inter-average-delay 
+
 
 ### Questions 
 1. Could we set up a time to go over the calculations? 
@@ -93,6 +101,8 @@ tBefore, tAfter: before summing and after summing but before writing
     t = \frac{tBefore + tAfter}{2}
 \end{align}
 ```
+D: analyze t_after - t_before ~ time spent sampling ~ should be stable 
+Hopefully the gaps are the only unstable bit
 
 Voltage \
 d0: A0 analog value \
@@ -106,6 +116,10 @@ d1: A1 analog value
 
 Theoretical Sample Frequency \
 n = samples to average 
+D: or n-1? does it do the delay after the last sample 
+D: set inter_average delay to zero 
+D: 10s of microseconds not a problem 
+D: plot distribution
 
 ```math
 \begin{align*}
@@ -113,6 +127,8 @@ n = samples to average
     &= (n \times 100 \text{ us})+ 500\text{ us}\\
 \end{align*}
 ```
+D: 10^6 silly both equations* 
+
 ```math
 \begin{align}
     f \text{ Hz}= \frac{10^{-6}}{\text{cycle per data point us}}
@@ -125,6 +141,25 @@ Sample Frequency
     f_\text{actual} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{-6}
 \end{align}
 ```
+D: CPD ~ 1/2 ms 
+cycle per data point cpd 
+    `expected duration = cpd*#data points`
+    gives_expected time of file 
+
+    differnce of how long it took vs how long we expected it to take 
+    if this ration is .1 then it took 10% longer than expected 
+    2 = twice as long as expected 
+Theory
+    `deadtime vs. expectation = (duration - expected duration)/expected duration`
+
+    we don't know if the cause of that is due to (x,y,z)
+
+How much of it is gaps 
+    `deadtime due to gaps = (duration - #points*median dt) / (#points*median dt)`
+
+    median_dt = how long it takes to average all the sample (actual value)
+    `median dt = median(tAfter-tBefore)`
+
 
 Dead time 
 >Starting with $t$ found in Time calculations 
@@ -135,10 +170,17 @@ dt = t - np.roll(t,1)
 
 # index the gaps by a threshold 
 ## small gaps
-gap_index_S = np.where(dt > 4000)
+gap_index_S = np.where(dt > 4000) 
+#   number that should be dependent on theo sample freq ~ 1/thefreqq = theo spacing 
+#   4000us --> multiple of expecting 
+
 gap_index_S = gap_index_S[0]
 
 ## sum all of the gaps with the smaller threshold 
+# do better: 
+#   with no inter_average
+#   find the data that is missing 
+#   
 sum_small_gaps = np.sum(dt[gap_index_S])
 
 ## calculate the dead time
