@@ -1,10 +1,10 @@
 # M0 Active Programs 
 Contents 
 ```
-datalogger
-datalogger_timeLinear
-datalogger_timeLinear_binary
-MDA_Test
+datalogger/
+datalogger_timeLinear/
+datalogger_timeLinear_binary/
+MDA_Test/
 ```
 ## Run a program 
 This example is using `datalogger`
