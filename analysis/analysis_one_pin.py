@@ -16,19 +16,17 @@ Created by: David Smith & Michelle Pichardo
 """
 import matplotlib.pyplot as plt 
 import numpy as np
-import pandas as pd
 
-def extract_time_and_voltage(infile, delimiter=','):
+def extract_time_and_voltage(infile, delimiter=',', samples_averaged=1):
     """
-    Parameter: File
+    Parameter: infile, samples_averaged
     Returns: 
-    - Time in microseconds starting at zero
+    - Time in microseconds
     - Voltage = (digital value/samples averaged) * (3.3/4096)
         - The value 4096 depends on analog resolution set to 12 bits
     - Samples averaged
     """
-    # Default unless overwritten 
-    samples_to_av=1
+    
     # Read the file to determine the number of header lines and extract parameters
     with open(infile, 'r') as file:
         header_lines = 0
@@ -49,7 +47,7 @@ def extract_time_and_voltage(infile, delimiter=','):
             if ':' in line:
                 param_name, param_value = map(str.strip, line.split(':'))
                 if param_name.lower() == 'samples averaged':
-                    samples_to_av = int(param_value)
+                    samples_averaged = int(param_value)
 
 
     # extract time and digital value
@@ -57,18 +55,24 @@ def extract_time_and_voltage(infile, delimiter=','):
 
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4096)
-    v = (d/samples_to_av)*(3.3/4096)
+    v = (d/samples_averaged)*(3.3/4096)
 
-    # set time to start at zero 
+    # set time to start at zero (NO, this rounds in a weird way)
     # t = t - t[0]
 
-    return t, v, samples_to_av
+    return t, v, samples_averaged
 
 
-def quickLook(infile, delimiter=',', samples_to_av=1): 
+def quickLook(infile, delimiter=',', samples_averaged=1, set_time_to_zero = True): 
 
     """
-    Parameter: File 
+    Parameters: 
+    - infile
+    - delimiter 
+    - samples_averaged 
+    - set_time_to_zero: sets the time axis to start at zero 
+        this should not be used for analysis; the rounding removes data
+
     Returns: Scatter plot and histogram of gaps 
     """
 
@@ -92,7 +96,7 @@ def quickLook(infile, delimiter=',', samples_to_av=1):
             if ':' in line:
                 param_name, param_value = map(str.strip, line.split(':'))
                 if param_name.lower() == 'samples averaged':
-                    samples_to_av = int(param_value)
+                    samples_averaged = int(param_value)
 
 
     # extract time and digital value
@@ -107,10 +111,12 @@ def quickLook(infile, delimiter=',', samples_to_av=1):
     ## KEEP POST PROCESSING HERE -------------------
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4096)
-    v = (d/samples_to_av)*(3.3/4096)
+    v = (d/samples_averaged)*(3.3/4096)
 
     # set time to start at zero 
-    # t = t - t[0]
+    if set_time_to_zero == True: 
+        t = t - t[0]
+    
     # convert us to s 
     t = t/1e6
     ##  -------------------
@@ -133,7 +139,7 @@ def quickLook(infile, delimiter=',', samples_to_av=1):
     axs[1].set_ylabel('Count')
     axs[1].grid()
 
-    fig.suptitle(f'{infile}, Samples Av:{samples_to_av}')
+    fig.suptitle(f'{infile}, Samples Av:{samples_averaged}')
     fig.subplots_adjust(top=.93)
     fig.tight_layout()
     plt.show() 
@@ -141,32 +147,47 @@ def quickLook(infile, delimiter=',', samples_to_av=1):
     return 
 
 
-def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_prints= False, prints=False):
+def analyze(infile, 
+            samples_averaged=1,
+            inter_sample_delay = None,
+            inter_average_delay = None,
+            gap_sizeL_us= 500., 
+            gap_sizeS_us =500., 
+            delimiter=',', 
+            loc_prints= False, 
+            prints=False
+            ):
 
     """
-    Parameter: File 
+    Checks the header for parameters, 
+    if no header is available the parameters can be set manually.
+
+    Parameters: 
+    - infile 
+    - samples_averaged
+    - inter_sample_delay
+    - inter_average_delay
+
     Optional parameters: 
-        - gap_sizeL_us: largest gap size of interest in (us)
-        - gap_sizeS_us: smallest gap size of interest in (us)
-        - loc_prints: bool, this prints additional info regarding gap locations/durations
-        - prints: bool, this prints values for 1 file
+    - gap_sizeL_us: largest gap size of interest in (us)
+    - gap_sizeS_us: smallest gap size of interest in (us)
+    - loc_prints: bool, this prints additional info regarding gap locations/durations
+    - prints: bool, this prints dictionary values for 1 file
+
     Returns: 
-        - dictionary of values
-            - samples averaged default/input
-            - sample freq
-            - median gap
-            - large gap default/input
-            - count of long gaps
-            - largest gap
-            - small gap default/input
-            - sum of durations larger than small gap 
-            - time length of file in ms,s
-            - dead time percentage
+    - dictionary of values
+        - samples averaged default/input
+        - sample freq
+        - median gap
+        - large gap default/input
+        - count of long gaps
+        - largest gap
+        - small gap default/input
+        - sum of durations larger than small gap 
+        - time length of file in ms,s
+        - dead time percentage
     """
-    # Default unless overwritten 
-    samples_to_av=1
-    inter_sample_delay = None
-    inter_average_delay = None
+
     # Read the file to determine the number of header lines and extract parameters
     with open(infile, 'r') as file:
         header_lines = 0
@@ -187,7 +208,7 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
             if ':' in line:
                 param_name, param_value = map(str.strip, line.split(':'))
                 if param_name.lower() == 'samples averaged':
-                    samples_to_av = int(param_value)
+                    samples_averaged = int(param_value)
                 # Uncomment and modify the following lines if other parameters are present
                 elif param_name.lower() == 'intersample gap (us)':
                     inter_sample_delay = float(param_value)
@@ -205,10 +226,11 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
     ## KEEP POST PROCESSING HERE -------------------
     # convert digital to voltage 
     #   (digital sample / number of samples averaged) * (3.3/4096)
-    v = (d/samples_to_av)*(3.3/4096)
+    v = (d/samples_averaged)*(3.3/4096)
 
     # set time to start at zero 
     # t = t - t[0]
+
     # convert to ms
     tms = t/1e3
     # convert us to s 
@@ -222,58 +244,72 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
     #  gap: amount of time taken per sample stored 
     #  old: sample_freq = (1/np.median(dt))*(1e6)
     
-    sample_freq = (len(t)/t[-1])*(1e6)
-    if prints == True: 
-        print(f'Sample Frequency from Median gap (KHz): {sample_freq/1e3:.2f}')
+    # Theoretical Frequency 
+    cycle = samples_averaged * inter_sample_delay + inter_average_delay
+    theoretical_freq = 1e6/(cycle)
 
-    # Gaps
-    if prints == True: 
-        print('Median gap (us): ', np.median(dt))
-    if prints == True: 
-        print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.3f} ms")
+    # Actual Frequency
+    t_z = t - t[0]
+    sample_freq = (len(t)/t_z[-1])*(1e6)
 
+    # Gaps Large
     gap_index_L = np.where(dt > gap_sizeL_us)
     gap_index_L=gap_index_L[0]
+
+    # Gaps small
+    gap_index_S = np.where(dt > gap_sizeS_us)
+    gap_index_S = gap_index_S[0]
+    sum_small_gaps = np.sum(dt[gap_index_S])
+    sum_small_gaps_ms = np.sum(dt[gap_index_S])/1e3
+
+    # File duration
+    actual_file_duration = t_z[-1]
+    
+    # Expected duratoin 
+    expected_file_duration = cycle*len(d)
+
+    # Dead time
+    dead_time = (sum_small_gaps/actual_file_duration)*100
+
+
+
+
+    if prints == True: 
+        # parameters
+        print('inter_sample: ', inter_sample_delay)
+        print('inter_average: ', inter_average_delay)
+        # Theoretical frequency
+        print(f'Expected Frequency from Median gap (KHz): {theoretical_freq/1e3:.3f}')
+        # Actual Frequency 
+        print(f'Sample Frequency from Median gap (KHz): {sample_freq/1e3:.3f}')
+        # Gaps Large
+        print(f"\nLARGE GAP ANALYSIS: {gap_sizeL_us/1e3:.3f} ms") 
+        print('Largest gaps (ms): ',max(dt[gap_index_L])/1e3)
+        print('Count of long gaps: ',len(dt[gap_index_L])) 
+        print('Median gap (us): ', np.median(dt))
+        # Gaps Small
+        print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.3f} ms") 
+        print(f"Sum of durations larger than {gap_sizeS_us/1e3:.2f} ms (ms): {sum_small_gaps_ms:.3f}")
+        # File info
+        print('\nFile info & Dead Time:')
+        print(f'Expected file duration assuming no overhead (ms,s): {expected_file_duration /1e3:.3f} , {expected_file_duration /1e6:.3f}')
+        print(f"Actual file duration (ms,s): {actual_file_duration/1e3:.3f} , {actual_file_duration/1e6:.3f}")
+        # Dead time
+        print('Dead time calculations have a variable dependency - omit')
+        print(f'\nDead time = (sum durations > {gap_sizeS_us/1e3:.3f} ms/Time length of file)')
+        print(f'Dead time %: {dead_time:.3f} \n')
 
     if loc_prints == True: 
         print('Locations of long gaps: ', gap_index_L)
         print('Times of long gaps (ms): ',ts[gap_index_L])
         print('Durations of long gaps (ms): ',dt[gap_index_L]/1e3)
 
-    if prints == True: 
-        print('Count of long gaps: ',len(dt[gap_index_L]))
-    if prints == True: 
-        print('Largest gaps (ms): ',max(dt[gap_index_L])/1e3)
 
-    if prints == True: 
-        print(f"\nSMALL GAP ANALYSIS: {gap_sizeS_us/1e3:.3f} ms")
 
-    gap_index_S = np.where(dt > gap_sizeS_us)
-    gap_index_S = gap_index_S[0]
-    sum_small_gaps = np.sum(dt[gap_index_S])
-    sum_small_gaps_ms = np.sum(dt[gap_index_S])/1e3
-
-    if prints == True: 
-        print(f"Sum of durations larger than {gap_sizeS_us/1e3:.0f} ms (ms): {sum_small_gaps_ms:.2f}")
-
-    if prints == True: 
-        print('\nFile info & Dead Time')
-    tot_len_file = t[-1]
-    if prints == True: 
-        print(f"Time Length of file (ms,s): {tot_len_file/1e3:.2f} , {tot_len_file/1e6:.2f}")
-
-    dead_time = (sum_small_gaps/tot_len_file)*100
-    if prints == True: 
-        print(f'Dead time = (sum durations > {gap_sizeS_us/1e3:.0f} ms/Time length of file)')
-        print(f'Dead time %: {dead_time:.3f} \n')
-
-    # Theoretical Frequency 
-    cycle = samples_to_av * inter_sample_delay + inter_average_delay
-    theoretical_freq = 1e-3/(cycle*1e-6)
 
     # Store to dictionary ----
     results_dict = {} 
-    results_dict['Samples_Averaged'] = samples_to_av
+    results_dict['Samples_Averaged'] = samples_averaged
     results_dict['Inter_Sample_delay'] = inter_sample_delay
     results_dict['Inter_Average_delay'] = inter_average_delay
     results_dict['Theoretical_Frequency_KHz'] = round(theoretical_freq,3)
@@ -286,8 +322,10 @@ def analyze(infile, gap_sizeL_us= 500., gap_sizeS_us =500., delimiter=',', loc_p
     # results_dict['Largest_Gaps_ms'] = round(max(dt[gap_index_L]) / 1e3,2)
     results_dict['Smallest_Gap_ms'] = round(min(dt) / 1e3,2)
     results_dict['Sum_of_Durations_Larger_than_Small_Gap_ms'] = round(sum_small_gaps_ms,2)
-    results_dict['Time_Length_of_File_ms'] =  round(tot_len_file / 1e3,3)
-    results_dict['Time_Length_of_File_s'] =  round(tot_len_file / 1e6,3)
+    results_dict['Expected_file_duration_ms'] = round(expected_file_duration / 1e3,3)
+    results_dict['Expected_file_duration_s'] = round(expected_file_duration / 1e6,3)
+    results_dict['Actual_file_duration_ms'] =  round(actual_file_duration / 1e3,3)
+    results_dict['Actual_file_duration_s'] =  round(actual_file_duration / 1e6,3)
     results_dict['Dead_Time_Percentage'] =  round(dead_time,3)
 
     return results_dict
