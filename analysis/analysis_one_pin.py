@@ -1,8 +1,15 @@
-# analysis_plotter.py
-
 """
+analysis_one_pin.py 
+
+Version 1: Used to analyze pre-TX files
+
+Assumes files are of the following format 
+        micros(), A0
+
 Created by: David Smith & Michelle Pichardo
-Helper file containing useful functions 
+
+
+
 - Extract time and voltage
 - Plotters
 - Analysis 

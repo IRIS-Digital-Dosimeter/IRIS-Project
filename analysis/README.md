@@ -12,6 +12,12 @@ analysis/
                 data/
                 test_name.ipynb
                 analysis.py
+
+    helper_files/ 
+                <helpful python files>
+    
+    common_module/
+                analysis.py
 ```
 
 # Using Poetry
