@@ -109,12 +109,14 @@ This should work independently of the CPU and is dedicated to data transfer.
 
 # Calculations Used in Analysis
 Code snippet to reference.
-```arduino
-// Declare local variable/Buffer 
+```c++
+// Declare local variable/Buffer
+
 uint32_t sum_sensorValue_A0 = 0; 
 uint32_t sum_sensorValue_A1 = 0; 
 
-// Collect time before sampling 
+// Collect time before sampling
+
 uint32_t timeBefore = micros();
 
 // Build buffer: read sensor value then sum it to the previous sensor value 
@@ -124,10 +126,12 @@ for (unsigned int counter = 1; counter <= numSamples; counter++){
     // Pause for stability 
     myDelay_us(intersampleDelay);
 }
-// Collect time after sampling 
+// Collect time after sampling
+
 uint32_t timeAfter = micros();
 
-// Pause for stability 
+// Pause for stability
+
 myDelay_us(interaverageDelay);
 
 // Write to file commands 
