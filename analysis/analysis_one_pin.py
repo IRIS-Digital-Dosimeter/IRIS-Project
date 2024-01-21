@@ -142,6 +142,7 @@ def quickLook(infile, delimiter=',', samples_averaged=1, set_time_to_zero = True
     fig.suptitle(f'{infile}, Samples Av:{samples_averaged}')
     fig.subplots_adjust(top=.93)
     fig.tight_layout()
+    
     plt.show() 
 
     return 
