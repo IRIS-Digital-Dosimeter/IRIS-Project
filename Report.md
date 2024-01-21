@@ -137,22 +137,6 @@ myDelay_us(interaverageDelay);
 // Write to file commands 
 // ... 
 ```
-
-## Time
-`tBefore`: before summing analog values \
-`tAfter`: after summing but before writing & `inter_average`
-```math
-\begin{align}
-    t = \frac{tBefore + tAfter}{2} = \text{Time per averaged data point}
-\end{align}
-```
-```math
-\begin{align}
-    t_{s} = \text{tAfter} - \text{tBefore} = \text{Time Spent Sampling}
-\end{align}
-```
-> We expect $t_s$ to be a stable value. We should plot this distribution.
-
 ## Voltage 
 d0: A0 analog value \
 d1: A1 analog value
@@ -163,64 +147,128 @@ d1: A1 analog value
 \end{align}
 ```
 
-## Theoretical Sample Frequency 
+## Time per Averaged Data Point
+`tBefore`: before summing analog values \
+`tAfter`: after summing but before writing & `inter_average` delay
+```math
+\begin{align}
+    t = \frac{tBefore + tAfter}{2} = \text{Time per averaged data point}
+\end{align}
+```
+
+## Actual Time spent sampling $\Delta t_a$
+
+```math
+\begin{align}
+    \Delta t_{a} = \text{tAfter} - \text{tBefore} = \text{Actual Time Spent Sampling}
+\end{align}
+```
+```py 
+# find median aka Actual time spent sampling
+time_spent_sampling = numpy.median(t_a)
+```
+> We expected $t_s$ to be a stable value -- it is! 
+
+## Expected Time spent sampling $\Delta t_e$
+
 > See Code snippet found at the start of Calculations Used in Analysis; $n$ is matches the number of times `inter_sample` delay is called. 
 
 $n$ = samples to average 
 
 ```math
 \begin{align}
-    \text{cycles per data point (CPD)} &= (n \times \text{inter sample delay}) + \text{inter average delay}\\
-    \text{New (CPD)} &= (n \times \text{inter sample delay}) 
+    \Delta t_e &= (n \times \text{inter sample delay}) + \text{inter average delay}\\
+    \text{New } \Delta t_e &= (n \times \text{inter sample delay}) 
 \end{align}
 ```
+
+## :exclamation: Expected Sample Spacing
+> :exclamation:Removed this variable because this is the $t_e$ value aka time spent sampling this does not include the gap that comes after sampling:exclamation: 
+```math
+\begin{align}
+    \frac{1}{f_{e}} =\text{ Theoretical Sample Spacing}
+\end{align}
+```
+
+## Actual Sample Frequency $f_a$
+```math
+\begin{align}
+    f_\text{a} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{6}
+\end{align}
+```
+
+## Expected Sample Frequency $f_e$
 
 ```math
 \begin{align}
-    f_{TH} = \frac{10^{6}}{\text{CPD us}} =\text{ Theoretical Frequency Hz}
+    f_{e} \text{ Hz} = \frac{10^{6}}{\Delta t_e\text{ us}}
 \end{align}
 ```
-## Theoretical Sample Spacing
 
+## Actual File Duration $F_a$
+
+```py
+# Actual File duration (us)
+actual_file_duration =  t[-1] - t[0]
+```
+
+## Expected File Duration $F_e$
+> assumes no overhead and:
+> - doesn't account for `inter_average` delay
+> - " " write times
+> - " " if else statement check 
 ```math
 \begin{align}
-    S_{TH} = \frac{1}{f_{TH}} =\text{ Theoretical Sample Spacing}
+    \text{expected file duration} = \Delta t_e \times \text{\# of points}
 \end{align}
 ```
 
-## Sample Frequency 
+## New Dead time calculations 
+>Starting with $t$ found in Time per Averaged Data Point calculations 
+
+Dead time vs Expectation (us)
+- actual file duration = $F_a$ 
+- expected file duration = $F_e$
 ```math
 \begin{align}
-    f_\text{actual} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{6}
+    \text{Dead time vs Expectation} = \frac{F_a - F_e}{F_e}
 \end{align}
 ```
 
-## Dead time 
->Starting with $t$ found in Time calculations 
+Dead time due to gaps (us)
+- let number of points = $N$
+- actual time spent sampling = $\Delta t_a$
+```math
+\begin{align}
+    \text{Dead time due to gaps} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}
+\end{align}
+```
+
+## Old Dead Time Calculations 
+
+>Starting with $t$ found in Time per Averaged Data Point calculations 
+
 
 Code Snippet from D.S's original program. 
 ```py
 # difference between adjacent points 
 dt = t - np.roll(t,1) 
 
+dependent_variable = ? # this should depend on the expected spacing
+
 # index the gaps by a threshold 
 ## small gaps
-gap_index_S = np.where(dt > 4000) 
-#   number that should be dependent on theo sample freq ~ 1/thefreqq = theo spacing 
-#   4000us --> multiple of expecting 
+gap_index_S = np.where(dt > dependent_variable) 
 
 gap_index_S = gap_index_S[0]
 
 ## sum all of the gaps with the smaller threshold 
-# do better: 
-#   with no inter_average
-#   find the data that is missing 
-#   
 sum_small_gaps = np.sum(dt[gap_index_S])
 
 ## calculate the dead time
 dead_time = (sum_small_gaps/tot_len_file)*100
 ```
+
 ## :question: Questions on Calculations 
 1. What is an appropriate threshold for the smaller gaps? the median?
     > This is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
