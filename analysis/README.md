@@ -1,22 +1,22 @@
-# Postprocessing using Python 
-Here develop our analysis program and analyze IRIS output files. 
-
+# Postprocessing & Analysis using Python 
+The primary focus of these programs is to address concerns related to time gaps that occur during data storage. These gaps, if not managed properly, may result in missing significant events entirely.
 ## Content Format
 ```
 tests/
     <test_name_1>/ 
-                data/
-                test_name.ipynb
+        data/
+        test_name.ipynb
+
     <test_name_2>/ 
-                data/
-                test_name.ipynb
+        data/
+        test_name.ipynb
 
     analysis_IRIS.py
     analysis_one_pin.py
     import_serial.py
 
 helper_files/ 
-                <helpful python files>
+         <helpful python files>
 ```
 
 Jupyter notebooks are used for quick plotting. All analysis functions are pulled from the files: 

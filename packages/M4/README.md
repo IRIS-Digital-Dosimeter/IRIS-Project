@@ -6,10 +6,10 @@ M0_to_M4_timeAv/
 ```
 
 ## Run a program 
-This example is using `datalogger`
-1. download the directory {datalogger}
-2. run the executable file with the arduino IDE, it should match the name of the directory: `datalogger.ino`. The IDE should reveal any `.cpp`, `.h`, or secondary `.ino` files. 
-3. Upload the program to the the M0 Board 
+This example is using `M4/M0_to_M4/`
+1. Download the directory `M0_to_M4/`
+2. Run the executable file with the arduino IDE, it should match the name of the directory: `M0_to_M4.ino`. The IDE should reveal any `.cpp`, `.h`, or secondary `.ino` files. 
+3. Upload the program to the the M4 Board 
 4. Follow any serial command prompts using the serial monitor, if applicable. 
 
 ## About the files 
