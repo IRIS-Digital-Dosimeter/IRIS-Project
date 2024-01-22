@@ -426,6 +426,10 @@ Removing Remote
 ```bash
 $ git push origin -d <remote branch>
 ```
+### Create a Branch and Switch to it 
+```bash
+$ git checkout -b <new_brach_name>
+```
 
 ### Adding your local branch to remote 
 This command needs to run once - the first time you push to upstream.
