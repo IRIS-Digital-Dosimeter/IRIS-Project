@@ -1,5 +1,5 @@
 # Active Programs 
-
+All active Adafruit programs relevant to the IRIS Digital Dosimeter project
 
 ## Contents 
 ```

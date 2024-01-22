@@ -9,12 +9,12 @@ drawings/
 images/
 markdowns/
 ```
-### drawings/
+1.  drawings/ \
 Contains png files created using `drawio`. Most are referenced in Report.md.
 
 
-### images/
+2. images/ \
 A place to dump images for markdowns. 
 
-### markdowns/
+3.  markdowns/ \
 This directory has old notes 

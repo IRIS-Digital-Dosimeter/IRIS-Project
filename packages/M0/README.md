@@ -30,6 +30,12 @@ The time is converted to an average during analysis and the name timeAv was chos
 
 ### `datalogger_timeAv_binary`: 
 Similar to `datalogger_timeAv` but now the files are stored in binary. 
+```txt
+micros()_timeB4, micros()_timeAfter, A0, A1
+```
 
 ### `MDA_Test`: 
 The last working program which was used during the 2023 summer trip to MDA TX. 
+```txt
+micros(), pin
+```
