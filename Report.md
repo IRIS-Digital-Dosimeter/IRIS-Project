@@ -1,11 +1,11 @@
 # Report Update: 1/17/2024
 At a glance:
-1. Setting up new repo 
+1. Setting up new repo :white_check_mark:
 2. Merging GUI 
-3. Adjusting Analysis program 
+3. Adjusting Analysis program :white_check_mark:
 4. Creating a Byte Analysis
 5. Helping Andrew parse DMA 
-6. Creating a doc for Andrew to review (msp430fr, STM32L4)
+6. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David. 
 
 ## Newest parameters 1/8/24
 ```
@@ -63,7 +63,7 @@ This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
 
 ## Baud Rate Changes 
 
-Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/main/pythonEnv/tests/azinn_testing/M0_baud_analysis.ipynb) 
+Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/sandbox_fileRevamp/analysis/tests/serial_output/M0_baud_analysis.ipynb) 
 
 
 ## Binary Files 
@@ -156,19 +156,6 @@ d1: A1 analog value
 \end{align}
 ```
 
-## Actual Time spent sampling $\Delta t_a$
-
-```math
-\begin{align}
-    \Delta t_{a} = \text{tAfter} - \text{tBefore} = \text{Actual Time Spent Sampling}
-\end{align}
-```
-```py 
-# find median aka Actual time spent sampling
-time_spent_sampling = numpy.median(t_a)
-```
-> We expected $t_s$ to be a stable value -- it is! 
-
 ## Expected Time spent sampling $\Delta t_e$
 
 > See Code snippet found at the start of Calculations Used in Analysis; $n$ is matches the number of times `inter_sample` delay is called. 
@@ -182,18 +169,25 @@ $n$ = samples to average
 \end{align}
 ```
 
+## Actual Time spent sampling $\Delta t_a$
+
+```math
+\begin{align}
+    \Delta t_{a} = \text{tAfter} - \text{tBefore} = \text{Actual Time Spent Sampling}
+\end{align}
+```
+```py 
+# find median aka Actual time spent sampling
+time_spent_sampling = numpy.median(t_a)
+```
+> We expected $t_s$ to be a stable value -- it is! 
+
+
 ## :exclamation: Expected Sample Spacing
-> :exclamation:Removed this variable because this is the $t_e$ value aka time spent sampling this does not include the gap that comes after sampling:exclamation: 
+> :exclamation:Removed this variable because this is the $\Delta t_e$ value aka time spent sampling this does not include the gap that comes after sampling:exclamation: 
 ```math
 \begin{align}
     \frac{1}{f_{e}} =\text{ Theoretical Sample Spacing}
-\end{align}
-```
-
-## Actual Sample Frequency $f_a$
-```math
-\begin{align}
-    f_\text{a} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{6}
 \end{align}
 ```
 
@@ -205,11 +199,11 @@ $n$ = samples to average
 \end{align}
 ```
 
-## Actual File Duration $F_a$
-
-```py
-# Actual File duration (us)
-actual_file_duration =  t[-1] - t[0]
+## Actual Sample Frequency $f_a$
+```math
+\begin{align}
+    f_\text{a} \text{ Hz}= (\frac{\text{number of data points in file}}{\text{length of file us}})\times 10^{6}
+\end{align}
 ```
 
 ## Expected File Duration $F_e$
@@ -221,6 +215,13 @@ actual_file_duration =  t[-1] - t[0]
 \begin{align}
     \text{expected file duration} = \Delta t_e \times \text{\# of points}
 \end{align}
+```
+
+## Actual File Duration $F_a$
+
+```py
+# Actual File duration (us)
+actual_file_duration =  t[-1] - t[0]
 ```
 
 ## New Dead time calculations 
