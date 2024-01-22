@@ -3,7 +3,7 @@ In collaboration with Aidan Zinn
 
 Boards tested: `M0`, `M4` \
 serial extraction: `import_serial.py`\
-Analysis file: `analysis_plotter_serial.py`\
+Analysis file: `analysis_IRIS.py`\
 Analysis plots: `M0_baud_analysis.ipynb`, `M0_serial_analysis.ipynb`, `M4_serial_analysis.ipynb`
 > Baud analysis: checks several baud choices \
 > Serial analysis: checks several parameter choices 
@@ -13,8 +13,8 @@ Analysis plots: `M0_baud_analysis.ipynb`, `M0_serial_analysis.ipynb`, `M4_serial
 Data_board_etc
 
 Boards: <M0, M4>
-Timing: tLinear  
-    tLinear: all txt files captures two micros() calls and their average is used in analysis 
+Timing: tAv  
+    tAv: all txt files captures two micros() calls and their average is used in analysis 
 
 Subdirectories are titled by parameters used: 
 
