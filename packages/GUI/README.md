@@ -52,7 +52,7 @@ Python Packages
         ```
         python IRISGUI.py
         ```
-    ![GUI_V1](../../docs/images/GUI_V1.png)
+    ![GUI_V1](docs/GUI_V1.png)
 
 3. Explore 
 4. Close GUI 
