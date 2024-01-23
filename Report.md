@@ -227,9 +227,11 @@ actual_file_duration =  t[-1] - t[0]
 ## New Dead time calculations 
 >Starting with $t$ found in Time per Averaged Data Point calculations 
 
+
 Dead time vs Expectation (us)
 - actual file duration = $F_a$ 
 - expected file duration = $F_e$
+
 ```math
 \begin{align}
     \text{Dead time vs Expectation} = \frac{F_a - F_e}{F_e}
