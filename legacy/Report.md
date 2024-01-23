@@ -1,12 +1,11 @@
 # Report Update: 2/25/24
 At a glance:
-1. Creating a Byte Analysis :white_check_mark: - Complete but creating an executable 
-2. Verify analysis program with David  
-3. Helping Andrew parse DMA
-4. Run analysis on previous files
-5. Run modified M0/M4 program and collect files for new analysis
-6. GUI - create plan
-7. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David.
+1. Setting up new repo :white_check_mark:
+2. Merging GUI :white_check_mark:
+3. Adjusting Analysis program :white_check_mark:
+4. Creating a Byte Analysis
+5. Helping Andrew parse DMA 
+6. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David. 
 
 ## Newest parameters 1/8/24
 ```
@@ -182,7 +181,14 @@ $n$ = samples to average
 \end{align}
 ```
 
-## Actual median Sampling Time $\Delta t_a$
+## Ratio of Expected Time spent sampling $r_{a/e}$
+```math
+\begin{align}
+    r_{a/e} = \frac{\Delta t_a}{\Delta t_e} 
+\end{align}
+```
+
+## Actual Time spent sampling $\Delta t_a$
 
 ```math
 \begin{align}
@@ -197,12 +203,6 @@ actual_sampling_time = numpy.median(t_sampling)
 ```
 > We expected $\Delta t_a$ to be a stable value -- it is! 
 
-## Ratio of Sampling Time $r_{a/e}$
-```math
-\begin{align}
-    r_{a/e} = \frac{\Delta t_a}{\Delta t_e} 
-\end{align}
-```
 
 ## Expected Sample Frequency $f_e$
 
@@ -240,6 +240,10 @@ actual_file_duration =  t[-1] - t[0]
 ## New Dead Time calculations 
 >Starting with $t$ found in Time per Averaged Data Point calculations 
 
+- do delta ta / delta te 
+- dead time due to everything but the sample for due to gap ting 
+- replace delta te for ta on the ddead time last one
+- 
 
 Dead time vs Expectation (us)
 - actual file duration = $F_a$ 
@@ -258,12 +262,12 @@ Dead time vs Expectation (us)
 
 ```math
 \begin{align}
-    \text{Dead time due to ?} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}
+    \text{Dead time due to gaps} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}\\
 \end{align}
 ```
 ```math
 \begin{align}
-    \text{Dead time due to ?} = \frac{F_a - (N\times \Delta t_e)}{N\times \Delta t_e}
+    \text{Dead time due to gaps} = \frac{F_a - (N\times \Delta t_e)}{N\times \Delta t_e}
 \end{align}
 ```
 
