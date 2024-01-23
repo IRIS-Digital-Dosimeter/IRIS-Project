@@ -417,5 +417,6 @@ def analyze(infile,
     results_dict['Smallest_gap_us'] = min(dt)
     results_dict['Sum_of_gaps_larger_than_med_ms'] = round(sum_small_gaps_ms,3)
     results_dict['Old_dead_time_%'] = round(old_dead_time,3)
+    results_dict['ratio_of_ta_to_te'] = actual_spacing/expected_sample_spacing
 
     return results_dict
