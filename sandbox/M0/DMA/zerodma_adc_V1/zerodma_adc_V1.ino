@@ -15,7 +15,7 @@ still not accurate).
 
 #define ADC_PIN A1
 #define SAMPLE_BLOCK_LENGTH 256
-#define GENERATOR DAC0
+#define GENERATOR DAC0 // reading digital pin A0
 
 Adafruit_ZeroDMA ADC_DMA;
 DmacDescriptor *dmac_descriptor_1;
@@ -166,7 +166,7 @@ void loop() {
  
     // set the DAC to output the generator value
     analogWriteResolution(12);
-    analogWrite(GENERATOR, gend);
+    analogWrite(GENERATOR, gend); // using DAC0 aka pin: A0
 
     // if the ADC buffer has been filled, copy it to the sample block and print it
     if (adc_buffer_filled) {
@@ -181,6 +181,7 @@ void loop() {
             Serial.print(adc_sample_block[i]);
             Serial.print(", Voltage: ");
             Serial.println(voltage, 2); // 2 decimal places for 10-bit 
+            delay(1000);
         }
     }
 }
