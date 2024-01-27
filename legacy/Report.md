@@ -256,11 +256,6 @@ actual_file_duration =  t[-1] - t[0]
 ## New Dead Time calculations 
 >Starting with $t$ found in Time per Averaged Data Point calculations 
 
-- do delta ta / delta te 
-- dead time due to everything but the sample for due to gap ting 
-- replace delta te for ta on the ddead time last one
-- 
-
 Dead time vs Expectation (us)
 - actual file duration = $F_a$ 
 - expected file duration = $F_e$
