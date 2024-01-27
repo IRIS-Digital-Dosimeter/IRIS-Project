@@ -3,7 +3,7 @@ At a glance:
 1. Setting up new repo :white_check_mark:
 2. Merging GUI :white_check_mark:
 3. Adjusting Analysis program :white_check_mark:
-4. Creating a Byte Analysis
+4. Creating a Byte Analysis :disappointed:
 5. Helping Andrew parse DMA 
 6. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David. 
 
@@ -181,7 +181,23 @@ $n$ = samples to average
 \end{align}
 ```
 
-## Ratio of Expected Time spent sampling $r_{a/e}$
+
+## Actual Sampling Time $\Delta t_a$
+
+```math
+\begin{align}
+    \Delta t_{a} = \text{tAfter} - \text{tBefore} 
+\end{align}
+```
+```py 
+# Actual Sampling Time (array)
+t_sampling = t2 - t1 
+# find median aka Actual time spent sampling
+actual_sampling_time = numpy.median(t_sampling)
+```
+> We expected $\Delta t_a$ to be a stable value -- it is! 
+
+## Ratio of Sampling Time $r_{a/e}$
 ```math
 \begin{align}
     r_{a/e} = \frac{\Delta t_a}{\Delta t_e} 
@@ -239,11 +255,6 @@ actual_file_duration =  t[-1] - t[0]
 
 ## New Dead Time calculations 
 >Starting with $t$ found in Time per Averaged Data Point calculations 
-
-- do delta ta / delta te 
-- dead time due to everything but the sample for due to gap ting 
-- replace delta te for ta on the ddead time last one
-- 
 
 Dead time vs Expectation (us)
 - actual file duration = $F_a$ 
