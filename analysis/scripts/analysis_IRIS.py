@@ -297,37 +297,36 @@ def analyze(infile,
     # Time per averaged data point (us)
     t = (t2 + t1)/2
 
-    """
-    Sample Frequency = num of samples/1s = (1 sample/ gap us) *(1us/10^-6s) = 10^6/gap us
-    gap: amount of actual time taken per sample stored 
-    """    
-    # Expected Sample spacing (us)
-    # expected_sample_spacing = samples_averaged * inter_sample_delay + inter_average_delay
-    expected_sample_spacing = samples_averaged * inter_sample_delay 
+    # Expected Sampling Time (us)
+    # expected_sampling_time = samples_averaged * inter_sample_delay + inter_average_delay
+    expected_sampling_time = samples_averaged * inter_sample_delay 
+
+    # Actual Sampling Time (array)
+    t_sampling = t2 - t1 
+
+    # Actual Sampling Time (us)
+    actual_sampling_time = np.median(t_sampling)
+
+    # Ratio of Expected Sampling Time
+    ratio_sampling_time = actual_sampling_time/expected_sampling_time
 
     # Expected Frequency (Hz)
-    expected_freq = 1e6/(expected_sample_spacing)
+    expected_freq = 1e6/(expected_sampling_time)
 
     # Actual Frequency (Hz)
-    sample_freq = (len(v0)/(t[-1] - t[0]))*(1e6)
+    actual_freq = (len(v0)/(t[-1] - t[0]))*(1e6)
 
     # Expected file duration (us)
-    expected_file_duration = expected_sample_spacing*len(v0)
+    expected_file_duration = expected_sampling_time*len(v0)
 
     # Actual File duration (us)
     actual_file_duration =  t[-1] - t[0]
-
-    # Time spent Sampling array (us)
-    t_sampling = t2 - t1 
-
-    # Median gap/ Actual sample spacing (us)
-    actual_spacing = np.median(t_sampling)
 
     # Dead time (us)
     dead_vs_expected = (actual_file_duration - expected_file_duration)/expected_file_duration
 
     # Dead time due to gaps (us)
-    dead_time_due_to_gaps = (actual_file_duration - len(v0)*actual_spacing) / ( len(v0) * actual_spacing )
+    dead_time_due_to_gaps = (actual_file_duration - len(v0)*actual_sampling_time) / ( len(v0) * actual_sampling_time )
 
     # --- Old Gap analysis ---
     # Make a list of the time differences (gaps) between adjacent points:
@@ -336,11 +335,11 @@ def analyze(infile,
     dt = dt[1:]
 
     # Gaps Large
-    gap_index_L = np.where(dt > actual_spacing*2)
+    gap_index_L = np.where(dt > actual_sampling_time*2)
     gap_index_L= gap_index_L[0]
 
     # Gaps small
-    gap_index_S = np.where(dt <= actual_spacing*2)
+    gap_index_S = np.where(dt <= actual_sampling_time*2)
     gap_index_S = gap_index_S[0]
     sum_small_gaps = np.sum(dt[gap_index_S])
     sum_small_gaps_ms = np.sum(dt[gap_index_S])/1e3
@@ -361,13 +360,13 @@ def analyze(infile,
         print('Number of samples: ', len(v0))
         # print('inter_average (us): ', inter_average_delay)
         # Sample Spacing
-        print('\nExpected sample spacing (us): ', round(expected_sample_spacing,3))
+        print('\nExpected sample spacing (us): ', round(expected_sampling_time,3))
         print('Actual sample spacing ...')
-        print(f'Median time spent sampling (us): {round(actual_spacing,3)}')
+        print(f'Median time spent sampling (us): {round(actual_sampling_time,3)}')
         # Expected frequency
         print(f'\nExpected Sample Frequency (KHz): {expected_freq/1e3:.3f}')
         # Actual Frequency 
-        print(f'Actual Sample Frequency (KHz): {sample_freq/1e3:.3f}')
+        print(f'Actual Sample Frequency (KHz): {actual_freq/1e3:.3f}')
         # # File info
         print(f'\nExpected file duration (ms,s): {expected_file_duration /1e3:.3f} , {expected_file_duration /1e6:.3f}')
         print(f"Actual file duration (ms,s): {actual_file_duration/1e3:.3f} , {actual_file_duration/1e6:.3f}")
@@ -380,14 +379,14 @@ def analyze(infile,
         print('\n---Old Dead time analysis---')
         # Gaps Large
         print('Largest gap (ms): ',max(dt)/1e3)
-        print(f'Count of gaps > {round(actual_spacing*4/1e3,3)} ms: {len(dt[gap_index_L])}') 
+        print(f'Count of gaps > {round(actual_sampling_time*4/1e3,3)} ms: {len(dt[gap_index_L])}') 
         print('Median gap (us): ', np.median(dt))
         # Gaps Small
         print('\nSmallest gap (us): ', min(dt))
         print('Count of all gaps: ', len(dt))
-        print(f"Sum of durations > {(actual_spacing*4)/1e3:.2f} ms (ms): {sum_small_gaps_ms:.3f}")
+        print(f"Sum of durations > {(actual_sampling_time*4)/1e3:.2f} ms (ms): {sum_small_gaps_ms:.3f}")
 
-        print(f'\nDead time = (sum durations > {(actual_spacing*4)/1e3:.2f} ms/ file duration)')
+        print(f'\nDead time = (sum durations > {(actual_sampling_time*4)/1e3:.2f} ms/ file duration)')
         print(f'Dead time: {old_dead_time:.3f} %\n')
 
     results_dict = {} 
@@ -398,12 +397,13 @@ def analyze(infile,
     results_dict['Number_of_samples'] = len(v0)
     results_dict['Number_of_gaps'] = len(dt)
     # spacing
-    results_dict['Expected_sample_time_us'] = round(expected_sample_spacing,3)
-    results_dict['Actual_sample_time_us'] = round(actual_spacing,3)
+    results_dict['Expected_sample_time_us'] = round(expected_sampling_time,3)
+    results_dict['Actual_sample_time_us'] = round(actual_sampling_time,3)
     results_dict['Median_gap_us'] = np.median(dt)
+    results_dict['ratio_sampling_time'] = ratio_sampling_time
     # freq
     results_dict['Expected_freq_KHz'] = round(expected_freq/1e3,3)
-    results_dict['Actual_freq_KHz'] = round(sample_freq/1e3,3)
+    results_dict['Actual_freq_KHz'] = round(actual_freq/1e3,3)
     # file duration
     results_dict['Expected_file_duration_ms'] = round(expected_file_duration/1e3,3)
     results_dict['Actual_file_duration_ms'] = round(actual_file_duration/1e3,3)
@@ -417,6 +417,5 @@ def analyze(infile,
     results_dict['Smallest_gap_us'] = min(dt)
     results_dict['Sum_of_gaps_larger_than_med_ms'] = round(sum_small_gaps_ms,3)
     results_dict['Old_dead_time_%'] = round(old_dead_time,3)
-    results_dict['ratio_of_ta_to_te'] = actual_spacing/expected_sample_spacing
 
     return results_dict
