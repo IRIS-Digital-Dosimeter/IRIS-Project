@@ -1,11 +1,12 @@
-# Report Update: 1/17/2024
+# Report Update: 2/25/24
 At a glance:
-1. Setting up new repo :white_check_mark:
-2. Merging GUI 
-3. Adjusting Analysis program :white_check_mark:
-4. Creating a Byte Analysis
-5. Helping Andrew parse DMA 
-6. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David. 
+1. Creating a Byte Analysis :white_check_mark: - Complete but creating an executable 
+2. Verify analysis program with David  
+3. Helping Andrew parse DMA
+4. Run analysis on previous files
+5. Run modified M0/M4 program and collect files for new analysis
+6. GUI - create plan
+7. Aidan suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David.
 
 ## Newest parameters 1/8/24
 ```
@@ -14,28 +15,26 @@ inter_average = 500 us --> testing removal of this parameter
 samples = 20 
 ```
 
-Time Analysis on parameters assuming little to no overhead.\
-$n = 4$
+Time Analysis on parameters assuming little to no overhead where $n$ is the number of samples averaged.  
+**E.g. 1.** $n = 4$
 
 ```math
 \begin{align*}
-    
     (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \text{ (CPD)} \\
     (4 \times 100 \text{ us})+ 500\text{ us} &= 900 \text{ us}
 \end{align*}
 ```
 
-This is about $1\text{ KHz}$ sample frequency ($\frac{10^6}{900\text{us}}$).
+This is about $1\text{ KHz}$ sample frequency ($\frac{1\times10^6}{900\text{us}}$).
 
-$n = 20$
+**E.g. 2.** $n = 20$
 ```math
 \begin{align*}
-    
     (20 \times 100 \text{ us})+ 500\text{ us} &= 20,500 \text{ us}
 \end{align*}
 ```
 
-This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
+This is about $48\text{ Hz}$ sample frequency ($\frac{1\times10^6}{20,500\text{us}}$).
 
 > As we increase the number of samples averaged the sample frequency decreases, as expected. We effectively have less samples per second but the samples are "steady" the averaging should work to reduce noise.
 
@@ -43,27 +42,27 @@ This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
 1. What is the purpose of having half a ms pause between averaging? 
     > Originally we had it due to comments on stability but part of me feels the overhead + the high level functions we are using should be sufficient buffers that ensure stability of the unit.
 
-    >:heavy_check_mark: D.S \
+    >:heavy_check_mark: D.S  
     We shouldn't need to have the inter_average parameter
 
 
 2. Do we have a desired sample frequency? If so, what is it and is it factoring in this averaging? 
-    > :heavy_check_mark: D.S \
+    > :heavy_check_mark: D.S  
     The desired sample frequency depends on the boards, and yes these values are taking into account the averaging. 
     >
-    > Time Constants \
-    >    a. Fast board: `1 ms` \
-    >    b. Medium Board: `10 ms` \
+    > Time Constants  
+    >    a. Fast board: `1 ms`  
+    >    b. Medium Board: `10 ms`  
     >    c. Slow Board: `150 ms` 
     >
     > E.g.: for the medium board with a time constant of `10 ms` we will aim for about `3 ms` between each **averaged** data point giving us about 3 points. Thus, the sample frequency is : $\frac{10^3}{3\text{ms}} \approx 300 \text{ Hz}$
 
-3. :warning: Follow up to question 2: :warning:\
+3. :warning: Follow up to question 2: :warning:  
  We're sure that 3 points is enough? I might be misremembering how the time constant applies to the decay plot. 
 
 ## Baud Rate Changes 
 
-Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/sandbox_fileRevamp/analysis/tests/serial_output/M0_baud_analysis.ipynb) 
+Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/sandbox_fileRevamp/analysis/tests/serial_output/M0_baud_analysis.ipynb) (analysis required)
 
 
 ## Binary Files 
@@ -87,7 +86,7 @@ sum_sensorValue_A1 (2 bytes) --> (4 bytes)
 ```
 
 ## DMA + Andrew 
-> DMA: Direct Memory Access. \
+> DMA: Direct Memory Access.  
 This should work independently of the CPU and is dedicated to data transfer. 
 
 1. See [diagram](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Data_Transfer.png)
@@ -103,9 +102,9 @@ This should work independently of the CPU and is dedicated to data transfer.
 
 ## Analysis Program Update
 
-1. Currently working the byte analysis found [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png)
-2. Removing inter_average delays 
-3. Checking the accuracy of the functions  
+1. Binary analysis prototype complete - executable required
+2. Remove inter_average delays on all M0 & M4 programs
+3. Functions in analysis require final approval 
 
 # Calculations Used in Analysis
 Code snippet to reference.
@@ -135,10 +134,13 @@ uint32_t timeAfter = micros();
 myDelay_us(interaverageDelay);
 
 // Write to file commands 
-// ... 
+file.write(timeBefore) // bytes 
+file.write(timeAfter)
+file.write(sum_sensorValue_A0)
+file.write(sum_sensorValue_A1)
 ```
 ## Voltage 
-d0: A0 analog value \
+d0: A0 analog value  
 d1: A1 analog value
 ```math
 \begin{align}
@@ -148,16 +150,16 @@ d1: A1 analog value
 ```
 
 ## Time per Averaged Data Point
-`tBefore`: before summing analog values \
+`tBefore`: before summing analog values  
 `tAfter`: after summing but before writing & `inter_average` delay
 ```math
 \begin{align}
-    t = \frac{tBefore + tAfter}{2} = \text{Time per averaged data point}
+    t = \frac{tBefore + tAfter}{2}
 \end{align}
 ```
 
-## Expected Time spent sampling $\Delta t_e$
-
+## Expected median Sampling Time $\Delta t_e$
+**The median sampling time should be the time between points assuming no gaps**
 > See Code snippet found at the start of Calculations Used in Analysis; $n$ is matches the number of times `inter_sample` delay is called. 
 
 $n$ = samples to average 
@@ -169,25 +171,25 @@ $n$ = samples to average
 \end{align}
 ```
 
-## Actual Time spent sampling $\Delta t_a$
+## Actual median Sampling Time $\Delta t_a$
 
 ```math
 \begin{align}
-    \Delta t_{a} = \text{tAfter} - \text{tBefore} = \text{Actual Time Spent Sampling}
+    \Delta t_{a} = \text{tAfter} - \text{tBefore}
 \end{align}
 ```
-```py 
+```py
+# Actual Sampling Time (array)
+t_sampling = t2 - t1 
 # find median aka Actual time spent sampling
-time_spent_sampling = numpy.median(t_a)
+actual_sampling_time = numpy.median(t_sampling)
 ```
 > We expected $t_s$ to be a stable value -- it is! 
 
-
-## :exclamation: Expected Sample Spacing
-> :exclamation:Removed this variable because this is the $\Delta t_e$ value aka time spent sampling this does not include the gap that comes after sampling:exclamation: 
+## Ratio of Sampling Time $r_{a/e}$
 ```math
 \begin{align}
-    \frac{1}{f_{e}} =\text{ Theoretical Sample Spacing}
+    r_{a/e} = \frac{\Delta t_a}{\Delta t_e} 
 \end{align}
 ```
 
@@ -230,18 +232,26 @@ actual_file_duration =  t[-1] - t[0]
 Dead time vs Expectation (us)
 - actual file duration = $F_a$ 
 - expected file duration = $F_e$
+
 ```math
 \begin{align}
     \text{Dead time vs Expectation} = \frac{F_a - F_e}{F_e}
 \end{align}
 ```
 
-Dead time due to gaps (us)
+:warning: Change :warning: Dead time due to gaps (us)
 - let number of points = $N$
 - actual time spent sampling = $\Delta t_a$
+- expected time spent sampling = $\Delta t_e$
+
 ```math
 \begin{align}
-    \text{Dead time due to gaps} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}
+    \text{Dead time due to ?} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}
+\end{align}
+```
+```math
+\begin{align}
+    \text{Dead time due to ?} = \frac{F_a - (N\times \Delta t_e)}{N\times \Delta t_e}
 \end{align}
 ```
 
@@ -274,13 +284,13 @@ dead_time = (sum_small_gaps/tot_len_file)*100
 1. What is an appropriate threshold for the smaller gaps? the median?
     > This is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
 
-    > :heavy_check_mark: D.S \
-    The threshold should be calculated using the `Time Spent Sampling` aka Equation (2).\
-    Use the following for new calculations: \
-    Expected duration of file = CPD $\times$ #_of_points \
-    Dead time vs. Expectation = (actual duration - expected duration) / expected duration \
-    >---note: `.1 = 10% from expected`, `2 = took twice as long as expected `\
-    >New median dt = median(tAfter - tBefore) \
+    > :heavy_check_mark: D.S  
+    The threshold should be calculated using the `Time Spent Sampling` aka Equation (2).  
+    Use the following for new calculations:  
+    Expected duration of file = CPD $\times$ #_of_points  
+    Dead time vs. Expectation = (actual duration - expected duration) / expected duration  
+    >---note: `.1 = 10% from expected`, `2 = took twice as long as expected `  
+    >New median dt = median(tAfter - tBefore)  
     New DeadTime due to Gaps = (actual_duration - #_of_points $\times$ median_dt) / (#_of_points $\times$ median_dt)
 
 
@@ -306,7 +316,7 @@ Three options
 2. Adjusting rules for now, but eventually moving to an organization to add admin roles 
 3. Currently we will work on PR for verification and use releases
 
-### What to do if I forgot to make a branch 
+### What to do if you forgot to make a branch 
 
 Step 1: Identify the work you need to move to a new branch.
 
@@ -335,7 +345,7 @@ Date:   Wed Jan 10 17:44:42 2024 -0800
     report finalized
 ```
 
-Step 2: Un commit \
+Step 2: Un commit  
     In order to undo the commit we use:
 
 ```bash
@@ -367,7 +377,7 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 ```
 
-Step 3: Move changes to a new branch.\
+Step 3: Move changes to a new branch. 
 The following command will move all of your unstaged changes to a new branch `myNewBranch`. 
 
 ```bash
@@ -425,6 +435,11 @@ Removing Remote
 
 ```bash
 $ git push origin -d <remote branch>
+```
+
+### Create a Branch and Switch to it 
+```bash
+$ git checkout -b <new_brach_name>
 ```
 
 ### Adding your local branch to remote 
