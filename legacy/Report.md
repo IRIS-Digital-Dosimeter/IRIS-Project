@@ -61,7 +61,12 @@ This is about $48\text{ Hz}$ sample frequency ($\frac{1\times10^6}{20,500\text{u
 
 ## Baud Rate Changes 
 
-Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/sandbox_fileRevamp/analysis/tests/serial_output/M0_baud_analysis.ipynb) (analysis required)
+Testing `serial_log` against the following baud rates:  
+1. 115,200
+2. 230,400
+3. 250,000
+4. 460,800
+5. 500,000
 
 $\mu$- controller software loc: `packages > serial_log`  
 output files loc: `analysis > tests > serial_output > data > M0_baud`
