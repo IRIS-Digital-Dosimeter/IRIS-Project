@@ -62,16 +62,27 @@ This is about $48\text{ Hz}$ sample frequency ($\frac{1\times10^6}{20,500\text{u
 
 ## Baud Rate Changes 
 
-Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/sandbox_fileRevamp/analysis/tests/serial_output/M0_baud_analysis.ipynb) (analysis required)
+Testing `serial_log` against the following baud rates:  
+1. 115,200
+2. 230,400
+3. 250,000
+4. 460,800
+5. 500,000
 
+$\mu$- controller software loc: `packages > serial_log`  
+output files loc: `analysis > tests > serial_output > data > M0_baud`
+
+Each baud contains subdirectories labeled by parameters used. For example: `M0_baud > 115200 > 50_50_4 `  
+Where `50_50_4` represent `interSample_interAverage_numSamples`. More info found in the README.md 
+
+**Requires**: New analysis tests on output files 
 
 ## Binary Files 
 
 M0 Binary storage program was successfully created. 
 
-> Issue: .bin caused issues when transferring from SD to computer. After reformating the issue disappeared. It reappeared when I started storing .txt files and again the unit needed to be reformatted. Conclusion: the binary data is now stored to .dat files and if I need to alternate between .dat or .txt a reformat needs to occur. 
-
-Binary Analysis is outlined [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png).
+> Issue: .bin caused issues when transferring from SD to computer. After reformating the issue disappeared. It reappeared when I started storing .txt files and again the unit needed to be reformatted.  
+> **Conclusion**: the binary data is now stored to .dat files and if I need to alternate between .dat or .txt a reformat needs to occur. 
 
 
 ### Byte sizes  
@@ -89,7 +100,7 @@ sum_sensorValue_A1 (2 bytes) --> (4 bytes)
 > DMA: Direct Memory Access.  
 This should work independently of the CPU and is dedicated to data transfer. 
 
-1. See [diagram](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Data_Transfer.png)
+1. Diagram in process; loc: `docs > drawings > Data_Transfer.png`
 2. Currently helping with DMA example programs; no POC is currently available 
 
 
