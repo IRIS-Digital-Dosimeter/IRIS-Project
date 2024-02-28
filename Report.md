@@ -449,9 +449,51 @@ $ git push origin -d <remote branch>
 ```
 
 ### Create a Branch and Switch to it 
+:warning: to create a PR this branch will require additonal actions see below
 ```bash
 $ git checkout -b <new_brach_name>
 ```
+#### Working on a local working branch & main is ahead
+:warning: Perform these steps within your working branch & **always run step 1 & 2**
+
+Step 1: fetch contents of main 
+```bash
+$ git fetch origin main 
+```
+
+Step 2: copy main commits to your working branch
+```bash
+git rebase origin/main 
+```
+This step will require a force push once changes need to be sent up. 
+
+#### Conflicts between working branch and main 
+Assuming you've `fetched` and `rebased` perform the following. 
+
+Step 1: Select commits of interest 
+```bash
+$ git reflog 
+```
+This is variable memory but this should show you commits of interest, keep the commit ID for future commands. 
+
+Step 2: Reset your branch to a copy of main 
+```bash
+$ git rest --hard main 
+```
+This will turn your working branch into an identical copy of your local main. All previous commits still exist and are available for cherry picking. 
+
+Step 3: Select/add desired commits & resolve conflicts
+```bash
+$ git cherry-pick -n <commit ID>
+``` 
+This will pull over any commits desired and allows you to resolve conflicts as they appear. 
+
+Step 4: Force the changes up
+```bash 
+$ git push --force 
+```
+
+
 
 ### Adding your local branch to remote 
 This command needs to run once - the first time you push to upstream.
