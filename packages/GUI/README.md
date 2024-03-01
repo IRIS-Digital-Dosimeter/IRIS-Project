@@ -1,4 +1,4 @@
-# <img  src="../../docs/images/sammy_serious.png"  alt="Alt text"  title="Optional title"  style="display: inline-block; margin: 0 auto; max-width: 100px">  IRIS GUI 
+# <img  src="docs/sammy_serious.png"  alt="Alt text"  title="Optional title"  style="display: inline-block; margin: 0 auto; max-width: 100px">  IRIS GUI 
 Notes
 - Tested on Windows (10,11)
 - Tested on Hazel's and Michelle's computer 
@@ -52,7 +52,7 @@ Python Packages
         ```
         python IRISGUI.py
         ```
-    ![GUI_V1](../../docs/images/GUI_V1.png)
+    ![GUI_V1](docs/GUI_V1.png)
 
 3. Explore 
 4. Close GUI 

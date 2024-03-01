@@ -1,4 +1,4 @@
-# Report Update: 1/17/2024
+# Report Update: 2/25/24
 At a glance:
 1. Setting up new repo :white_check_mark:
 2. Merging GUI :white_check_mark:
@@ -14,28 +14,26 @@ inter_average = 500 us --> testing removal of this parameter
 samples = 20 
 ```
 
-Time Analysis on parameters assuming little to no overhead.\
-$n = 4$
+Time Analysis on parameters assuming little to no overhead where $n$ is the number of samples averaged.  
+**E.g. 1.** $n = 4$
 
 ```math
 \begin{align*}
-    
     (n \times 100 \text{ us})+ 500\text{ us} &= \text{cycle per data point} \text{ (CPD)} \\
     (4 \times 100 \text{ us})+ 500\text{ us} &= 900 \text{ us}
 \end{align*}
 ```
 
-This is about $1\text{ KHz}$ sample frequency ($\frac{10^6}{900\text{us}}$).
+This is about $1\text{ KHz}$ sample frequency ($\frac{1\times10^6}{900\text{us}}$).
 
-$n = 20$
+**E.g. 2.** $n = 20$
 ```math
 \begin{align*}
-    
     (20 \times 100 \text{ us})+ 500\text{ us} &= 20,500 \text{ us}
 \end{align*}
 ```
 
-This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
+This is about $48\text{ Hz}$ sample frequency ($\frac{1\times10^6}{20,500\text{us}}$).
 
 > As we increase the number of samples averaged the sample frequency decreases, as expected. We effectively have less samples per second but the samples are "steady" the averaging should work to reduce noise.
 
@@ -43,36 +41,47 @@ This is about $48\text{ Hz}$ sample frequency ($\frac{10^6}{20,500\text{us}}$).
 1. What is the purpose of having half a ms pause between averaging? 
     > Originally we had it due to comments on stability but part of me feels the overhead + the high level functions we are using should be sufficient buffers that ensure stability of the unit.
 
-    >:heavy_check_mark: D.S \
+    >:heavy_check_mark: D.S  
     We shouldn't need to have the inter_average parameter
 
 
 2. Do we have a desired sample frequency? If so, what is it and is it factoring in this averaging? 
-    > :heavy_check_mark: D.S \
+    > :heavy_check_mark: D.S  
     The desired sample frequency depends on the boards, and yes these values are taking into account the averaging. 
     >
-    > Time Constants \
-    >    a. Fast board: `1 ms` \
-    >    b. Medium Board: `10 ms` \
+    > Time Constants  
+    >    a. Fast board: `1 ms`  
+    >    b. Medium Board: `10 ms`  
     >    c. Slow Board: `150 ms` 
     >
     > E.g.: for the medium board with a time constant of `10 ms` we will aim for about `3 ms` between each **averaged** data point giving us about 3 points. Thus, the sample frequency is : $\frac{10^3}{3\text{ms}} \approx 300 \text{ Hz}$
 
-3. :warning: Follow up to question 2: :warning:\
+3. :warning: Follow up to question 2: :warning:  
  We're sure that 3 points is enough? I might be misremembering how the time constant applies to the decay plot. 
 
 ## Baud Rate Changes 
 
-Several rates tested; results for the M0 are located [here.](https://github.com/Drixitel/IRIS-Project/blob/sandbox_fileRevamp/analysis/tests/serial_output/M0_baud_analysis.ipynb) 
+Testing `serial_log` against the following baud rates:  
+1. 115,200
+2. 230,400
+3. 250,000
+4. 460,800
+5. 500,000
 
+$\mu$- controller software loc: `packages > serial_log`  
+output files loc: `analysis > tests > serial_output > data > M0_baud`
+
+Each baud contains subdirectories labeled by parameters used. For example: `M0_baud > 115200 > 50_50_4 `  
+Where `50_50_4` represent `interSample_interAverage_numSamples`. More info found in the README.md 
+
+**Requires**: New analysis tests on output files 
 
 ## Binary Files 
 
 M0 Binary storage program was successfully created. 
 
-> Issue: .bin caused issues when transferring from SD to computer. After reformating the issue disappeared. It reappeared when I started storing .txt files and again the unit needed to be reformatted. Conclusion: the binary data is now stored to .dat files and if I need to alternate between .dat or .txt a reformat needs to occur. 
-
-Binary Analysis is outlined [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png).
+> Issue: .bin caused issues when transferring from SD to computer. After reformating the issue disappeared. It reappeared when I started storing .txt files and again the unit needed to be reformatted.  
+> **Conclusion**: the binary data is now stored to .dat files and if I need to alternate between .dat or .txt a reformat needs to occur. 
 
 
 ### Byte sizes  
@@ -87,10 +96,10 @@ sum_sensorValue_A1 (2 bytes) --> (4 bytes)
 ```
 
 ## DMA + Andrew 
-> DMA: Direct Memory Access. \
+> DMA: Direct Memory Access.  
 This should work independently of the CPU and is dedicated to data transfer. 
 
-1. See [diagram](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Data_Transfer.png)
+1. Diagram in process; loc: `docs > drawings > Data_Transfer.png`
 2. Currently helping with DMA example programs; no POC is currently available 
 
 
@@ -103,9 +112,9 @@ This should work independently of the CPU and is dedicated to data transfer.
 
 ## Analysis Program Update
 
-1. Currently working the byte analysis found [here](https://github.com/Drixitel/IRIS-Project/blob/main/drawings/Binary.png)
-2. Removing inter_average delays 
-3. Checking the accuracy of the functions  
+1. Binary analysis prototype complete - executable required
+2. Remove inter_average delays on all M0 & M4 programs
+3. Functions in analysis require final approval 
 
 # Calculations Used in Analysis
 Code snippet to reference.
@@ -141,7 +150,7 @@ file.write(sum_sensorValue_A0)
 file.write(sum_sensorValue_A1)
 ```
 ## Voltage 
-d0: A0 analog value \
+d0: A0 analog value  
 d1: A1 analog value
 ```math
 \begin{align}
@@ -151,11 +160,11 @@ d1: A1 analog value
 ```
 
 ## Time per Averaged Data Point
-`tBefore`: before summing analog values \
+`tBefore`: before summing analog values  
 `tAfter`: after summing but before writing & `inter_average` delay
 ```math
 \begin{align}
-    t = \frac{tBefore + tAfter}{2} = \text{Time per averaged data point}
+    t = \frac{tBefore + tAfter}{2}
 \end{align}
 ```
 
@@ -286,13 +295,13 @@ dead_time = (sum_small_gaps/tot_len_file)*100
 1. What is an appropriate threshold for the smaller gaps? the median?
     > This is used to calculate dead time; currently it's set to the smallest gap found and sums all gaps larger than it
 
-    > :heavy_check_mark: D.S \
-    The threshold should be calculated using the `Time Spent Sampling` aka Equation (2).\
-    Use the following for new calculations: \
-    Expected duration of file = CPD $\times$ #_of_points \
-    Dead time vs. Expectation = (actual duration - expected duration) / expected duration \
-    >---note: `.1 = 10% from expected`, `2 = took twice as long as expected `\
-    >New median dt = median(tAfter - tBefore) \
+    > :heavy_check_mark: D.S  
+    The threshold should be calculated using the `Time Spent Sampling` aka Equation (2).  
+    Use the following for new calculations:  
+    Expected duration of file = CPD $\times$ #_of_points  
+    Dead time vs. Expectation = (actual duration - expected duration) / expected duration  
+    >---note: `.1 = 10% from expected`, `2 = took twice as long as expected `  
+    >New median dt = median(tAfter - tBefore)  
     New DeadTime due to Gaps = (actual_duration - #_of_points $\times$ median_dt) / (#_of_points $\times$ median_dt)
 
 
@@ -318,7 +327,7 @@ Three options
 2. Adjusting rules for now, but eventually moving to an organization to add admin roles 
 3. Currently we will work on PR for verification and use releases
 
-### What to do if I forgot to make a branch 
+### What to do if you forgot to make a branch 
 
 Step 1: Identify the work you need to move to a new branch.
 
@@ -347,7 +356,7 @@ Date:   Wed Jan 10 17:44:42 2024 -0800
     report finalized
 ```
 
-Step 2: Un commit \
+Step 2: Un commit  
     In order to undo the commit we use:
 
 ```bash
@@ -379,7 +388,7 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 ```
 
-Step 3: Move changes to a new branch.\
+Step 3: Move changes to a new branch. 
 The following command will move all of your unstaged changes to a new branch `myNewBranch`. 
 
 ```bash
