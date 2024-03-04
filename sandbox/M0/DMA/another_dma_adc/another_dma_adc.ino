@@ -21,7 +21,7 @@ DmacDescriptor descriptor __attribute__((aligned(16)));                      // 
 
 void setup()
 {
-    Serial.begin(115200); // Configure the native USB port for 115200 baud
+    Serial.begin(9600); // Configure the native USB port for 115200 baud
     while (!Serial)
         ; // Wait for the console to open
 
@@ -54,7 +54,7 @@ void setup()
     ADC->SAMPCTRL.reg = 0x00; // Set the sample length in 1/2 CLK_ADC cycles + 1
     while (ADC->STATUS.bit.SYNCBUSY)
         ;                                         // Wait for synchronization
-    ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 | // Set the ADC clock prescaler to 512: 48MHz/512 = 93.750kHz
+    ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV32 | // Set the ADC clock prescaler to 512: 48MHz/512 = 93.750kHz
                      ADC_CTRLB_FREERUN |          // Set the ADC to free-run
                      ADC_CTRLB_RESSEL_12BIT;      // Set the ADC resolution to 12-bits
     while (ADC->STATUS.bit.SYNCBUSY)
@@ -67,29 +67,29 @@ void setup()
     DMAC->CHCTRLA.bit.ENABLE = 1;     // Enable DMAC channel 0, triggering read and store 256 results in memory
 }
 
-volatile int gend = 0;
+// volatile int gend = 0;
 void loop()
 {
-    // parse an incoming int and set the generator to that value (for testing)
-    if (Serial.available() > 0)
-    {
-        int in = Serial.parseInt();
-        gend = in;
-    }
+    // // parse an incoming int and set the generator to that value (for testing)
+    // if (Serial.available() > 0)
+    // {
+    //     int in = Serial.parseInt();
+    //     gend = in;
+    // }
 
-    analogWrite(DAC0, gend);
+    // analogWrite(DAC0, gend);
 
-
-
+     // Trigger ADC conversion
+    // ADC->SWTRIG.bit.START = 1;
 
     if (transferComplete == true) // If a DMAC transfer has completed...
     {
-        transferComplete = false;                  // Clear the transfer complete flag
+        // transferComplete = false;                  // Clear the transfer complete flag
         for (uint16_t i = 0; i < BUFFER_SIZE; i++) // Print the results
         {
             Serial.print(i + 1);
             Serial.print(F(": "));
-            Serial.println(adcResults[i]);
+            Serial.println((adcResults[i]*3.3)/4095);
         }
         Serial.print(F("   size of adcResults: "));
         Serial.print(sizeof(adcResults));
@@ -98,10 +98,15 @@ void loop()
         Serial.print(F("    millis: "));
         Serial.print(millis());
         Serial.println();
-        // delay(1);                      // Wait for .001 second
+
+        transferComplete = false;                  // Clear the transfer complete flag
+
+        delay(10);
         DMAC->CHID.reg = DMAC_CHID_ID(0); // Select DMAC channel 0
         DMAC->CHCTRLA.bit.ENABLE = 1;     // Enable DMAC channel 0, triggering read and store 256 results in memory
-    }
+ }
+
+    delay(100);                      // Wait for .001 second
 }
 
 void DMAC_Handler() // DMAC interrupt routine
