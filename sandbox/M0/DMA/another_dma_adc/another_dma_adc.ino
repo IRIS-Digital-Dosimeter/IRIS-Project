@@ -12,7 +12,7 @@
 
 #define BUFFER_SIZE 256 // Set the buffer size
 
-        uint16_t adcResults[BUFFER_SIZE]; // Define the memory location for the ADC results
+uint16_t adcResults[BUFFER_SIZE]; // Define the memory location for the ADC results
 volatile bool transferComplete = false; // Define the transfer complete flag
 
 volatile DmacDescriptor wrb[DMAC_CH_NUM] __attribute__((aligned(16)));       // Define write-back descriptors
@@ -98,7 +98,7 @@ void loop()
         Serial.print(F("    millis: "));
         Serial.print(millis());
         Serial.println();
-        // delay(1000);                      // Wait for 1 second
+        // delay(1);                      // Wait for .001 second
         DMAC->CHID.reg = DMAC_CHID_ID(0); // Select DMAC channel 0
         DMAC->CHCTRLA.bit.ENABLE = 1;     // Enable DMAC channel 0, triggering read and store 256 results in memory
     }
