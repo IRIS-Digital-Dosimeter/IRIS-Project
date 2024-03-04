@@ -102,35 +102,35 @@ void setup()
 
 void loop()
 {
-  // if ( fs_changed )
-  // {
-  //   root.open("/");
-  //   Serial.println("SD contents:");
+  if ( fs_changed )
+  {
+    root.open("/");
+    Serial.println("SD contents:");
 
-  //   // Open next file in root.
-  //   // Warning, openNext starts at the current directory position
-  //   // so a rewind of the directory may be required.
-  //   while ( file.openNext(&root, O_RDONLY) )
-  //   {
-  //     file.printFileSize(&Serial);
-  //     Serial.write(' ');
-  //     file.printName(&Serial);
-  //     if ( file.isDir() )
-  //     {
-  //       // Indicate a directory.
-  //       Serial.write('/');
-  //     }
-  //     Serial.println();
-  //     file.close();
-  //   }
+    // Open next file in root.
+    // Warning, openNext starts at the current directory position
+    // so a rewind of the directory may be required.
+    while ( file.openNext(&root, O_RDONLY) )
+    {
+      file.printFileSize(&Serial);
+      Serial.write(' ');
+      file.printName(&Serial);
+      if ( file.isDir() )
+      {
+        // Indicate a directory.
+        Serial.write('/');
+      }
+      Serial.println();
+      file.close();
+    }
 
-  //   root.close();
+    root.close();
 
-  //   Serial.println();
+    Serial.println();
 
-  //   fs_changed = false;
-  //   delay(1000); // refresh every 0.5 second
-  // }
+    fs_changed = false;
+    delay(1000); // refresh every 0.5 second
+  }
 }
 
 // Callback invoked when received READ10 command.
