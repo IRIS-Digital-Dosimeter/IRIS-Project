@@ -11,12 +11,13 @@ tests/
         data/
         test_name.ipynb
 
-    analysis_IRIS.py
-    analysis_one_pin.py
-    import_serial.py
+scripts/
+        analysis_IRIS.py
+        analysis_one_pin.py
+        import_serial.py
 
 helper_files/ 
-         <helpful python files>
+         <helpful independent python files>
 ```
 
 Jupyter notebooks are used for quick plotting. All analysis functions are pulled from the files: 
