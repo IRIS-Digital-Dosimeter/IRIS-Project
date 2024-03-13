@@ -1,13 +1,17 @@
 # M0 and M4 Data files
 Programs used to generate these files: 
-- [M0_to_M4](https://github.com/Drixitel/Iris-Adafruit-GPS/tree/main/scripts/ada_M4_scripts/M0_to_M4) : An M4 program which should be nearly 1:1 with the M0 program
-- [M0_datalogger](https://github.com/Drixitel/Iris-Adafruit-GPS/tree/main/scripts/ada_M0_scripts/M0_datalogger) : The original M0 program
+- `M0_to_M4.ino` : An M4 program which should be nearly 1:1 with the M0 program
+    - loc: `packages > M4 > M0_to_M4`
+- `datalogger.ino` : The original M0 program
+    - loc: `packages > M0 > datalogger`
 
-## Data Folders Format 
+## Subdirectories: data 
+The following describes the formatting/naming of data subdirectories
 ```
-Board_timing
 Boards: <M0, M4>
-Timing: t1, tLinear 
+Timing Types: <t1, tLinear> 
+
+Directory Naming: <board>_<timing type>
     t1: txt file only captures one micros() call 
     tLinear: txt file captures two micros() calls and their average is used in analysis 
 
