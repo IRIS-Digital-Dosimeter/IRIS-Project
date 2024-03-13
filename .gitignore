@@ -21,3 +21,6 @@ setinter/
 # Jupyter 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+
+# misc 
+.drawio
