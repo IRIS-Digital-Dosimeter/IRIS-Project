@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////////////////
-/* datalogger_tAv_bin_sdfat.ino
+/* datalogger_tAv_bin.ino
 
   Composite Sketch + Helper Files 
   Board: M0 48MHz & SD card
 
   Created: 3/10/2024
   Michelle Pichardo
-  Andrew Y
-  David Smith
+  Andrew Yegiayan
+  Dr. David Smith
 
   Purpose: 
   - Testing timing 
@@ -22,19 +22,15 @@
 #include "HelperFunc.h"
 #include "Debug.h"
 
+// LED & Reset Pins
+#define REDLEDpin 13 
 // User Tiny for serial output
 #define Ser SerialTinyUSB
 
-// LED & Reset Pins
-#define REDLEDpin 13 
-#define RESET_PIN  A4 
-
-#define SAFESERIAL if (Ser.availableForWrite() <= 6) {Ser.printf("\nSerial.availableForWrite() is %d bytes.\n\n", Ser.availableForWrite()); delay(50); } else 
-
 // Baudrate for serial comm 
-const int32_t baud = 9600;
+const int32_t baud = 115200;
 // Cipselect M0 = 4
-const int32_t cs = 4;
+const int8_t cs = 4;
 // bit resolution
 const float res12bit = 4095;
 // Circuit voltage
@@ -42,9 +38,10 @@ const float vHi = 3.3;
 const float vLo = 0.0; 
 // Timing param
 uint32_t startAnalogTimer = 0; 
+// Create Files variable
+int32_t fileCounter = 1; 
 
-// File objs --------
-// File dataFile;
+// File & data objs --------
 FsFile dataFile;
 
 #pragma pack(1)
@@ -58,43 +55,87 @@ struct datastore {
 struct datastore myData;
 // ---------------------
 
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-/* Create Files variables */
-int32_t fileCounter = 1; 
+// Define an enum to represent the setup types
+enum class SetupType {
+    MSC_ONLY,     // view contents only mode 
+    SD_ONLY,      // no view accesss only file creation
+    MSC_SD,       // view and create mode 
+    AUTO_PILOT,   // Run once using default values *Cannot view contents* 
+    SERIAL_ONLY,  // no view no creation, used to view pins via serial w/o file creation
+};
+
+// Set the initial setup type
+SetupType setupType = SetupType::MSC_ONLY; 
 bool filePrint = true; 
 
-
-
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 void setup() {
 
   // indicate setup with red LED
   pinMode(REDLEDpin, OUTPUT);
   digitalWrite(REDLEDpin, HIGH);
-  // Set up Reset pin KEEP THIS ORDER: Write THEN pinMODE
-  pinMode(RESET_PIN, OUTPUT);
-  digitalWrite(RESET_PIN, HIGH);
   // Set input pins
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
-  // Expose M0 as external USB and set up serial monitor communication
-  // TinyUSB_Device_Init();
-  USB_SPI_initialization(baud, cs);
   // Set the analog pin resolution 
   analogReadResolution(12);
 
-  if (filePrint){
-  // Set the analog pin resolution 
-  analogReadResolution(12);
-  // send notice
-  Ser.println("\t< Parameter Setup >");
-  // Request input params
-  userInputParams(); 
-  myDelay_us(100);
-  // Turn on LED while writing
-  digitalWrite(REDLEDpin, LOW);
+  // Cases to handle differnt setup types 
+  switch (setupType) {
+    case SetupType::MSC_ONLY:
+        // Setup Mass storage device & SPI
+        Setup::MSC_SPI_SD(baud, cs);
+        filePrint = false;
+        Ser.println("MODE: MSC_ONLY ");
+        break;
+    case SetupType::SD_ONLY:
+        // Setup serial communication
+        Setup::SPI(baud);
+        // Set up Sdcard
+        Setup::SdCard(cs);
+        Ser.println("\nMODE: SD_ONLY ");
+        // send notice
+        Ser.println("\n\t< Parameter Setup >");
+        // Request input params
+        params::userInputALL();
+        Delay::my_us(100);
+        // Turn on LED while writing
+        digitalWrite(REDLEDpin, LOW);
+        break;
+    case SetupType::MSC_SD:
+        // Setup Mass storage device
+        Setup::MSC_SPI_SD(baud, cs);
+        // send notice
+        Ser.println("\nMODE: MSC_SD");
+        Ser.println("\nCAUTION: this setting might fail for large files");
+        Ser.println("CAUTION: prints might fail mid execution");
+        Ser.println("\n\t< Parameter Setup >");
+        // Request input params
+        params::userInputALL();
+        // Warn case might fail
+        Delay::my_us(100);
+        // Turn on LED while writing
+        digitalWrite(REDLEDpin, LOW);
+        break;
+    case SetupType::AUTO_PILOT:
+        // Setup serial communication
+        Setup::SPI(baud);
+        // Set up Sdcard
+        Setup::SdCard(cs);
+        Ser.println("MODE: AUTO_PILOT");
+        Delay::my_us(100);
+        // Turn on LED while writing
+        digitalWrite(REDLEDpin, LOW);
+        break;
+    default:
+        // Setup serial communication
+        Setup::SPI(baud);
+        filePrint = false;
+        break;
   }
-
 }
 
 
@@ -104,10 +145,8 @@ void loop() {
 
   if (filePrint)
   {
-    setUSB(false);
-
-    // Create File: MMDDXXXX.tmp 
-    dataFile = openFile(fileCounter, session_val);
+    // Create File: MMDDXXXX.dat 
+    dataFile = sdFile::Open(fileCounter, session_val);
     
     // Header   
     dataFile.write((uint8_t*)&intersampleDelay, sizeof(intersampleDelay));
@@ -130,11 +169,12 @@ void loop() {
 
       // Build buffer: read sensor value then sum it to the previous sensor value 
       for (unsigned int counter = 1; counter <= numSamples; counter++){
-         myData.adc0 += analogRead(A0);
-         myData.adc1 += analogRead(A1);
+        myData.adc0 += analogRead(A0);
+        myData.adc1 += analogRead(A1);
 
         // Pause for stability 
-        myDelay_us(intersampleDelay);
+        // myDelay_us(intersampleDelay);
+        Delay::cycle_usec(intersampleDelay);
       
       }
       // Log time_after
@@ -146,28 +186,22 @@ void loop() {
 
       // Write to file 
       if (dataFile){
+        // A single write is better than 4
         dataFile.write((uint8_t*)&myData, sizeof(myData));
       } else {
-        SAFESERIAL  Ser.print("Error writing to data file.");
-        // Close the file 
-        dataFile.close();
-        while(1);
+        Ser.print("Error writing to data file.");
       }
-
     }
 
     // Close the file 
     if (dataFile){
-      // dataFile.flush();
       dataFile.close();
     } else {
-        SAFESERIAL  Ser.print("Error CLOSING file.");
-        // Close the file 
-        while(1);
+      Ser.print("Error CLOSING file.");
     }
     
-    // Ser.println("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
-    debugln("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+    debugsln("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+
     // Incriment file counter 
     fileCounter++;
 
@@ -176,21 +210,21 @@ void loop() {
 
       //Turn ON LED 
       digitalWrite(REDLEDpin, HIGH);
-      // Reset the USB to view new files 
-      setUSB(true);
-      // TinyUSB_Device_FlushCDC();
-      myDelay_us(8000);
-      // Debug prints 
-      SAFESERIAL  Ser.println("\nMAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
-      SAFESERIAL  Ser.println("\nSession {"+ String(session_val) +"} Complete");
-      debugf("File count: %i", fileCounter-1);
+      Delay::my_us(1000);
+
+      // Check the value of setupType outside of the switch statement
+      if (setupType == SetupType::SD_ONLY) {
+          Ser.println("\nMode: SD_ONLY");
+      } else if (setupType == SetupType::MSC_SD) {
+          Ser.println("\nMode: MSC_SD");
+      } else if (setupType == SetupType::AUTO_PILOT) {
+          Ser.println("\nMode: AUTO_PILOT");
+      }
+
+      Ser.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
+      Ser.println("\n\tSession {"+ String(session_val) +"} Complete");
       // Change Condition 
       filePrint = false; 
-      // Pause
-      myDelay_us(15000);
-      // Reset the board to view new files 
-      // digitalWrite(RESET_PIN, LOW);
-
       }
    
    }

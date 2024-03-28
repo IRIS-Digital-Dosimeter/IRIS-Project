@@ -13,8 +13,6 @@ Details:
 
 // Global Variables ------------------------------------------------------
 
-// SD card 
-extern const int32_t chipSelect;
 // Params
 extern int32_t session_val;
 extern uint32_t desiredInterval_s;
@@ -29,33 +27,36 @@ extern uint32_t numSamples;
 
 // Function Prototypes ------------------------------------------------------
 
-// Serial Communication
-void SPI_initialization(const uint32_t baudRate);
+namespace Setup {
+  void SPI(const uint32_t baudRate);
+  void SdCard(const int8_t chipSelect);
+  void MSC_SPI_SD(const int32_t baudRate, int8_t chipselect);
+}
 
-//  SD wrapper of SdFat
-void SD_initialization(const int32_t chipSelect);
-FsFile openFile(int32_t fileIndex, int32_t session);
+namespace sdFile {
+  FsFile Open(int32_t fileIndex, int32_t session);
+  char* fourDigits(int32_t digits, char* result);
+}
 
-// USB
-void USB_SPI_initialization(const int32_t baudRate, int32_t chipselect);
-void setUSB(bool ready);
-void msc_flush_cb (void);
-int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize);
-int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize);
+namespace params {
+  void userInputALL(void);
+  void setFileInterval(void);
+  void setParams(void);
+  void setSessionName(void);
+}
 
-// Format
-char* fourDigits(int32_t digits, char* result);
+namespace MSC {
+  void setUSB(bool ready);
+  void msc_flush_cb (void);
+  int32_t msc_read_cb (uint32_t lba, void* buffer, uint32_t bufsize);
+  int32_t msc_write_cb (uint32_t lba, uint8_t* buffer, uint32_t bufsize);
+}
 
-// Delay
-void myDelay_us(uint32_t us);
+namespace Delay {
+  void my_us(uint32_t us);
+  void cycle_usec(uint32_t n);
+}
 
-// Test Pins
-void printPins_01(float VHi, float VLo, float resolution);
-
-// Parameter Setup
-void userInputParams(void);
-void setFileInterval(void);
-void setParams(void);
-void setSessionName(void);
-
+// Debugging
+void printA0A1(float VHi, float VLo, float resolution);
 #endif
