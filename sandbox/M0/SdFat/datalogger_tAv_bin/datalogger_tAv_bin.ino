@@ -93,7 +93,7 @@ void setup() {
         break;
     case SetupType::SD_ONLY:
         // Setup serial communication
-        Setup::SPI(baud);
+        Setup::SPI_init(baud);
         // Set up Sdcard
         Setup::SdCard(cs);
         Ser.println("\nMODE: SD_ONLY ");
@@ -122,7 +122,7 @@ void setup() {
         break;
     case SetupType::AUTO_PILOT:
         // Setup serial communication
-        Setup::SPI(baud);
+        Setup::SPI_init(baud);
         // Set up Sdcard
         Setup::SdCard(cs);
         Ser.println("MODE: AUTO_PILOT");
@@ -132,7 +132,7 @@ void setup() {
         break;
     default:
         // Setup serial communication
-        Setup::SPI(baud);
+        Setup::SPI_init(baud);
         filePrint = false;
         break;
   }

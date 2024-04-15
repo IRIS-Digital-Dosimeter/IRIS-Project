@@ -1,5 +1,5 @@
 /*/////////////////////////////////////////////////////////////////////////////////////////
-HelperFunc.cpp 
+HelperFunc.cpp
 
 Details: 
   - this file contains helper functions in all their glory 
@@ -88,7 +88,7 @@ namespace Setup {
     - Needed for native USB port only
     - Ensure only one monitor is open
   */
-  void SPI(const uint32_t baudRate)
+  void SPI_init(const uint32_t baudRate)
   {
     Ser.begin(baudRate);
     while (!SerialTinyUSB && millis() < 15000){;}
@@ -127,7 +127,7 @@ namespace Setup {
     usb_msc.begin();
 
     // Set up Serial Monitor communication  
-    Setup::SPI(baudRate);
+    Setup::SPI_init(baudRate);
     Ser.println("\nSD contents are available check explorer/finder\n");
 
     debugln("\nInitializing TinyUSB Mass Storage SD Card...");

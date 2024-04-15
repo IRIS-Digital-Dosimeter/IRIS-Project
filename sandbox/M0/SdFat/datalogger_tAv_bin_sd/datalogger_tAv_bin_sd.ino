@@ -91,7 +91,7 @@ void setup() {
         break;
     case SetupType::SD_ONLY:
         // Setup serial communication
-        Setup::SPI(baud);
+        Setup::SPI_init(baud);
         // Set up Sdcard
         Setup::SdCard(cs);
         // send notice
@@ -117,7 +117,7 @@ void setup() {
         break;
     default:
         // Setup serial communication
-        Setup::SPI(baud);
+        Setup::SPI_init(baud);
         break;
   }
 

@@ -28,7 +28,7 @@ extern uint32_t numSamples;
 // Function Prototypes ------------------------------------------------------
 
 namespace Setup {
-  void SPI(const uint32_t baudRate);
+  void SPI_init(const uint32_t baudRate);
   void SdCard(const int8_t chipSelect);
   void MSC_SPI_SD(const int32_t baudRate, int8_t chipselect);
 }
@@ -59,4 +59,5 @@ namespace Delay {
 
 // Debugging
 void printA0A1(float VHi, float VLo, float resolution);
+
 #endif

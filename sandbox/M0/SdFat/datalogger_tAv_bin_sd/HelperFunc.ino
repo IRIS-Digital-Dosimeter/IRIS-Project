@@ -55,7 +55,7 @@ namespace Setup {
     - Needed for native USB port only
     - Ensure only one monitor is open
   */
-  void SPI(const uint32_t baudRate)
+  void SPI_init(const uint32_t baudRate)
   {
     Ser.begin(baudRate);
     while (!SerialTinyUSB && millis() < 15000){;}
