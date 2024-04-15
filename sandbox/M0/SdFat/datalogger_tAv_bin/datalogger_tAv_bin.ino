@@ -61,13 +61,13 @@ struct datastore myData;
 enum class SetupType {
     MSC_ONLY,     // view contents only mode 
     SD_ONLY,      // no view accesss only file creation
-    MSC_SD,       // view and create mode 
     AUTO_PILOT,   // Run once using default values *Cannot view contents* 
+    MSC_SD,       // view and create mode 
     SERIAL_ONLY,  // no view no creation, used to view pins via serial w/o file creation
 };
 
 // Set the initial setup type
-SetupType setupType = SetupType::MSC_ONLY; 
+SetupType setupType = SetupType::AUTO_PILOT; 
 bool filePrint = true; 
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -126,7 +126,7 @@ void setup() {
         // Set up Sdcard
         Setup::SdCard(cs);
         Ser.println("MODE: AUTO_PILOT");
-        Delay::my_us(100);
+        Delay::my_us(1000);
         // Turn on LED while writing
         digitalWrite(REDLEDpin, LOW);
         break;
@@ -173,7 +173,6 @@ void loop() {
         myData.adc1 += analogRead(A1);
 
         // Pause for stability 
-        // myDelay_us(intersampleDelay);
         Delay::cycle_usec(intersampleDelay);
       
       }
@@ -182,7 +181,7 @@ void loop() {
       // myData.t2 = micros() - startAnalogTimer;
 
       // Pause for stability 
-      // myDelay_us(interaverageDelay);
+      // Delay::cycle_usec(interaverageDelay);
 
       // Write to file 
       if (dataFile){
@@ -200,7 +199,7 @@ void loop() {
       Ser.print("Error CLOSING file.");
     }
     
-    debugsln("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+    debugln("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
 
     // Incriment file counter 
     fileCounter++;

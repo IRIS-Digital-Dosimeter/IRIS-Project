@@ -16,15 +16,14 @@ Details:
 
 /* Defaults for Files */
 int32_t session_val = 1;                // default trial is 1
-uint32_t desiredInterval_s = 1;         // 1 min = 60 s  
-uint32_t desiredInterval_ms = 1000;     // 1 s   = 1_000 ms 
-uint32_t desiredInterval_us = 1000000;  // 1 ms  = 1_000_000 us
-int32_t maxFiles = 3;                   // Maximum number of files to write
+uint32_t desiredInterval_s = 5;         // 1 min = 60 s  
+uint32_t desiredInterval_us = 5000000;  // 1 s  = 1_000_000 us
+int32_t maxFiles = 10;                   // Maximum number of files to write
 
 /* Board Defaults: 4bytes/32bits */
-uint32_t intersampleDelay = 20; 
+uint32_t intersampleDelay = 20; //20
 uint32_t interaverageDelay = 0; 
-uint32_t numSamples = 20;  
+uint32_t numSamples = 12;  
 
 // SdFat + TinyUSB ----------------------------------------
 
@@ -251,7 +250,6 @@ namespace params {
           }
           // Successfully extracted break loop
           desiredInterval_us = desiredInterval_s * 1000000UL;
-          desiredInterval_ms = desiredInterval_s * 1000UL;
           debugln("Successful interval extraction.");
           break;
         }
@@ -264,10 +262,6 @@ namespace params {
     }
     Ser.print("Interval entered (s) : ");
     Ser.println(desiredInterval_s);
-    debug("Interval entered (ms): ");
-    debugln(desiredInterval_s * 1000UL);
-    debug("Interval entered (us): ");
-    debugln(desiredInterval_us);
   }
 
   /*

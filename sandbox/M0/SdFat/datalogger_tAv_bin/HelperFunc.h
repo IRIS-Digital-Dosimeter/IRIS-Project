@@ -16,7 +16,6 @@ Details:
 // Params
 extern int32_t session_val;
 extern uint32_t desiredInterval_s;
-extern uint32_t desiredInterval_ms;
 extern uint32_t desiredInterval_us;
 extern int32_t maxFiles;  
 
