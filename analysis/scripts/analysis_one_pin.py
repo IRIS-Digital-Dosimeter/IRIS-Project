@@ -270,7 +270,11 @@ def analyze(infile,
     expected_file_duration = cycle*len(d)
 
     # Dead time
-    dead_time = (sum_small_gaps/actual_file_duration)*100
+
+    dead_time = dt[dt>gap_sizeS_us]
+    dead_time = np.sum(dead_time) # us
+    dead_time = (dead_time/actual_file_duration)*100 
+    # dead_time = (sum_small_gaps/actual_file_duration)*100
 
 
 
