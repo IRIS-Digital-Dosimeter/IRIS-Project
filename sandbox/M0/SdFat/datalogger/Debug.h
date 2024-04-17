@@ -17,12 +17,13 @@ Reson:
   - This program adds them if they are needed and removes them when they are not 
 /////////////////////////////////////////////////////////////////////////////////////////*/
 
-#pragma once
+// #pragma once
 #ifndef DEBUG_H
 #define DEBUG_H
 
 // Debug Parameters ........................................
-#define DEBUG 1
+#define DEBUG 0
+#define DEBUG_SMALL 0
 #define APRINT 0
 // ........................................................
 
@@ -36,6 +37,18 @@ Reson:
 #define debugln(x)
 #define debugf(x,y)
 #endif
+
+// Debug: small print
+#if DEBUG_SMALL == 1
+#define debugs(x) Serial.print(x)
+#define debugsln(x) Serial.println(x)
+#define debugsf(x,y) Serial.printf(x,y)
+#else
+#define debugs(x)
+#define debugsln(x)
+#define debugsf(x,y)
+#endif
+
 
 // Aprint: serial plotter view
 #if APRINT == 1

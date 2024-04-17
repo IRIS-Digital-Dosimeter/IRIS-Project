@@ -5,7 +5,7 @@ Details:
   - This file contains classes; global variables; and prototypes of our helper functions 
   - Full fuctions are found in HelperFunc.cpp 
 /////////////////////////////////////////////////////////////////////////////////////////*/
-#pragma once
+// #pragma once
 
 #ifndef HELPER_FUNC_H
 #define HELPER_FUNC_H
@@ -16,6 +16,7 @@ Details:
 // Params
 extern int32_t session_val;
 extern uint32_t desiredInterval_s;
+extern uint32_t desiredInterval_ms;
 extern uint32_t desiredInterval_us;
 extern int32_t maxFiles;  
 
@@ -54,6 +55,10 @@ namespace MSC {
 namespace Delay {
   void my_us(uint32_t us);
   // void cycle_usec(uint32_t n);
+}
+
+namespace MANUAL {
+  void overwriteValues(int32_t session, uint32_t intervalSeconds, int32_t max_Files);
 }
 
 // Debugging

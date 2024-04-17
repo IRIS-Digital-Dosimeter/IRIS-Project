@@ -1,5 +1,5 @@
 /*/////////////////////////////////////////////////////////////////////////////////////////
-HelperFunc.cpp
+HelperFunc.cpp 
 
 Details: 
   - this file contains helper functions in all their glory 
@@ -12,18 +12,21 @@ Details:
 #include <Adafruit_TinyUSB.h>
 #include "Debug.h"
 
+
 // Constants //////////////////////////////////////////////////////////////////////////////
 
 /* Defaults for Files */
-int32_t session_val = 1;                // default trial is 1
+int32_t session_val = 4;                // default trial is 1
 uint32_t desiredInterval_s = 5;         // 1 min = 60 s  
-uint32_t desiredInterval_us = 5000000;  // 1 s  = 1_000_000 us
-int32_t maxFiles = 10;                   // Maximum number of files to write
+uint32_t desiredInterval_ms = 5000;     // 1 s   = 1_000 ms 
+uint32_t desiredInterval_us = 5000000;  // 1 ms  = 1_000_000 us
+int32_t maxFiles = 2;                   // Maximum number of files to write
+
 
 /* Board Defaults: 4bytes/32bits */
-uint32_t intersampleDelay = 20; //20
+uint32_t intersampleDelay = 50; 
 uint32_t interaverageDelay = 0; 
-uint32_t numSamples = 12;  
+uint32_t numSamples = 20;  
 
 // SdFat + TinyUSB ----------------------------------------
 
@@ -71,6 +74,7 @@ const uint8_t SD_CS_PIN = SDCARD_SS_PIN;
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SPI_CLOCK)
 #endif  // HAS_SDIO_CLASS
 
+bool fs_changed = true;
 
 
 // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
@@ -249,6 +253,7 @@ namespace params {
           }
           // Successfully extracted break loop
           desiredInterval_us = desiredInterval_s * 1000000UL;
+          desiredInterval_ms = desiredInterval_s * 1000UL;
           debugln("Successful interval extraction.");
           break;
         }
@@ -261,6 +266,10 @@ namespace params {
     }
     Ser.print("Interval entered (s) : ");
     Ser.println(desiredInterval_s);
+    debug("Interval entered (ms): ");
+    debugln(desiredInterval_s * 1000UL);
+    debug("Interval entered (us): ");
+    debugln(desiredInterval_us);
   }
 
   /*
@@ -377,6 +386,7 @@ namespace params {
     Ser.println("- Red LED = LOW: LED will turn off during collection");
     delay(500); 
   }
+
 }
 
 namespace MSC {
@@ -436,6 +446,7 @@ namespace MSC {
     #else
       sd.card()->syncBlocks();
     #endif
+      fs_changed = true;
   }
 
 }
@@ -463,33 +474,52 @@ namespace Delay {
   // __attribute__ ( ( section (  ".ramfunc " ) ) ) void cycle_usec ( uint32_t n )
   // {
   //   __asm (
-  //     "my_us: \n "
+  //     "mydelay: \n "
   //     " sub  r0, r0, #1 \n "  // 1 cycle
   //     " nop             \n "  // 1 cycle
   //     " nop             \n "  // 1 cycle
   //     " nop             \n "  // 1 cycle
   //     " nop             \n "  // 1 cycle
   //     " nop             \n "  // 1 cycle
-  //     " bne  my_us    \n "  // 2 if taken, 1 otherwise
+  //     " bne  mydelay    \n "  // 2 if taken, 1 otherwise
   //   );
   // }
   // #elif F_CPU == 48000000UL
   // __attribute__ ( ( section (  ".ramfunc " ) ) ) void cycle_usec ( uint32_t n )
   // {
   //   __asm (
-  //     "my_us: \n "
+  //     "mydelay: \n "
   //     " mov  r1, #15    \n "  // 1 cycle
-  //     "my_us1: \n "
+  //     "mydelay1: \n "
   //     " sub  r1, r1, #1 \n "  // 1 cycle
-  //     " bne  my_us1    \n " // 2 if taken, 1 otherwise
+  //     " bne  mydelay1    \n " // 2 if taken, 1 otherwise
   //     " sub  r0, r0, #1 \n "  // 1 cycle
-  //     " bne  my_us    \n "  // 2 if taken, 1 otherwise
+  //     " bne  mydelay    \n "  // 2 if taken, 1 otherwise
   //   );
   // }
   // #else
   // #error F_CPU is not defined
   // #endif
 
+}
+
+
+namespace MANUAL {
+
+  void overwriteValues(int32_t session, uint32_t intervalSeconds, int32_t max_Files) 
+  {
+    // Set session value
+    session_val = session;
+
+    // Set interval values
+    desiredInterval_s = intervalSeconds;
+    desiredInterval_ms = intervalSeconds * 1000UL;
+    desiredInterval_us = intervalSeconds * 1000000UL;
+
+    // Set max files
+    maxFiles = max_Files;
+    return;
+  }
 }
 
 

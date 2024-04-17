@@ -40,11 +40,13 @@ const float vLo = 0.0;
 uint32_t startAnalogTimer = 0; 
 // Create Files variable
 int32_t fileCounter = 1; 
+// inital state 
+bool filePrint = true; 
 
 // File & data objs --------
 FsFile dataFile;
 
-#pragma pack(1)
+// #pragma pack(1)
 struct datastore {
   uint32_t t1;
   uint32_t t2;
@@ -61,15 +63,18 @@ struct datastore myData;
 enum class SetupType {
     MSC_ONLY,     // view contents only mode 
     SD_ONLY,      // no view accesss only file creation
-    AUTO_PILOT,   // Run once using default values *Cannot view contents* 
     MSC_SD,       // view and create mode 
+    AUTO_PILOT,   // Run once using default values *Cannot view contents* 
     SERIAL_ONLY,  // no view no creation, used to view pins via serial w/o file creation
 };
 
 // Set the initial setup type
 SetupType setupType = SetupType::AUTO_PILOT; 
-bool filePrint = true; 
-
+const uint32_t s = 70;
+const int32_t files = 5;
+const int32_t ses = 1805;
+// const uint32_t us = 7000000;
+// overwriteValues(int32_t session, uint32_t intervalSeconds, int32_t max_Files);
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 void setup() {
@@ -124,11 +129,17 @@ void setup() {
         // Setup serial communication
         Setup::SPI_init(baud);
         // Set up Sdcard
-        Setup::SdCard(cs);
         Ser.println("MODE: AUTO_PILOT");
-        Delay::my_us(1000);
+        Setup::SdCard(cs);
+        // session_val = 5;
+        // maxFiles = 2;
+        // desiredInterval_s = 60;
+        // desiredInterval_us = 6000000;
+        MANUAL::overwriteValues(ses,s,files);
+        Ser.println("Session {"+ String(session_val) +"}");
         // Turn on LED while writing
         digitalWrite(REDLEDpin, LOW);
+        delay(500);
         break;
     default:
         // Setup serial communication
@@ -181,7 +192,7 @@ void loop() {
       // myData.t2 = micros() - startAnalogTimer;
 
       // Pause for stability 
-      // Delay::my_us(interaverageDelay);
+      // Delay::cycle_usec(interaverageDelay);
 
       // Write to file 
       if (dataFile){
@@ -199,7 +210,7 @@ void loop() {
       Ser.print("Error CLOSING file.");
     }
     
-    debugln("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
+    debugsln("File "+ String(fileCounter) + "/" + String(maxFiles) +" complete...");
 
     // Incriment file counter 
     fileCounter++;
@@ -213,14 +224,15 @@ void loop() {
 
       // Check the value of setupType outside of the switch statement
       if (setupType == SetupType::SD_ONLY) {
-          Ser.println("\nMode: SD_ONLY");
+          Ser.println("\nMODE: SD_ONLY");
       } else if (setupType == SetupType::MSC_SD) {
-          Ser.println("\nMode: MSC_SD");
+          Ser.println("\nMODE: MSC_SD");
       } else if (setupType == SetupType::AUTO_PILOT) {
-          Ser.println("\nMode: AUTO_PILOT");
+          Ser.println("\nMODE: AUTO_PILOT");
       }
 
-      Ser.println("MAX number of files (" + String(fileCounter-1) + ") created. Comencing RESET protocol.");
+      Ser.println("MAX number of files (" + String(fileCounter-1) + ") created.");
+      Ser.println("Duration per file (" + String(desiredInterval_s) + ") seconds.");
       Ser.println("\n\tSession {"+ String(session_val) +"} Complete");
       // Change Condition 
       filePrint = false; 
