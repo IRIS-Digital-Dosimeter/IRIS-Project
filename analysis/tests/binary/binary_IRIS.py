@@ -91,7 +91,7 @@ def extract_params(infile,
 
 def quickLook(infile, 
               delimiter=',', 
-              samples_averaged = 1,
+              samplesAveraged = 1,
               gap_qualifier = 2000, 
               set_time_to_zero = True,
               save_png = False,
@@ -111,10 +111,10 @@ def quickLook(infile,
     base_filename = os.path.basename(infile)
     file_wout_ext = os.path.splitext(base_filename)[0]
 
-    t1,t2,v0,v1,inter_sample_delay,inter_average_delay,samples_averaged = extract_params(infile)
+    t_1,t_2,v_0,v_1,inter_sampleDelay,inter_averageDelay,samplesAveraged = extract_params(infile)
     
     # Time per averaged point (us)
-    t = (t2 + t1)/2
+    t = (t_2 + t_1)/2
 
     # Make a list of the time differences (gaps) between adjacent points:
     dt = t - np.roll(t,1)
@@ -126,7 +126,7 @@ def quickLook(infile,
     h,tax = np.histogram(dt,range=[0,max(dt)],bins=int(max(dt)/100.))
 
     # Second gap analysis 
-    t_s = t2-t1
+    t_s = t_2-t_1
     # find median time spent sampling 
     t_s_med = np.median(t_s)
     # Create hist
@@ -145,16 +145,16 @@ def quickLook(infile,
         fig, axs = plt.subplots(4)
         fig.set_size_inches(8,8)
 
-        axs[0].scatter(t,v0,s=4)
-        axs[0].plot(t,v0,alpha=0.5, label ='A0')
+        axs[0].scatter(t,v_0,s=4)
+        axs[0].plot(t,v_0,alpha=0.5, label ='A0')
         axs[0].set_xlabel('Time (seconds)')
         axs[0].set_ylabel('Volts')
         axs[0].set_title('A0')
         # axs[0].legend()
         axs[0].grid()
 
-        axs[1].scatter(t,v1,s=4, color ='C1')
-        axs[1].plot(t,v1,alpha=0.5, color ='C1', label= 'A1')
+        axs[1].scatter(t,v_1,s=4, color ='C1')
+        axs[1].plot(t,v_1,alpha=0.5, color ='C1', label= 'A1')
         axs[1].set_xlabel('Time (seconds)')
         axs[1].set_ylabel('Volts')
         axs[1].set_title('A1')
@@ -162,23 +162,24 @@ def quickLook(infile,
         axs[1].grid()
 
         #plot histogram of gaps in milliseconds:
-        axs[2].plot(tax[1:]/1e3,h,alpha=0.5)
-        axs[2].scatter(tax[1:]/1e3,h,s=4)
-        axs[2].set_yscale('log')
-        axs[2].set_xlabel('Gap (milliseconds)')
+        axs[2].plot(tax2[1:]/1e3,h2,alpha=0.5)
+        axs[2].scatter(tax2[1:]/1e3,h2,s=4)
+        axs[2].set_xlabel('Sample Time (milliseconds)')
         axs[2].set_ylabel('Count')
-        axs[2].set_title(f'Histogram of gaps, {len(long_gap)} long gaps, median: {round(np.median(dt[long_gap])/1e3,3)} ms')
+        axs[2].set_title(f'Histogram of time spent sampling: Median time = {round(t_s_med/1e3,3)} +- 0.2 ms')
         axs[2].grid()
 
         #plot histogram of gaps in milliseconds:
-        axs[3].plot(tax2[1:]/1e3,h2,alpha=0.5)
-        axs[3].scatter(tax2[1:]/1e3,h2,s=4)
-        axs[3].set_xlabel('Sample Time (milliseconds)')
+        axs[3].plot(tax[1:]/1e3,h,alpha=0.5)
+        axs[3].scatter(tax[1:]/1e3,h,s=4)
+        axs[3].set_yscale('log')
+        axs[3].set_xlabel('Gap (milliseconds)')
         axs[3].set_ylabel('Count')
-        axs[3].set_title(f'Histogram of time spent sampling: Median time = {round(t_s_med/1e3,3)} +- 0.2 ms')
+        axs[3].set_title(f'Histogram of gaps, {len(long_gap)} long gaps, median: {round(np.median(dt[long_gap])/1e3,3)} ms')
         axs[3].grid()
 
-        fig.suptitle(f'{infile}, Samples_Av:{samples_averaged}, Inter_S:{inter_sample_delay}, Inter_Av:{inter_average_delay}')
+
+        fig.suptitle(f'{infile}, Samples_Av:{samplesAveraged}, Inter_S:{inter_sampleDelay}, Inter_Av:{inter_averageDelay}')
         fig.subplots_adjust(top=.93)
         fig.tight_layout()
         
