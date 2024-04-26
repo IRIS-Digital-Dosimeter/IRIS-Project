@@ -44,7 +44,7 @@ int32_t fileCounter = 1;
 // File & data objs --------
 FsFile dataFile;
 
-#pragma pack(1)
+// #pragma pack(1)
 struct datastore {
   uint32_t t1;
   uint32_t t2;
@@ -67,7 +67,7 @@ enum class SetupType {
 };
 
 // Set the initial setup type
-SetupType setupType = SetupType::AUTO_PILOT; 
+SetupType setupType = SetupType::SD_ONLY; 
 bool filePrint = true; 
 
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
