@@ -69,7 +69,7 @@ enum class SetupType {
 };
 
 // Set the initial setup type
-SetupType setupType = SetupType::AUTO_PILOT; 
+SetupType setupType = SetupType::MSC_ONLY; 
 const uint32_t s = 70;
 const int32_t files = 5;
 const int32_t ses = 1805;
