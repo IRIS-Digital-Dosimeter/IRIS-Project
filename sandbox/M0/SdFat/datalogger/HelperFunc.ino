@@ -303,25 +303,25 @@ namespace params {
     delay(500);
     Ser.println(maxFiles);
 
-    // // Inter_sample_delay
-    // Ser.print("Enter inter sample delay (us): ");
-    // while (true) {
-    //     while (!Ser.available()) {delay(100);}
+    // Inter_sample_delay
+    Ser.print("Enter inter sample delay (us): ");
+    while (true) {
+        while (!Ser.available()) {delay(100);}
 
-    //     intersampleDelay = Ser.parseInt();
+        intersampleDelay = Ser.parseInt();
 
-    //     if (Ser.read() == '\n') {
-    //       if (intersampleDelay > 0) {break;
-    //       } else {
-    //       Ser.print("\nInvalid input range.\nEnter a positive integer: ");
-    //       }
-    //     }
-    //     else {
-    //       Ser.print("\nInvalid input format.\nEnter an integer: ");
-    //     }
-    //   }
-    // delay(500);
-    // Ser.println(intersampleDelay);
+        if (Ser.read() == '\n') {
+          if (intersampleDelay > 0) {break;
+          } else {
+          Ser.print("\nInvalid input range.\nEnter a positive integer: ");
+          }
+        }
+        else {
+          Ser.print("\nInvalid input format.\nEnter an integer: ");
+        }
+      }
+    delay(500);
+    Ser.println(intersampleDelay);
 
     // Number_of_samples_to_average
     Ser.print("Enter number of samples to average: ");
