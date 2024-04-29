@@ -310,7 +310,14 @@ def analyze(infile,
 
     # ~~~~~~~~~~~ Frequency ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Expected Frequency (Hz) = 1/(samples_av*sample_delay + sample_av)
-    expected_freq = 1e6/(t_s_expected)
+    try: 
+        expected_freq = 1e6/(t_s_expected)
+    except ZeroDivisionError: 
+        if prints == True: 
+            print(f'Inter sample delay = {inter_sampleDelay}, causing division by zero.')
+            print('\t No expected frequency calculated')
+    else: 
+        expected_freq = None
     # Frequency of averaging / Freq of INTRA 
     freq_averaging = samplesAveraged/t_s_med # t_s_med = actual INTRA
     freq_averaging = round(freq_averaging*1e6,4)
@@ -330,7 +337,7 @@ def analyze(infile,
     # Dead time due to gaps (us)
     #   dead_time = (file_duration - tot_samples*INTRA_GAP)/ tot_samples*INTRA_GAP
     #   where tot_samples*INTRA_GAP = median_file_duration
-    dead_time_intra = ((file_t_actual - len(t_mid)*t_s_med) / ( len(t_mid) * t_s_med))*100
+    dead_time_intra = (abs(file_t_actual - len(t_mid)*t_s_med) / ( len(t_mid) * t_s_med))*100
 
 
     if prints == True: 
@@ -355,54 +362,97 @@ def analyze(infile,
         print(len(dt[long_gap]), dt[long_gap])
 
     # ~~~~~~~~~~~ DICT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    results_dict = {}
-    # PARAMS
-    results_dict['PARAMS_us'] = '---'
-    results_dict['sample_delay'] = inter_sampleDelay
-    results_dict['average_delay'] = inter_averageDelay
-    results_dict['samples_averaged'] = samplesAveraged
-    results_dict['tot_samples'] = len(t_mid)
-    # INTRA
-    results_dict['INTRA_us'] = '---'
-    results_dict['expected_intra'] = t_s_expected
-    results_dict['actual_intra'] = t_s_med
-    results_dict['actual_intra_dt'] = dt_med
-    # INTER
-    results_dict['INTER_us'] = '---'
-    results_dict['expected_inter'] = t_g_expected
-    results_dict['min_gap'] = t_g_min # smallest possible with t1-t2
-    results_dict['max_gap'] = dt_max # largest possible with dt
-    # GAPS 
-    results_dict['LARGE_GAPS_ms'] = '---'
-    results_dict['gap_qualifier'] = round(gap_qualifier/1e3,2)
-    results_dict['qualifier_multiplier'] = qualifier_multiplier
-    results_dict['num_gaps'] = n_long_gap
-    results_dict['median_gap_t'] = round(dt_med_of_long_gaps/1e3,2)
-    # BYTES & LINES 
-    results_dict['BYTES_LINES'] = '---'
-    results_dict['med_lines'] = lines_med
-    results_dict['med_bytes'] = bytes_med
-    results_dict['mod_512'] = mod_512
-    results_dict['min_bytes'] = bytes_min
-    results_dict['max_bytes'] = bytes_max
-    # TIME B4 512 WRITES 
-    results_dict['DELTA_B4_WRITE_TRIGGER_ms'] = '---'
-    results_dict['t_b4_write'] = round(dt_b4_med/1e3,3)
-    results_dict['t_b4_min'] = round(dt_b4_min/1e3,3)
-    results_dict['t_b4_max'] = round(dt_b4_max/1e3,3)
-    # FREQUENCY 
-    results_dict['FREQUENCY_hz'] = '---'
-    results_dict['freq_intra'] = round(freq_averaging,1)
-    results_dict['freq_b4_write'] = round(freq_b4,1)
-    results_dict['freq_holistic'] = round(freq_holistic,1)
-    # FILE TIME
-    results_dict['FILE_T_s'] = '---'
-    results_dict['file_length'] = round(file_t_actual/1e6,1)
-    # DEAD TIME
-    results_dict['DEAD_TIME'] = '---'
-    results_dict['L_gap_sum_s'] = round(dead_time_sum/1e6,1)
-    results_dict['deadTime_intra_percent'] = round(dead_time_intra,3)
-    results_dict['dead_time_percent'] = round(dead_time*100,3)
+    # results_dict = {}
+    # # PARAMS
+    # results_dict['PARAMS_us'] = '---'
+    # results_dict['sample_delay'] = inter_sampleDelay
+    # results_dict['average_delay'] = inter_averageDelay
+    # results_dict['samples_averaged'] = samplesAveraged
+    # results_dict['tot_samples'] = len(t_mid)
+    # # INTRA
+    # results_dict['INTRA_us'] = '---'
+    # results_dict['expected_intra'] = t_s_expected
+    # results_dict['actual_intra'] = t_s_med
+    # results_dict['actual_intra_dt'] = dt_med
+    # # INTER
+    # results_dict['INTER_us'] = '---'
+    # results_dict['expected_inter'] = t_g_expected
+    # results_dict['min_gap'] = t_g_min # smallest possible with t1-t2
+    # results_dict['max_gap'] = dt_max # largest possible with dt
+    # # GAPS 
+    # results_dict['LARGE_GAPS_ms'] = '---'
+    # results_dict['gap_qualifier'] = round(gap_qualifier/1e3,2)
+    # results_dict['qualifier_multiplier'] = qualifier_multiplier
+    # results_dict['num_gaps'] = n_long_gap
+    # results_dict['median_gap_t'] = round(dt_med_of_long_gaps/1e3,2)
+    # # BYTES & LINES 
+    # results_dict['BYTES_LINES'] = '---'
+    # results_dict['med_lines'] = lines_med
+    # results_dict['med_bytes'] = bytes_med
+    # results_dict['mod_512'] = mod_512
+    # results_dict['min_bytes'] = bytes_min
+    # results_dict['max_bytes'] = bytes_max
+    # # TIME B4 512 WRITES 
+    # results_dict['DELTA_B4_WRITE_TRIGGER_ms'] = '---'
+    # results_dict['t_b4_write'] = round(dt_b4_med/1e3,3)
+    # results_dict['t_b4_min'] = round(dt_b4_min/1e3,3)
+    # results_dict['t_b4_max'] = round(dt_b4_max/1e3,3)
+    # # FREQUENCY 
+    # results_dict['FREQUENCY_hz'] = '---'
+    # results_dict['freq_intra'] = round(freq_averaging,1)
+    # results_dict['freq_b4_write'] = round(freq_b4,1)
+    # results_dict['freq_holistic'] = round(freq_holistic,1)
+    # # FILE TIME
+    # results_dict['FILE_T_s'] = '---'
+    # results_dict['file_length'] = round(file_t_actual/1e6,1)
+    # # DEAD TIME
+    # results_dict['DEAD_TIME'] = '---'
+    # results_dict['L_gap_sum_s'] = round(dead_time_sum/1e6,1)
+    # results_dict['deadTime_intra_percent'] = round(dead_time_intra,3)
+    # results_dict['dead_time_percent'] = round(dead_time*100,3)
+
+    results_dict = {
+    'PARAMS_us': '---',
+    'sample_delay': inter_sampleDelay,
+    'average_delay': inter_averageDelay,
+    'samples_averaged': samplesAveraged,
+    'tot_samples': len(t_mid),
+    'INTRA_us': '---',
+    'expected_intra': t_s_expected,
+    'actual_intra': t_s_med,
+    'actual_intra_dt': dt_med,
+    'INTER_us': '---',
+    'expected_inter': t_g_expected,
+    'min_gap': t_g_min, 
+    'max_gap': dt_max,
+    'LARGE_GAPS_ms': '---',
+    'gap_qualifier': round(gap_qualifier/1e3, 2),
+    'qualifier_multiplier': qualifier_multiplier,
+    'num_gaps': n_long_gap,
+    'median_gap_t': round(dt_med_of_long_gaps/1e3, 2),
+    'BYTES_LINES': '---',
+    'med_lines': lines_med,
+    'med_bytes': bytes_med,
+    'mod_512': mod_512,
+    'min_bytes': bytes_min,
+    'max_bytes': bytes_max,
+    'DELTA_B4_WRITE_TRIGGER_ms': '---',
+    't_b4_write': round(dt_b4_med/1e3, 3),
+    't_b4_min': round(dt_b4_min/1e3, 3),
+    't_b4_max': round(dt_b4_max/1e3, 3),
+    'FREQUENCY_hz': '---',
+    'freq_intra': round(freq_averaging, 1),
+    'freq_b4_write': round(freq_b4, 1),
+    'freq_holistic': round(freq_holistic, 1),
+    'FILE_T_s': '---',
+    'file_length': round(file_t_actual/1e6, 1),
+    'DEAD_TIME': '---',
+    'L_gap_sum_s': round(dead_time_sum/1e6, 1),
+    'deadTime_intra_percent': round(dead_time_intra, 3),
+    'dead_time_percent': round(dead_time*100, 3)
+    }
+
+
 
     return results_dict
 
