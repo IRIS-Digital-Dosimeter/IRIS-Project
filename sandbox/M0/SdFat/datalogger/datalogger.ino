@@ -46,7 +46,7 @@ bool filePrint = true;
 // File & data objs --------
 FsFile dataFile;
 
-// #pragma pack(1)
+#pragma pack(1)
 struct datastore {
   uint32_t t1;
   uint32_t t2;
@@ -69,7 +69,7 @@ enum class SetupType {
 };
 
 // Set the initial setup type
-SetupType setupType = SetupType::SD_ONLY; 
+SetupType setupType = SetupType::MSC_ONLY; 
 const uint32_t s = 70;
 const int32_t files = 5;
 const int32_t ses = 1805;
