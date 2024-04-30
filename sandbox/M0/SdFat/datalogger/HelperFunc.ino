@@ -24,9 +24,9 @@ int32_t maxFiles = 2;                   // Maximum number of files to write
 
 
 /* Board Defaults: 4bytes/32bits */
-uint32_t intersampleDelay = 50; 
+uint32_t intersampleDelay = 20; 
 uint32_t interaverageDelay = 0; 
-uint32_t numSamples = 20;  
+uint32_t numSamples = 15;  
 
 // SdFat + TinyUSB ----------------------------------------
 
@@ -303,46 +303,46 @@ namespace params {
     delay(500);
     Ser.println(maxFiles);
 
-    // Inter_sample_delay
-    Ser.print("Enter inter sample delay (us): ");
-    while (true) {
-        while (!Ser.available()) {delay(100);}
+    // // Inter_sample_delay
+    // Ser.print("Enter inter sample delay (us): ");
+    // while (true) {
+    //     while (!Ser.available()) {delay(100);}
 
-        intersampleDelay = Ser.parseInt();
+    //     intersampleDelay = Ser.parseInt();
 
-        if (Ser.read() == '\n') {
-          if (intersampleDelay > 0) {break;
-          } else {
-          Ser.print("\nInvalid input range.\nEnter a positive integer: ");
-          }
-        }
-        else {
-          Ser.print("\nInvalid input format.\nEnter an integer: ");
-        }
-      }
-    delay(500);
-    Ser.println(intersampleDelay);
+    //     if (Ser.read() == '\n') {
+    //       if (intersampleDelay > 0) {break;
+    //       } else {
+    //       Ser.print("\nInvalid input range.\nEnter a positive integer: ");
+    //       }
+    //     }
+    //     else {
+    //       Ser.print("\nInvalid input format.\nEnter an integer: ");
+    //     }
+    //   }
+    // delay(500);
+    // Ser.println(intersampleDelay);
 
-    // Number_of_samples_to_average
-    Ser.print("Enter number of samples to average: ");
-    while (true) {
-        while (!Ser.available()) {delay(100);}
+    // // Number_of_samples_to_average
+    // Ser.print("Enter number of samples to average: ");
+    // while (true) {
+    //     while (!Ser.available()) {delay(100);}
 
-        numSamples = Ser.parseInt();
+    //     numSamples = Ser.parseInt();
 
-        if (Ser.read() == '\n') {
-          if (numSamples > 1) {
-            break;
-          } else {
-          Ser.print("\nInvalid input range.\nEnter a positive integer greater than 1: ");
-          }
-        } 
-        else {
-          Ser.print("\nInvalid input format.\nEnter an integer: ");
-        }
-      }
-    delay(500); // 2 second delay 
-    Ser.print(numSamples);
+    //     if (Ser.read() == '\n') {
+    //       if (numSamples > 1) {
+    //         break;
+    //       } else {
+    //       Ser.print("\nInvalid input range.\nEnter a positive integer greater than 1: ");
+    //       }
+    //     } 
+    //     else {
+    //       Ser.print("\nInvalid input format.\nEnter an integer: ");
+    //     }
+    //   }
+    // delay(500); // 2 second delay 
+    // Ser.print(numSamples);
   }
 
   /*setSessionName:
