@@ -46,7 +46,7 @@ bool filePrint = true;
 // File & data objs --------
 FsFile dataFile;
 
-#pragma pack(1)
+// #pragma pack(1)
 struct datastore {
   uint32_t t1;
   uint32_t t2;
