@@ -69,7 +69,7 @@ enum class SetupType {
 };
 
 // Set the initial setup type
-SetupType setupType = SetupType::MSC_ONLY; 
+SetupType setupType = SetupType::SD_ONLY; 
 const uint32_t s = 70;
 const int32_t files = 5;
 const int32_t ses = 1805;
@@ -87,6 +87,11 @@ void setup() {
   pinMode(A1, INPUT);
   // Set the analog pin resolution 
   analogReadResolution(12);
+  // Set up ADC 
+  ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |    // 93.7kHz??
+                 ADC_CTRLB_RESSEL_12BIT;         
+  while(ADC->STATUS.bit.SYNCBUSY);                 
+  ADC->SAMPCTRL.reg = 0x0;
 
   // Cases to handle differnt setup types 
   switch (setupType) {
