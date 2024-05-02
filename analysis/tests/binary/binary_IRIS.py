@@ -122,7 +122,7 @@ def quickLook(infile,
     h2,tax2 = np.histogram(t_s,range=[0, max(t_s)], bins=int(max(t_s)/100.))
 
     # Gap qualifier 
-    gap_qualifier = t_s_med*1.5
+    gap_qualifier = t_s_med*1.3
     # Find longest gaps based on qualifier 
     long_gap = np.where(dt > gap_qualifier)[0]
     # Dead time
@@ -195,7 +195,7 @@ def analyze(infile,
             samplesAveraged = 1, 
             inter_sampleDelay = None,
             inter_averageDelay = None,
-            qualifier_multiplier = 1.5,
+            qualifier_multiplier = 1.3,
             prints=False):
 
     """
@@ -272,8 +272,16 @@ def analyze(infile,
     bytes_med = np.median(dt_idx)*16 # expected 512, each line has 16 bytes
     mod_512 = round((np.median(dt_idx)*16)/512,2) # expected 0
     # max min 
-    bytes_min = min(dt_idx)*16
-    bytes_max = max(dt_idx)*16
+    try: 
+        bytes_min = min(dt_idx)*16
+        bytes_max = max(dt_idx)*16
+    except ValueError: 
+        print('Error: Bytes min or max returned an empty sequency')
+    else: 
+        if not min(dt_idx): 
+            bytes_min = None
+        if not max(dt_idx): 
+            bytes_max = None
 
     # ~~~~~~~~~~~ FILE TIME ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Actual file time
