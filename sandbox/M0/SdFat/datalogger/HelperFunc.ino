@@ -19,7 +19,7 @@ Details:
 int32_t session_val = 4;                // default trial is 1
 uint32_t desiredInterval_s = 5;         // 1 min = 60 s  
 uint32_t desiredInterval_ms = 5000;     // 1 s   = 1_000 ms 
-uint32_t desiredInterval_us = 5000000;  // 1 ms  = 1_000_000 us
+uint32_t desiredInterval_us = 5000000;  // 1 s  = 1_000_000 us
 int32_t maxFiles = 2;                   // Maximum number of files to write
 
 
