@@ -13,8 +13,19 @@ __pycache__/
 .venv
 env/
 venv/
+data/
+**/data*/
+old/
 
 # directories
 libraries/
 setinter/
 
+# Jupyter 
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# misc 
+.drawio
+.txt
+.dat
