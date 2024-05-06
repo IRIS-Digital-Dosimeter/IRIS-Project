@@ -15,7 +15,6 @@ env/
 venv/
 data/
 **/data*/
-old/
 
 # directories
 libraries/
