@@ -65,10 +65,10 @@ void adc_init() {
   ADC->AVGCTRL.reg = 0;
 //   ADC->AVGCTRL.bit.SAMPLENUM = ADC_AVGCTRL_SAMPLENUM_16_Val;
 //   ADC->AVGCTRL.bit.ADJRES = 0x4;
-  ADC->SAMPCTRL.bit.SAMPLEN = 2;
+  ADC->SAMPCTRL.bit.SAMPLEN = 0;
   ADCsync();
 
-  //                                                               v this is for averaging
+  //                                                               v this should be 16 for averaging
   ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV32 | ADC_CTRLB_FREERUN | ADC_CTRLB_RESSEL_12BIT;
   ADC->CTRLB.bit.DIFFMODE = 0;
   ADCsync();
@@ -115,64 +115,91 @@ float getSineValue(float Hz, unsigned long curUS) {
 }
 
 
-volatile ulong time;
+volatile ulong time, time2;
 volatile float gend;
 void setup() {
   Serial.begin(115200);
   adc_init();
   dma_init();
   ADC_DMA.startJob();
-
+    time = micros();
 }
 
 void loop() {
     
-    time = micros();
-    gend = getSineValue(0.5, time) + 1;
-    gend *= 512;
-    analogWrite(DAC0, gend);
+    // time = micros();
+    // gend = getSineValue(0.5, time) + 1;
+    // gend *= 512;
+    // analogWrite(DAC0, gend);
 
-    Serial.print("hi:");
-    Serial.print(5000);
-    Serial.print(",");
-
-    Serial.print("lo:");
-    Serial.print(0);
-    Serial.print(",");
-
-    Serial.print("gend:");
-    Serial.print(gend);
-    Serial.print(",");
-
-    // Serial.print("averageOfBuffer:");
-    // volatile int avg = 0;
-    // for (int i = 0; i < 32; i++) 
-    // {
-    //     avg += adc_sample_block[i];
-    // }
-    // Serial.print(avg/32);
+    // Serial.print("hi:");
+    // Serial.print(5000);
     // Serial.print(",");
 
-    Serial.print("midpoint-sample:");
-    Serial.print(adc_sample_block[15]);
+    // Serial.print("lo:");
+    // Serial.print(0);
+    // Serial.print(",");
 
-    // for (int i = 0; i < 32; i++) 
-    // {
-    //     Serial.println(adc_sample_block[i]);
-    // }
+    // Serial.print("gend:");
+    // Serial.print(gend);
+    // Serial.print(",");
+
+    // // Serial.print("averageOfBuffer:");
+    // // volatile int avg = 0;
+    // // for (int i = 0; i < 32; i++) 
+    // // {
+    // //     avg += adc_sample_block[i];
+    // // }
+    // // Serial.print(avg/32);
+    // // Serial.print(",");
+
+    // Serial.print("midpoint-sample:");
+    // Serial.print(adc_sample_block[15]);
+
+    // // for (int i = 0; i < 32; i++) 
+    // // {
+    // //     Serial.println(adc_sample_block[i]);
+    // // }
+
+    // imagine a global variable called FIRSTSAMPLE=true;
+    // imagine global variables called TIME, POSTTIME;
+
+    if(ADC->INTFLAG.bit.RESRDY && FIRSTSAMPLE) {
+        TIME = micros();
+        FIRSTSAMPLE = false;
+    }
+
+    if(adc_buffer_filled) {
+        POSTTIME = micros();
+        FIRSTSAMPLE = true;
+
+        // blah blah other stuffj
+    }
+
+    // now we can do math
+    int delta = POSTTIME - TIME;
+    int interDelay = delta / (32)
+
+    // so first sample was taken at delta - interDelay
+    // second was taken at: delta - interdelay + interDelay
+    // third takend at:     delta - interdelay + 2*interDelay
+    // general fomula for i'th sample (0-indexed):      delta + (i-1)*interDelay
+    
 
     if(adc_buffer_filled){
         adc_buffer_filled=false;
         memcpy(adc_sample_block, (const void*)active_adc_buffer, SAMPLE_BLOCK_LENGTH*sizeof(uint16_t));
-
-        Serial.print(",");
-        Serial.print("delta:");
-        Serial.println(micros() - time);
+        time2 = micros();
+        Serial.println(time2 - time);
+        time = time2;
+        // Serial.print(",");
+        // Serial.print("delta:");
+        // Serial.println(micros() - time);
         
         // Serial.print("Peak: ");
         // Serial.println(peak_to_peak(adc_sample_block, SAMPLE_BLOCK_LENGTH));
     } else {
-        Serial.println();
+        // Serial.println();
     }
 
 }
