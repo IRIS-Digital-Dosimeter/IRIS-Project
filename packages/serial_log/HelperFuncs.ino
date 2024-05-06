@@ -1,13 +1,28 @@
 // HelperFuncs.ino
 
-uint32_t session_val = 1;              // default trial is 1
-uint32_t desiredInterval_s = 1;        // 1 min = 60 s  
-uint32_t desiredInterval_ms = 1000;    // 1 s   = 1_000 ms 
-uint32_t desiredInterval_us = 1000000;
+uint32_t interSampleDelay = 20; 
+uint32_t interAverageDelay = 0; 
+uint32_t numSamples = 15;
 
-uint32_t interSampleDelay = 50; 
-uint32_t interAverageDelay = 1500; 
-uint32_t numSamples = 20;
+
+namespace Setup {
+
+  /* Open serial communications by initializing serial obj @ baudRate
+      - Standard baudRate = 9600
+      - Speed of printing to serial monitor 
+  
+  Will wait up to 15 seconds for Arduino Serial Monitor / serial port to connect
+    - Needed for native USB port only
+    - Ensure only one monitor is open
+  */
+  void SPI_init(const uint32_t baudRate)
+  {
+    Serial.begin(baudRate);
+    while (!Serial && millis() < 15000){;}
+
+    Serial.println("New Serial Communication Secured");
+  }
+}
 
 
 void myDelay_us(uint32_t us)                      // us: duration (use instaed of block func delay())
