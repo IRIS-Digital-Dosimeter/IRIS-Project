@@ -13,6 +13,8 @@ __pycache__/
 .venv
 env/
 venv/
+data/
+**/data*/
 
 # directories
 libraries/
@@ -24,3 +26,5 @@ setinter/
 
 # misc 
 .drawio
+.txt
+.dat
