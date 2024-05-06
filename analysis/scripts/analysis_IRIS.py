@@ -77,7 +77,13 @@ def extract_params(infile,
                     inter_sample_delay = float(param_value)
                 elif param_name.lower() == 'inter-average gap (us)':
                     inter_average_delay = float(param_value)
-
+    """
+    Header snippet
+    dataFile.println("Inter-sample gap (us): " + String(intersampleDelay));
+    dataFile.println("Inter-average gap (us): " + String(interaverageDelay));
+    dataFile.println("Samples averaged: " + String(numSamples));    
+    dataFile.println("Format: micros(), A0, A1 ");   
+    """
 
     # extract time and digital value
     t1, t2, d0, d1 = np.genfromtxt(infile, skip_header=header_lines, unpack=True, delimiter=delimiter)
