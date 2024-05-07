@@ -55,7 +55,7 @@ void adc_init() {
   ADC->CTRLA.bit.ENABLE = 0;
   ADCsync();
 
-  ADC->INPUTCTRL.bit.GAIN = ADC_INPUTCTRL_GAIN_1X_Val;
+  ADC->INPUTCTRL.bit.GAIN = ADC_INPUTCTRL_GAIN_DIV2_Val;
   ADC->REFCTRL.bit.REFSEL = ADC_REFCTRL_REFSEL_INTVCC1;
   ADCsync();
 
@@ -118,10 +118,10 @@ float getSineValue(float Hz, unsigned long curUS) {
 volatile ulong time, time2;
 volatile float gend;
 void setup() {
-  Serial.begin(115200);
-  adc_init();
-  dma_init();
-  ADC_DMA.startJob();
+    Serial.begin(115200);
+    adc_init();
+    dma_init();
+    ADC_DMA.startJob();
     time = micros();
 }
 
@@ -164,44 +164,38 @@ void loop() {
     // imagine a global variable called FIRSTSAMPLE=true;
     // imagine global variables called TIME, POSTTIME;
 
-    if(ADC->INTFLAG.bit.RESRDY && FIRSTSAMPLE) {
-        TIME = micros();
-        FIRSTSAMPLE = false;
-    }
-
-    if(adc_buffer_filled) {
-        POSTTIME = micros();
-        FIRSTSAMPLE = true;
-
-        // blah blah other stuffj
-    }
-
-    // now we can do math
-    int delta = POSTTIME - TIME;
-    int interDelay = delta / (32)
-
-    // so first sample was taken at delta - interDelay
-    // second was taken at: delta - interdelay + interDelay
-    // third takend at:     delta - interdelay + 2*interDelay
-    // general fomula for i'th sample (0-indexed):      delta + (i-1)*interDelay
     
 
     if(adc_buffer_filled){
         adc_buffer_filled=false;
         memcpy(adc_sample_block, (const void*)active_adc_buffer, SAMPLE_BLOCK_LENGTH*sizeof(uint16_t));
-        time2 = micros();
-        Serial.println(time2 - time);
-        time = time2;
-        // Serial.print(",");
-        // Serial.print("delta:");
-        // Serial.println(micros() - time);
-        
-        // Serial.print("Peak: ");
-        // Serial.println(peak_to_peak(adc_sample_block, SAMPLE_BLOCK_LENGTH));
-    } else {
-        // Serial.println();
-    }
 
+        // time2 = micros();
+        // Serial.println(time2 - time);
+        // time = time2;
+        // Serial.print("delta:");
+        // Serial.print(micros() - time);
+        // Serial.print(",");
+
+        Serial.print("hi:");
+        Serial.print(5000);
+        Serial.print(",");
+
+        Serial.print("lo:");
+        Serial.print(0);
+        Serial.print(",");
+
+        Serial.print("midpoint:");
+        Serial.println(adc_sample_block[15]);
+        
+        // for (int i = 0; i < 16; i++) {
+        //     Serial.print("midpoint:");
+        //     Serial.print(adc_sample_block[i*2]);
+        //     Serial.print(",");
+        // }
+        // Serial.println();
+        
+    } 
 }
 
 
