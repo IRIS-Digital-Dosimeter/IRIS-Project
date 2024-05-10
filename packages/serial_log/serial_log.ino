@@ -66,6 +66,7 @@ void loop() {
   // Pause for stability 
   // myDelay_us(interAverageDelay);
 
+  // Old writes 
   // Serial.write((uint8_t*)&myData, sizeof(myData));
   Serial.write((uint8_t*)&myData.t1, sizeof(myData.t1));
   Serial.write((uint8_t*)&myData.t2, sizeof(myData.t2));
@@ -73,15 +74,15 @@ void loop() {
   Serial.write((uint8_t*)&myData.adc1, sizeof(myData.adc1));
 
   // FLASH LED -----------------------------------------
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    // save the last time you blinked the LED
-    previousMillis = currentMillis; 
-    // Toggle the LED state
-    ledState = !ledState;
-    // set the LED with the ledState of the variable:
-    digitalWrite(REDLEDpin, ledState);
-  }
+  // unsigned long currentMillis = millis();
+  // if (currentMillis - previousMillis >= interval) {
+  //   // save the last time you blinked the LED
+  //   previousMillis = currentMillis; 
+  //   // Toggle the LED state
+  //   ledState = !ledState;
+  //   // set the LED with the ledState of the variable:
+  //   digitalWrite(REDLEDpin, ledState);
+  // }
 
 
    
