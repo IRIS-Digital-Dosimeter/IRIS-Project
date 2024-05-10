@@ -67,11 +67,8 @@ void loop() {
   // myDelay_us(interAverageDelay);
 
   // Old writes 
-  // Serial.write((uint8_t*)&myData, sizeof(myData));
-  Serial.write((uint8_t*)&myData.t1, sizeof(myData.t1));
-  Serial.write((uint8_t*)&myData.t2, sizeof(myData.t2));
-  Serial.write((uint8_t*)&myData.adc0, sizeof(myData.adc0));
-  Serial.write((uint8_t*)&myData.adc1, sizeof(myData.adc1));
+  Serial.write((uint8_t*)&myData, sizeof(myData));
+
 
   // FLASH LED -----------------------------------------
   // unsigned long currentMillis = millis();
