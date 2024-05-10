@@ -1,6 +1,13 @@
+/*
+This is just a demo for reading ADC samples on ONE PIN.
+The DMAC then takes these and dumps them into a circular buffer.
+I then print the len(copied_buffer)/2 'th sample so you can view the readings on the serial monitor.
+*/
+
+
 #include <Adafruit_ZeroDMA.h>
 
-#define ADC_PIN A1
+#define ADC_PIN A0
 #define SAMPLE_BLOCK_LENGTH 512
 
 Adafruit_ZeroDMA ADC_DMA;
