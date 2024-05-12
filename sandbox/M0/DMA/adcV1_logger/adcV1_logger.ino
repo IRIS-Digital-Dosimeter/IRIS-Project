@@ -282,6 +282,7 @@ void loop() {
         //   copy(to 16bit adc_sample_block[512], from unspecified data type active_adc_buffer, size: 512x2)
 
         if (dataFile){
+          dataFile.write((uint8_t *)time2, sizeof(time2));
           dataFile.write((uint8_t *)adc_sample_block, sizeof(adc_sample_block));
         }
 
