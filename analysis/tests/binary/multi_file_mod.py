@@ -5,7 +5,7 @@ import pandas as pd
 
 
 
-def get_relative_paths(subdir):
+def get_relative_paths(subdir, extension = '.dat'):
 
     import os
     # Define the subdirectory to search within
@@ -14,7 +14,7 @@ def get_relative_paths(subdir):
     # Populate paths with everything in the specified subdirectory
     for root, dirs, files in os.walk(os.path.join(os.getcwd(), subdir)):
         for file in files:
-            if file.endswith('.dat'):
+            if file.endswith(extension):
                 path = os.path.join(root, file)
                 path = path.replace("\\", "/")  # Replace backslashes with forward slashes
                 relative_path = os.path.relpath(path, os.path.join(os.getcwd(), subdir))
