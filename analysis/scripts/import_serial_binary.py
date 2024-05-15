@@ -39,12 +39,6 @@ for x in range(0, len(portsList)):
         print('\nThe port selected is not a valid input. The program will terminate.\n')
         ser.close()
 
-# Open serial
-ser.open()
-ser.reset_input_buffer()  
-# ser.flushInput()
-
-
 # Function to create a new file with a timestamp in the name
 def create_new_file():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
@@ -52,30 +46,27 @@ def create_new_file():
     return open(filename, 'wb')  # Open in binary write mode
 
 
+# Open serial
+ser.open()
+ser.reset_input_buffer()  
+ser.flushInput()
 
 # Initialize variables
 file = create_new_file()
 line_count = 0
-byte_count = 0
-
 
 while True:
     try:
-        ser_bytes = ser.read(4)
+        ser_bytes = ser.read(16)
 
-        if len(ser_bytes) == 4:
-            value = struct.unpack('<I', ser_bytes)[0]
-            # print(f"{value},", end='')
+        # if len(ser_bytes) == 16:
+        #     value = struct.unpack('<4I', ser_bytes)
+        #     print(f"{value[0]},{value[1]},{value[2]},{value[3]}", end='')
+        #     print() 
 
-        byte_count += 1
-        if byte_count == 4:
-            # print()  
-            byte_count = 0  
-
-
-            file.write(ser_bytes)
-            file.flush()
-            line_count += 1
+        file.write(ser_bytes)
+        file.flush()
+        line_count += 1
 
         if line_count >= 5000:
             file.close()  # Close the current file
@@ -83,7 +74,7 @@ while True:
             line_count = 0  # Reset line count 
 
     except KeyboardInterrupt:
-        print("Keyboard Interrupt: Exiting...")
+        print("\n\nKeyboard Interrupt: Exiting...")
         break
     except Exception as e:
         print("Error:", e)
