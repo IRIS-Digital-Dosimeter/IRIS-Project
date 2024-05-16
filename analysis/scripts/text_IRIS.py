@@ -4,7 +4,7 @@ analysis_IRIS.py
 HUMAN READABLE FILES
 
 File requirements
-    - Expected file format: 
+    - Expected file format (.txt): 
         t_before,t_after,A0,A1
 
     - Works with files w/ & w/out headers 
