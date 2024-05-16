@@ -1,6 +1,8 @@
 # By Aidan Zinn 
 # repo: https://github.com/aidanzinn/Adafruit_Constant_Log/blob/master/import_serial_binary.py
 
+# Update: Michelle P 
+# Date: 5/15/24
 
 import serial.tools.list_ports
 from datetime import datetime
@@ -43,7 +45,12 @@ for x in range(0, len(portsList)):
 def create_new_file():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
     filename = f'serial_data_{timestamp}.dat'
-    return open(filename, 'wb')  # Open in binary write mode
+    try:
+        return open('data/'+ filename, 'wb')  # Open in binary write mode
+    except FileNotFoundError:
+        print('\nNot Found: "data/"')
+        print('Create "data" directory then run this program again')
+        return None
 
 
 # Open serial
@@ -57,6 +64,9 @@ line_count = 0
 
 while True:
     try:
+        if file is None: 
+            break # Exit the loop if file creation failed
+
         ser_bytes = ser.read(16)
 
         # if len(ser_bytes) == 16:
@@ -73,6 +83,7 @@ while True:
             file = create_new_file()  # Open a new file with a new timestamp
             line_count = 0  # Reset line count 
 
+
     except KeyboardInterrupt:
         print("\n\nKeyboard Interrupt: Exiting...")
         break
@@ -81,5 +92,6 @@ while True:
         break
 
 # Close the current file and the serial connection
-file.close()
+if file is not None:
+    file.close()
 ser.close()
