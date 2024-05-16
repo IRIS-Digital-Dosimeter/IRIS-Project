@@ -1,8 +1,10 @@
 """
-binary_IRIS.py 
+binaryT2_IRIS.py 
+
+BINARY FILES W/ 2 TIMESTAMPS
 
 File requirements
-    - Expected file format: 
+    - Expected file format (.dat): 
         t_before,t_after,A0,A1
         4bytes, 4bytes, 4bytes, 4bytes
 
@@ -155,6 +157,8 @@ def quickLook(infile,
     h2,tax2 = np.histogram(t_s,range=[0, max(t_s)], bins=int(max(t_s)/100.))
 
     # Gap qualifier 
+    if header_infile == False: 
+        qualifier_multiplier = 1.3
     gap_qualifier = t_s_med*qualifier_multiplier
     # Find longest gaps based on qualifier 
     long_gap = np.where(dt > gap_qualifier)[0]
