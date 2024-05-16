@@ -4,8 +4,9 @@ binary_IRIS.py
 File requirements
     - Expected file format: 
         t_before,t_after,A0,A1
+        4bytes, 4bytes, 4bytes, 4bytes
 
-    - Files require 16 byte headers
+    - Files work w/wo headers
 
 Created by:  Michelle Pichardo & Dr. David Smith
 
@@ -20,63 +21,73 @@ import struct
 import os
 
 def extract_params(infile,
-                   samples_averaged = 1,
-                   inter_sample_delay = None,
-                   inter_average_delay = None):
+                   header_infile = True, 
+                   samples_averaged = 15,
+                   inter_sample_delay = 20,
+                   inter_average_delay = 0):
 
     """
     Used to extract data if the other functions are not wanted (sad but ok here you go!)
 
     Parameters: 
     - infile
-    - samples_averaged
-    - inter_sample_delay
-    - inter_average_delay
+
+    Defaults: 
+    - header_infile = True, set to false if no header 
+    - samples_averaged = 15
+    - inter_sample_delay = 20
+    - inter_average_delay = 0
 
     Returns: 
-    - Time in us
+    - Time in us 
         - t1: t_before
         - t2: t_after
     - Voltage: 
-        V = (digital value/samples averaged) * (3.3/4095)
+        V = (digital value/samples averaged) * (3.3/4096)
+        - The value 4096 depends on analog resolution set to 12 bits
         - V0: Volts from A0
         - V1: Volts from A1
-        - The value 4095 depends on analog resolution set to 12 bits
+    The following are extracted from the file's header 
+    If no header is present defaults are used 
     - samples_averaged
-        - extracted from file or returns default value
     - inter_sample_delay
     - inter_average_delay
     """
     
-    header = [0, 0, 0]  # Initialize header variable as a list of 3 integers
+    header = [inter_sample_delay, inter_average_delay, samples_averaged]  # Initialize header variable as a list of 3 integers
     arrays = [[], [], [], []]  # Initialize 4 arrays
+    try: 
+        with open(infile, mode='rb') as file:
 
-    with open(infile, mode='rb') as file:
+            if header_infile == True: 
+                # Read the first 3 values aka 12 bytes into the header
+                header = list(struct.unpack('<3I', file.read(12)))
 
-        # Read the first 3 values aka 12 bytes into the header
-        header = list(struct.unpack('<3I', file.read(12)))
-        # header = list(struct.unpack('<2I', file.read(8)))
+            while True:
+                data = file.read(16)  # Reading 16 bytes at a time (4 bytes for each interval)
+                if not data:  # If data is empty
+                    break
 
-        while True:
-            data = file.read(16)  # Reading 16 bytes at a time (4 bytes for each interval)
-            if not data:  # If data is empty
-                break
+                # Extract values using struct.unpack
+                values = struct.unpack('<4I', data)
 
-            # Extract values using struct.unpack
-            values = struct.unpack('<4I', data)
+                # Add values to respective arrays
+                arrays[0].append(values[0])
+                arrays[1].append(values[1])
+                arrays[2].append(values[2])
+                arrays[3].append(values[3])
 
-            # Add values to respective arrays
-            arrays[0].append(values[0])
-            arrays[1].append(values[1])
-            arrays[2].append(values[2])
-            arrays[3].append(values[3])
-
+    except FileNotFoundError: 
+        print(f'No File Found: {infile}')
+        return None
+        
     t1 = np.array(arrays[0]) # time before data collection 
     t2 = np.array(arrays[1]) # time after data collection 
     d0 = np.array(arrays[2]) # A0 digital value
     d1 = np.array(arrays[3]) # A1 digital value
-    v0 = (d0/samples_averaged)*(3.3/4095)
-    v1 = (d1/samples_averaged)*(3.3/4095)
+    v0 = (d0/samples_averaged)*(3.3/4096)
+    v1 = (d1/samples_averaged)*(3.3/4096)
+    # For legibility 
     inter_sample_delay = header[0]
     inter_average_delay = header[1]
     samples_averaged = header[2]
@@ -85,24 +96,46 @@ def extract_params(infile,
 
 
 def quickLook(infile, 
-              samplesAveraged = 1,
+              header_infile = True, 
+              qualifier_multiplier = 1.3,
               set_time_to_zero = True,
-              save_png = False,
-              plot_all = True):
+              samples_averaged = 15,
+              inter_sample_delay = 20,
+              save_png = False):
     
     """
     Parameters: 
     - infile 
-    - samples_averaged 
-    - set_time_to_zero: sets the time axis to start at zero 
-        this should not be used for analysis; the rounding removes data
+    
+    Defaults: 
+    - header_infile = True, set to false if no header
+    - qualifier_multiplier = 1.3 
+        multiplied to our median gap to find larger gaps 
+    - set_time_to_zero
+        sets the time axis to start at zero 
+    - samples_averaged = 15
+    - inter_sample_delay = 20
+    - inter_average_delay = 0
+    - save_png = False 
+        change to save file as filename.png
 
-    Returns: Scatter plot and histogram of gaps 
+    Returns: 4 plots 
+        V vs t(us) of A0 and A1 
+        Histogram of long gaps 
+        Histogram of time spent sampling 
     """
     base_filename = os.path.basename(infile)
     file_wout_ext = os.path.splitext(base_filename)[0]
 
-    t_1,t_2,v_0,v_1,inter_sampleDelay,inter_averageDelay,samplesAveraged = extract_params(infile)
+    # remove change of namespace conflicts 
+    s = samples_averaged 
+    isd = inter_sample_delay 
+    h = header_infile
+
+    t_1,t_2,v_0,v_1,inter_sampleDelay,inter_averageDelay,samples_averaged = extract_params(infile, 
+                                                                                          samples_averaged = s,
+                                                                                          inter_sample_delay = isd,
+                                                                                          header_infile = h)
     
     # Time per averaged point (us)
     t = (t_2 + t_1)/2
@@ -122,9 +155,19 @@ def quickLook(infile,
     h2,tax2 = np.histogram(t_s,range=[0, max(t_s)], bins=int(max(t_s)/100.))
 
     # Gap qualifier 
-    gap_qualifier = t_s_med*1.3
+    gap_qualifier = t_s_med*qualifier_multiplier
     # Find longest gaps based on qualifier 
     long_gap = np.where(dt > gap_qualifier)[0]
+    num_long_gaps = len(long_gap)
+    
+    # incase we do not have large gaps 
+    if num_long_gaps != 0:
+        # Median time value of the Large gaps  
+        median_long_gap = np.median(dt[long_gap])
+        median_long_gap = round(median_long_gap,3)
+    elif num_long_gaps == 0: 
+        median_long_gap = None
+
     # Dead time
     dead_time = dt[dt>gap_qualifier]
     dead_time = np.sum(dead_time) # us
@@ -142,81 +185,89 @@ def quickLook(infile,
     ##  -------------------
 
     #plot dataset
-    if plot_all == True:
-        fig, axs = plt.subplots(4)
-        fig.set_size_inches(8,8)
+    fig, axs = plt.subplots(4)
+    fig.set_size_inches(8,8)
 
-        axs[0].scatter(t,v_0,s=4)
-        axs[0].plot(t,v_0,alpha=0.5, label ='A0')
-        axs[0].set_xlabel('Time (seconds)')
-        axs[0].set_ylabel('Volts')
-        axs[0].set_title('A0')
-        # axs[0].legend()
-        axs[0].grid()
+    axs[0].scatter(t,v_0,s=4)
+    axs[0].plot(t,v_0,alpha=0.5, label ='A0')
+    axs[0].set_xlabel('Time (seconds)')
+    axs[0].set_ylabel('Volts')
+    axs[0].set_title('A0')
+    # axs[0].legend()
+    axs[0].grid()
 
-        axs[1].scatter(t,v_1,s=4, color ='C1')
-        axs[1].plot(t,v_1,alpha=0.5, color ='C1', label= 'A1')
-        axs[1].set_xlabel('Time (seconds)')
-        axs[1].set_ylabel('Volts')
-        axs[1].set_title('A1')
-        # axs[1].legend()
-        axs[1].grid()
+    axs[1].scatter(t,v_1,s=4, color ='C1')
+    axs[1].plot(t,v_1,alpha=0.5, color ='C1', label= 'A1')
+    axs[1].set_xlabel('Time (seconds)')
+    axs[1].set_ylabel('Volts')
+    axs[1].set_title('A1')
+    # axs[1].legend()
+    axs[1].grid()
 
-        #plot histogram of gaps in milliseconds:
-        axs[2].plot(tax2[1:]/1e3,h2,alpha=0.5)
-        axs[2].scatter(tax2[1:]/1e3,h2,s=4)
-        axs[2].set_xlabel('Sample Time (milliseconds)')
-        axs[2].set_ylabel('Count')
-        axs[2].set_title(f'Time spent sampling b4 512 trigger: Median time = {round(t_s_med/1e3,3)} +- 0.2 ms')
-        axs[2].grid()
+    #plot histogram of gaps in milliseconds:
+    axs[2].plot(tax2[1:]/1e3,h2,alpha=0.5)
+    axs[2].scatter(tax2[1:]/1e3,h2,s=4)
+    axs[2].set_xlabel('Sample Time (milliseconds)')
+    axs[2].set_ylabel('Count')
+    axs[2].set_title(f'Time spent sampling b4 512 trigger: Median time = {round(t_s_med/1e3,3)} +- 0.2 ms')
+    axs[2].grid()
 
-        #plot histogram of gaps in milliseconds:
-        axs[3].plot(tax[1:]/1e3,h,alpha=0.5)
-        axs[3].scatter(tax[1:]/1e3,h,s=4)
-        axs[3].set_yscale('log')
-        axs[3].set_xlabel('Gap (milliseconds)')
-        axs[3].set_ylabel('Count')
-        axs[3].set_title(f'Gaps: {len(long_gap)} long gaps, median: {round(np.median(dt[long_gap])/1e3,3)} ms, Dead Time {round(dead_time,3)}%')
-        axs[3].grid()
+    #plot histogram of gaps in milliseconds:
+    axs[3].plot(tax[1:]/1e3,h,alpha=0.5)
+    axs[3].scatter(tax[1:]/1e3,h,s=4)
+    axs[3].set_yscale('log')
+    axs[3].set_xlabel('Gap (milliseconds)')
+    axs[3].set_ylabel('Count')
+    axs[3].set_title(f'Histogram of Gaps: {num_long_gaps} long gaps, median: {median_long_gap} ms, Dead Time {round(dead_time,3)}%')
+    axs[3].grid()
 
 
-        fig.suptitle(f'{infile}, Samples_Av:{samplesAveraged}, Inter_S:{inter_sampleDelay}, Inter_Av:{inter_averageDelay}')
-        fig.subplots_adjust(top=.93)
-        fig.tight_layout()
+    fig.suptitle(f'{infile}\nSamples_Av:{samples_averaged}, Inter_S:{inter_sampleDelay}, Inter_Av:{inter_averageDelay}')
+    fig.subplots_adjust(top=.93)
+    fig.tight_layout()
+    
+    if save_png == True: 
         
-        if save_png == True: 
-            
-            fig.savefig(file_wout_ext+".png",bbox_inches ="tight")
+        fig.savefig(file_wout_ext+".png",bbox_inches ="tight")
 
-        plt.show() 
+    plt.show() 
     return
 
 def analyze(infile, 
-            samplesAveraged = 1, 
-            inter_sampleDelay = None,
-            inter_averageDelay = None,
+            header_infile = True, 
             qualifier_multiplier = 1.3,
+            samples_averaged = 15,
+            inter_sample_delay = 20,
             prints=False):
 
     """
 
     Parameters: 
     - infile 
-    - samples_averaged
-    - inter_sample_delay
-    - inter_average_delay
 
-    Optional parameters: 
-        - gap_sizeL_us: largest gap size of interest in (us)
-        - gap_sizeS_us: smallest gap size of interest in (us)
-        - loc_prints: bool, this prints additional info regarding gap locations/durations
-        - prints: bool, this prints dictionary values for 1 file
+    Defaults: 
+    - header_infile = True, set to false if no header
+    - qualifier_multiplier = 1.3 
+        multiplied to our median gap to find larger gaps 
+    - samples_averaged = 15
+    - inter_sample_delay = 20
+    - inter_average_delay = 0
+    - prints = False 
+        set to True to view descriptions of analysis values 
+
     Returns: 
         - dictionary of values
 
     """
+    # remove namespace conflicts 
+    s = samples_averaged
+    isd = inter_sample_delay
+    h = header_infile
 
-    t_1,t_2,_,_,inter_sampleDelay,inter_averageDelay,samplesAveraged = extract_params(infile)
+    t_1,t_2,_,_,inter_sampleDelay,inter_averageDelay,samplesAveraged = extract_params(infile, 
+                                                                                      samples_averaged=s,
+                                                                                      inter_sample_delay=isd,
+                                                                                      header_infile=h )
     
     # Time per averaged data point (us)
     t_mid = (t_2 + t_1)/2
@@ -251,12 +302,19 @@ def analyze(infile,
     dt_min = min(dt)
     dt_max = max(dt)
     # Collect gaps larger than the - INTRA GAP
+    if header_infile == False: 
+        qualifier_multiplier = 1
+        
     gap_qualifier = t_s_med*qualifier_multiplier
     long_gap = np.where(dt > gap_qualifier)[0] # indices
+
     # Expected # of large gaps 
-    n_long_gap = len(long_gap)
+    num_long_gaps = len(long_gap)
+
     # Median time value of the Large gaps 
-    dt_med_of_long_gaps = np.median(dt[long_gap])
+    median_long_gap = np.median(dt[long_gap])
+    median_long_gap = round(median_long_gap,3)
+
 
     # ~~~~~~~~~~~ BYTE & LINE COUNT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -277,11 +335,9 @@ def analyze(infile,
         bytes_max = max(dt_idx)*16
     except ValueError: 
         print('Error: Bytes min or max returned an empty sequency')
-    else: 
-        if not min(dt_idx): 
-            bytes_min = None
-        if not max(dt_idx): 
-            bytes_max = None
+    finally: 
+        bytes_min = None
+        bytes_max = None
 
     # ~~~~~~~~~~~ FILE TIME ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Actual file time
@@ -305,8 +361,10 @@ def analyze(infile,
     #       t[long_gap[i]] - t[long_gap[i-1] + 1 ] = dt of time before 2nd gap
 
     # where the indices are from long_gap
+
     # Collect the times where the gap occurred
     t_mid = t_mid - t_mid[0] # zero out time
+
     dt_b4_write = []
     dt_b4_write.append(t_mid[long_gap[0]])
     for i in range(1,len(long_gap[1:])): 
@@ -315,6 +373,12 @@ def analyze(infile,
     dt_b4_med = np.median(dt_b4_write)
     dt_b4_min = min(dt_b4_write)
     dt_b4_max = np.max(dt_b4_write)
+
+    # save rounded 
+    dt_b4_med_r = round(dt_b4_med,3)
+    dt_b4_min_r = round(dt_b4_min,3)
+    dt_b4_max_r = round(dt_b4_max,3)
+
 
     # ~~~~~~~~~~~ Frequency ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Expected Frequency (Hz) = 1/(samples_av*sample_delay + sample_av)
@@ -326,18 +390,25 @@ def analyze(infile,
             print('\t No expected frequency calculated')
     else: 
         expected_freq = None
+
     # Frequency of averaging / Freq of INTRA 
     freq_averaging = samplesAveraged/t_s_med # t_s_med = actual INTRA
     freq_averaging = round(freq_averaging*1e6,4)
     # Frequency: # of lines / time before 512 write ( or other byte trigger )
-    freq_b4 = lines_med/dt_b4_med
-    freq_b4 = round(freq_b4*1e6,4)
+    if dt_b4_med != 0: 
+        freq_b4 = lines_med/dt_b4_med
+        freq_b4 = round(freq_b4*1e6,4)
+    elif dt_b4_med == 0: 
+        freq_b4 = None
+
     # Holistic Frequency: # data points in file / time length of file 
     freq_holistic = len(t_mid)/file_t_actual
     freq_holistic = round(freq_holistic*1e6,4)
 
     # ~~~~~~~~~~~ DEAD TIME ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Gather gap values larger than the INTRA gap value 
+    if header_infile == False: 
+        gap_qualifier = t_s_med*1.3
     dead_time_list = dt[dt>gap_qualifier]
     dead_time_sum = np.sum(dead_time_list) # us
     dead_time = (dead_time_sum/file_t_actual)
@@ -369,56 +440,6 @@ def analyze(infile,
         print('Large gaps full view:')
         print(len(dt[long_gap]), dt[long_gap])
 
-    # ~~~~~~~~~~~ DICT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # results_dict = {}
-    # # PARAMS
-    # results_dict['PARAMS_us'] = '---'
-    # results_dict['sample_delay'] = inter_sampleDelay
-    # results_dict['average_delay'] = inter_averageDelay
-    # results_dict['samples_averaged'] = samplesAveraged
-    # results_dict['tot_samples'] = len(t_mid)
-    # # INTRA
-    # results_dict['INTRA_us'] = '---'
-    # results_dict['expected_intra'] = t_s_expected
-    # results_dict['actual_intra'] = t_s_med
-    # results_dict['actual_intra_dt'] = dt_med
-    # # INTER
-    # results_dict['INTER_us'] = '---'
-    # results_dict['expected_inter'] = t_g_expected
-    # results_dict['min_gap'] = t_g_min # smallest possible with t1-t2
-    # results_dict['max_gap'] = dt_max # largest possible with dt
-    # # GAPS 
-    # results_dict['LARGE_GAPS_ms'] = '---'
-    # results_dict['gap_qualifier'] = round(gap_qualifier/1e3,2)
-    # results_dict['qualifier_multiplier'] = qualifier_multiplier
-    # results_dict['num_gaps'] = n_long_gap
-    # results_dict['median_gap_t'] = round(dt_med_of_long_gaps/1e3,2)
-    # # BYTES & LINES 
-    # results_dict['BYTES_LINES'] = '---'
-    # results_dict['med_lines'] = lines_med
-    # results_dict['med_bytes'] = bytes_med
-    # results_dict['mod_512'] = mod_512
-    # results_dict['min_bytes'] = bytes_min
-    # results_dict['max_bytes'] = bytes_max
-    # # TIME B4 512 WRITES 
-    # results_dict['DELTA_B4_WRITE_TRIGGER_ms'] = '---'
-    # results_dict['t_b4_write'] = round(dt_b4_med/1e3,3)
-    # results_dict['t_b4_min'] = round(dt_b4_min/1e3,3)
-    # results_dict['t_b4_max'] = round(dt_b4_max/1e3,3)
-    # # FREQUENCY 
-    # results_dict['FREQUENCY_hz'] = '---'
-    # results_dict['freq_intra'] = round(freq_averaging,1)
-    # results_dict['freq_b4_write'] = round(freq_b4,1)
-    # results_dict['freq_holistic'] = round(freq_holistic,1)
-    # # FILE TIME
-    # results_dict['FILE_T_s'] = '---'
-    # results_dict['file_length'] = round(file_t_actual/1e6,1)
-    # # DEAD TIME
-    # results_dict['DEAD_TIME'] = '---'
-    # results_dict['L_gap_sum_s'] = round(dead_time_sum/1e6,1)
-    # results_dict['deadTime_intra_percent'] = round(dead_time_intra,3)
-    # results_dict['dead_time_percent'] = round(dead_time*100,3)
-
     results_dict = {
     'PARAMS_us': '---',
     'sample_delay': inter_sampleDelay,
@@ -436,8 +457,8 @@ def analyze(infile,
     'LARGE_GAPS_ms': '---',
     'gap_qualifier': round(gap_qualifier/1e3, 2),
     'qualifier_multiplier': qualifier_multiplier,
-    'num_gaps': n_long_gap,
-    'median_gap_t': round(dt_med_of_long_gaps/1e3, 2),
+    'num_gaps': num_long_gaps,
+    'median_gap_t': median_long_gap,
     'BYTES_LINES': '---',
     'med_lines': lines_med,
     'med_bytes': bytes_med,
@@ -445,12 +466,12 @@ def analyze(infile,
     'min_bytes': bytes_min,
     'max_bytes': bytes_max,
     'DELTA_B4_WRITE_TRIGGER_ms': '---',
-    't_b4_write': round(dt_b4_med/1e3, 3),
-    't_b4_min': round(dt_b4_min/1e3, 3),
-    't_b4_max': round(dt_b4_max/1e3, 3),
+    't_b4_write': dt_b4_med_r,
+    't_b4_min': dt_b4_min_r,
+    't_b4_max': dt_b4_max_r,
     'FREQUENCY_hz': '---',
     'freq_intra': round(freq_averaging, 1),
-    'freq_b4_write': round(freq_b4, 1),
+    'freq_b4_write': freq_b4,
     'freq_holistic': round(freq_holistic, 1),
     'FILE_T_s': '---',
     'file_length': round(file_t_actual/1e6, 1),
@@ -459,8 +480,6 @@ def analyze(infile,
     'deadTime_intra_percent': round(dead_time_intra, 3),
     'dead_time_percent': round(dead_time*100, 3)
     }
-
-
 
     return results_dict
 
