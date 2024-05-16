@@ -1,6 +1,6 @@
 # Useful functions
 
-from binary_IRIS import extract_params, quickLook, analyze
+from scripts.binaryT2_IRIS import extract_params, quickLook, analyze
 import pandas as pd
 
 
