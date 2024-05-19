@@ -21,7 +21,7 @@ Adding: File creation & notes (for me)
 Adafruit_ZeroDMA ADC_DMA;
 
 // Data 
-#define SAMPLE_BLOCK_LENGTH 512
+#define SAMPLE_BLOCK_LENGTH 256
 
 // DMA descriptors 
 //  Each DMA Channel has 2 descriptors normally located in RAM 
@@ -245,17 +245,18 @@ void dma_init(){ // uses Adafruit_ZeroDMA obj
 void SPI_init(const uint32_t baudRate)
 {
   Serial.begin(baudRate);
-  while (!Serial && millis() < 15000){;}
+  while (!Serial && millis() < 5000){;}
+  debugln("Connection Secured");
 }
 
 volatile uint32_t time1, time2; 
-int32_t session_val = 1;
+int32_t session_val = 55;
 int32_t maxFiles = 2;   
            
 void setup() {
 
   SPI_init(115200);
-  SdCard_init(cs);
+  SdCard_init(4);
   adc_init();
   dma_init();
   time1 = micros(); 
@@ -269,23 +270,24 @@ void loop() {
     // Create File: MMDDXXXX.dat 
     dataFile = Open(fileCounter, session_val);
 
-    // Collect data for 1 min
-    uint32_t startFileTimer = micros(); 
-    while (micros() - startFileTimer < 60000000UL){
+    if (dataFile){
+      debugln("data file open block");
+      // Collect data for 1 min
+      uint32_t startFileTimer = micros(); 
+      while (micros() - startFileTimer < 30000000UL){
 
-      if (adc_buffer_filled){
+        if (adc_buffer_filled){
 
-        time2 = micros(); 
-        adc_buffer_filled = false; 
-        memcpy(adc_sample_block, (const void*)active_adc_buffer, SAMPLE_BLOCK_LENGTH*sizeof(uint16_t));
-        // copy memory block (destination pointer, location pointer, #of bytes to copy)
-        //   copy(to 16bit adc_sample_block[512], from unspecified data type active_adc_buffer, size: 512x2)
-
-        if (dataFile){
-          dataFile.write((uint8_t *)time2, sizeof(time2));
-          dataFile.write((uint8_t *)adc_sample_block, sizeof(adc_sample_block));
+          time2 = micros(); 
+          adc_buffer_filled = false; 
+          memcpy(adc_sample_block, (const void*)active_adc_buffer, SAMPLE_BLOCK_LENGTH*sizeof(uint16_t));
+          // copy memory block (destination pointer, location pointer, #of bytes to copy)
+          //   copy(to 16bit adc_sample_block[512], from unspecified data type active_adc_buffer, size: 512x2)
+          // debugln("Inside adc buffer block");
         }
-
+        dataFile.write((uint8_t *)time2, sizeof(time2));
+        // dataFile.write((uint8_t *)adc_sample_block, sizeof(adc_sample_block));
+        debugln("post data file write block");
       }
     }
 
@@ -293,6 +295,8 @@ void loop() {
       dataFile.close();
     } else {
       Serial.print("Error CLOSING file.");
+      dataFile.close();
+      filePrint = false; 
     }
 
     fileCounter++;
@@ -302,7 +306,8 @@ void loop() {
       Serial.println("\n\tSession {"+ String(session_val) +"} Complete");
       filePrint = false; 
     }
-
+  
   }
+
 
 }
