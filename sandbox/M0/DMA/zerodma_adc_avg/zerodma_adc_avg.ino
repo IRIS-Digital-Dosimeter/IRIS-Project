@@ -1,7 +1,5 @@
 /*
-This is just a demo for reading ADC samples on ONE PIN.
-The DMAC then takes these and dumps them into a dual buffer.
-I then print the len(copied_buffer)/2 'th sample so you can view the readings on the serial monitor.
+This is just  demo for reading ADC samples on ONE PIN using the AVERAGING MODE.
 
 Made by Andrew Yegiayan
 
@@ -12,7 +10,8 @@ Based on a ZeroDMA example
 #include <Adafruit_ZeroDMA.h>
 
 #define ADC_PIN A0
-#define SAMPLE_BLOCK_LENGTH 512
+#define SAMPLE_BLOCK_LENGTH 256
+#define SAMPLES_PER_BLOCK 32
 
 Adafruit_ZeroDMA ADC_DMA;
 DmacDescriptor *dmac_descriptor_1;
@@ -23,22 +22,6 @@ uint16_t adc_sample_block[SAMPLE_BLOCK_LENGTH];
 volatile bool filling_first_half = true;
 volatile uint16_t *active_adc_buffer;
 volatile bool adc_buffer_filled = false;
-
-
-uint16_t peak_to_peak(uint16_t *data, int data_length){
-    int signalMax = 0;
-    int signalMin = 4096;  // max value for 12 bit adc
-    
-    for(int i=0; i<data_length; i++){
-        if ( data[i] > signalMax ) {
-        signalMax = data[i];
-        }
-        if (data[i] < signalMin ){
-        signalMin = data[i];
-        }
-    }
-    return signalMax - signalMin;
-}
 
 
 void dma_callback(Adafruit_ZeroDMA *dma) {
@@ -74,13 +57,13 @@ void adc_init() {
     ADCsync();
 
     ADC->AVGCTRL.reg = 0;
-    //   ADC->AVGCTRL.bit.SAMPLENUM = ADC_AVGCTRL_SAMPLENUM_16_Val;
-    //   ADC->AVGCTRL.bit.ADJRES = 0x4;
+    ADC->AVGCTRL.bit.SAMPLENUM = ADC_AVGCTRL_SAMPLENUM_16_Val;
+    ADC->AVGCTRL.bit.ADJRES = 0x4;
     ADC->SAMPCTRL.bit.SAMPLEN = 0;
     ADCsync();
 
     //                                                               v this should be 16 for averaging
-    ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV32 | ADC_CTRLB_FREERUN | ADC_CTRLB_RESSEL_12BIT;
+    ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV32 | ADC_CTRLB_FREERUN | ADC_CTRLB_RESSEL_16BIT;
     ADC->CTRLB.bit.DIFFMODE = 0;
     ADCsync();
 
@@ -126,8 +109,8 @@ float getSineValue(float Hz, unsigned long curUS) {
 }
 
 
-volatile ulong time1, time2;
-volatile float gend;
+const float convFactor = 3.3 / 4096;
+volatile ulong time1, time2, delta, each;
 void setup() {
     Serial.begin(115200);
     adc_init();
@@ -142,35 +125,39 @@ void loop() {
     if(adc_buffer_filled){
         time2 = micros();
 
+
         // beforeFirstSample is time1
         // afterLastSample is time2
         // time before each sample = deltaT = (afterLastSample - beforeFirstSample) / 32
+        delta = time2 - time1;
+        each = delta / SAMPLES_PER_BLOCK;
+        Serial.println(each);
 
-        // this must come after the previous caclulation
-        time1 = time2;
 
         adc_buffer_filled=false;
         memcpy(adc_sample_block, (const void*)active_adc_buffer, SAMPLE_BLOCK_LENGTH*sizeof(uint16_t));
 
 
-        Serial.print("hi:");
-        Serial.print(5000);
-        Serial.print(",");
+        // Serial.print("hi:");
+        // Serial.print(5000);
+        // Serial.print(",");
 
-        Serial.print("lo:");
-        Serial.print(0);
-        Serial.print(",");
+        // Serial.print("lo:");
+        // Serial.print(0);
+        // Serial.print(",");
 
-        Serial.print("midpoint:");
-        Serial.println(adc_sample_block[15]);
+        Serial.print("converted:");
+        Serial.println(adc_sample_block[15] * convFactor);
         
-        // for (int i = 0; i < 16; i++) {
-        //     Serial.print("midpoint:");
-        //     Serial.print(adc_sample_block[i*2]);
+        // for (int i = 0; i < 32; i++) {
+        //     Serial.print("sample:");
+        //     Serial.print(adc_sample_block[i]);
         //     Serial.print(",");
         // }
         // Serial.println();
         
+        // this must come after the delta caclulation
+        time1 = time2;
     } 
 }
 
