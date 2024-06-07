@@ -131,7 +131,7 @@ void loop() {
         // time before each sample = deltaT = (afterLastSample - beforeFirstSample) / 32
         delta = time2 - time1;
         each = delta / SAMPLES_PER_BLOCK;
-        Serial.println(each);
+        Serial.println(delta);
 
 
         adc_buffer_filled=false;
@@ -146,8 +146,8 @@ void loop() {
         // Serial.print(0);
         // Serial.print(",");
 
-        Serial.print("converted:");
-        Serial.println(adc_sample_block[15] * convFactor);
+        // Serial.print("converted:");
+        // Serial.println(adc_sample_block[15] * convFactor);
         
         // for (int i = 0; i < 32; i++) {
         //     Serial.print("sample:");
