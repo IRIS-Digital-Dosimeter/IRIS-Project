@@ -39,43 +39,43 @@ for x in range(0, len(portsList)):
         print('\nThe port selected is not a valid input. The program will terminate.\n')
         ser.close()
 
-# Open serial
-ser.open()
-ser.reset_input_buffer()  
-# ser.flushInput()
-
-
 # Function to create a new file with a timestamp in the name
 def create_new_file():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
     filename = f'serial_data_{timestamp}.dat'
-    return open(filename, 'wb')  # Open in binary write mode
+    try:
+        return open('data/'+ filename, 'wb')  # Open in binary write mode
+    except FileNotFoundError:
+        print('\nNot Found: "data/"')
+        print('Create "data" directory then run this program again')
+        return None
 
 
+# Open serial
+ser.open()
+ser.reset_input_buffer()  
+ser.flushInput()
 
 # Initialize variables
 file = create_new_file()
 line_count = 0
-byte_count = 0
 
 
 while True:
     try:
-        ser_bytes = ser.read(4)
+        if file is None: 
+            break # Exit the loop if file creation failed
 
-        if len(ser_bytes) == 4:
-            value = struct.unpack('<I', ser_bytes)[0]
-            # print(f"{value},", end='')
+        ser_bytes = ser.read(16)
 
-        byte_count += 1
-        if byte_count == 4:
-            # print()  
-            byte_count = 0  
+        # if len(ser_bytes) == 16:
+        #     value = struct.unpack('<4I', ser_bytes)
+        #     print(f"{value[0]},{value[1]},{value[2]},{value[3]}", end='')
+        #     print()
 
-
-            file.write(ser_bytes)
-            file.flush()
-            line_count += 1
+        file.write(ser_bytes)
+        file.flush()
+        line_count += 1
 
         if line_count >= 5000:
             file.close()  # Close the current file
@@ -83,12 +83,13 @@ while True:
             line_count = 0  # Reset line count 
 
     except KeyboardInterrupt:
-        print("Keyboard Interrupt: Exiting...")
+        print("\n\nKeyboard Interrupt: Exiting...")
         break
     except Exception as e:
         print("Error:", e)
         break
 
 # Close the current file and the serial connection
-file.close()
+if file is not None:
+    file.close()
 ser.close()
