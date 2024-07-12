@@ -1,45 +1,12 @@
-# By Aidan Zinn 
+# By Aidan Zinn
 # repo: https://github.com/aidanzinn/Adafruit_Constant_Log/blob/master/import_serial_binary.py
-
+# Edited by Andrew Yegiayan and Michelle Picardo
+# repo: https://github.com/IRIS-Digital-Dosimeter/IRIS-Project/blob/serial_log_binary/analysis/scripts/import_serial_binary.py
 
 import serial.tools.list_ports
 from datetime import datetime
 import struct
 
-# Set up the serial line
-# port = '/dev/ttyACM0'
-# ser = serial.Serial(port, 115200)
-# ser.flushInput()
-
-# List of ports available
-ports = serial.tools.list_ports.comports()  
-# Opens the class, not the port, and fill the class below
-ser = serial.Serial()  
-
-# Create an empty list to store the ports 
-portsList = []
-for onePort in ports:               # loop through ports list and save them to the port list
-    portsList.append(str(onePort))  # Add the ports into the list 
-    print(str(onePort))             # Print them to view them
-
-# Ask the user to declare which Port number to use
-val = input("Select Port: COM")
-for x in range(0, len(portsList)):                  
-    if portsList[x].startswith("COM" + str(val)):   
-        portVar = "COM" + str(val)                  
-        print(f"Selected Port: {portVar}") 
-        # Ask the user to declare the baud rate 
-        baud = input("Set baud rate (9600,115200):")  
-        # set baud
-        ser.baudrate = baud
-        # set port 
-        ser.port = portVar
-        break    
-    else: 
-        print('\nThe port selected is not a valid input. The program will terminate.\n')
-        ser.close()
-
-# Function to create a new file with a timestamp in the name
 def create_new_file():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
     filename = f'serial_data_{timestamp}.dat'
@@ -51,6 +18,32 @@ def create_new_file():
         return None
 
 
+# List of ports available
+ports = serial.tools.list_ports.comports()  
+
+
+# Create an empty dict to store the enumerated ports 
+print("Available Ports:")
+portsList = {}
+for num, port in enumerate(ports, start=1):               # loop through ports list and save them to the port list
+    portsList[num] = port                                 # Save the ports to the dict
+    print(f'{num}: {portsList[num].description}')         # Print them to view them
+
+val = input("\nSelect Port by number: ")  # Ask the user to declare which Port to use based on the dict above
+selectedPort = portsList[int(val)]        # Save the selected port to a variable
+
+print()
+
+# make an instance of the class before populating it
+ser = serial.Serial()  
+
+# set baud
+baud = input("Set baud rate (9600,115200): ")  
+ser.baudrate = int(baud)
+
+# set port 
+ser.port = selectedPort.device
+
 # Open serial
 ser.open()
 ser.reset_input_buffer()  
@@ -60,6 +53,9 @@ ser.flushInput()
 file = create_new_file()
 line_count = 0
 
+
+print()
+print("Starting the logging process...")
 
 while True:
     try:
@@ -86,10 +82,12 @@ while True:
         print("\n\nKeyboard Interrupt: Exiting...")
         break
     except Exception as e:
-        print("Error:", e)
+        print("\n\nError:", e)
         break
 
 # Close the current file and the serial connection
 if file is not None:
     file.close()
 ser.close()
+
+print(ser.is_open())
