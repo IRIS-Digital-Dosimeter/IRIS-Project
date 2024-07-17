@@ -22,7 +22,7 @@ Reson:
 #define DEBUG_H
 
 // Debug Parameters ........................................
-#define DEBUG 0
+#define DEBUG 1
 #define DEBUG_SMALL 0
 #define APRINT 0
 // ........................................................
