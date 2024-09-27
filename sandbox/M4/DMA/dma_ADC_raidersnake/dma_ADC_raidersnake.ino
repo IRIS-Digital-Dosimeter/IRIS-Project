@@ -7,6 +7,7 @@ const uint8_t SD_CS_PIN = 10;
 #define SPI_CLOCK SD_SCK_MHZ(50)
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SPI_CLOCK)
 #define NUM_SAMPLES_2 2048 // two times the number of samples per pin. i.e. each pin will get half of this number in samples
+#define NUM_SAMPLES 1024
 
 SdFs sd;
 FsFile file;
@@ -21,8 +22,8 @@ volatile boolean results0Part0Ready = false;
 volatile boolean results0Part1Ready = false;
 volatile boolean results1Part0Ready = false;
 volatile boolean results1Part1Ready = false;
-uint16_t adcResults0[NUM_SAMPLES_2];                                                       // ADC results array 0
-uint16_t adcResults1[NUM_SAMPLES_2];                                                       // ADC results array 1
+uint16_t adcResults0[NUM_SAMPLES*2];                                                       // ADC results array 0
+uint16_t adcResults1[NUM_SAMPLES*2];                                                       // ADC results array 1
 
 // ADC0 INPUTCTRL register MUXPOS settings 
 uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
@@ -38,15 +39,15 @@ typedef struct                                                                  
     uint32_t srcaddr;
     uint32_t dstaddr;
     uint32_t descaddr;
-} dmacdescriptor ;
+} dmacdescriptor;
 
 volatile dmacdescriptor (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          // Write-back DMAC descriptors (changed to array pointer)
 dmacdescriptor (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
-dmacdescriptor descriptor __attribute__ ((aligned (16)));                         // Place holder descriptor
+dmacdescriptor descriptor __attribute__ ((aligned (16)));                            // Place holder descriptor
 
 void setup() {
-    Serial.begin(115200);                                                           // Start the native USB port
-    while(!Serial);                                                                 // Wait for the console to open
+    Serial.begin(9600);                                                           // Start the native USB port
+    while(!Serial);                                                               // Wait for the console to open
 
     #if DEBUG_SD_BEGIN
         // Initialize SD card before setting up DMA
@@ -57,15 +58,11 @@ void setup() {
         Serial.println("SD initialization succeeded!");
         }
     #endif
-
-  
-    // pinMode(10, OUTPUT);                                                            // Initialise the output on D10 for debug purposes
-    // PORT->Group[PORTB].DIRSET.reg = PORT_PB23;                                      // Initialise the output on D11 for debug purposes TODO: make it autoselect based on board 
-
+    
     descriptor_section =  reinterpret_cast<dmacdescriptor(*)[DMAC_CH_NUM]>(DMAC->BASEADDR.reg); //point array pointer to BASEADDR defined by SD.begin
     wrb =  reinterpret_cast<dmacdescriptor(*)[DMAC_CH_NUM]>(DMAC->WRBADDR.reg);                 //point array pointer to WRBADDR defined by SD.begin
-    DMAC->CTRL.reg = DMAC_CTRL_DMAENABLE | DMAC_CTRL_LVLEN(0xf);                    // Enable the DMAC peripheral and all priority levels
-
+    DMAC->CTRL.reg = DMAC_CTRL_DMAENABLE | DMAC_CTRL_LVLEN(0xf); 
+  
 
     // ADC0 DMA Sequencing setup  
     DMAC->Channel[2].CHPRILVL.reg = DMAC_CHPRILVL_PRILVL_LVL3;                      // Set DMAC channel 2 to priority level 3 (highest)
@@ -86,7 +83,6 @@ void setup() {
     
     memcpy(&(*descriptor_section)[2], &descriptor, sizeof(descriptor));             // Copy the descriptor to the descriptor section
     
-
 // ADC0
     DMAC->Channel[3].CHPRILVL.reg = DMAC_CHPRILVL_PRILVL_LVL3;                      // Set DMAC channel 3 to priority level 3 (highest)
     DMAC->Channel[3].CHCTRLA.reg = DMAC_CHCTRLA_TRIGSRC(ADC0_DMAC_ID_RESRDY) |      // Set DMAC to trigger when ADC0 result is ready
@@ -94,25 +90,23 @@ void setup() {
 
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[0];                      // Set up a circular descriptor
     descriptor.srcaddr = (uint32_t)&ADC0->RESULT.reg;                               // Take the result from the ADC0 RESULT register
-    descriptor.dstaddr = (uint32_t)adcResults0 + sizeof(uint16_t) * (NUM_SAMPLES_2/2);           // Place it in the middle of adcResults0 array
-    descriptor.btcnt = (NUM_SAMPLES_2/2);                                                        // Beat count
+    descriptor.dstaddr = (uint32_t)adcResults0 + sizeof(uint16_t) * (NUM_SAMPLES);           // Place it in the middle of adcResults0 array
+    descriptor.btcnt = NUM_SAMPLES;                                                        // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
                         DMAC_BTCTRL_VALID |                                         // Descriptor is valid
                         DMAC_BTCTRL_BLOCKACT_SUSPEND;                               // Suspend DMAC channel 3 after block transfer
     memcpy(&(*descriptor_section)[3], &descriptor, sizeof(descriptor));             // Copy the descriptor to the descriptor section
 
-
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[3];                      // Set up a circular descriptor
     descriptor.srcaddr = (uint32_t)&ADC0->RESULT.reg;                               // Take the result from the ADC0 RESULT register
-    descriptor.dstaddr = (uint32_t)&adcResults0[NUM_SAMPLES_2/2] + sizeof(uint16_t) * (NUM_SAMPLES_2/2);    // Place it in the adcResults0 array
-    descriptor.btcnt = (NUM_SAMPLES_2/2);                                                        // Beat count
+    descriptor.dstaddr = (uint32_t)&adcResults0[NUM_SAMPLES] + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the adcResults0 array
+    descriptor.btcnt = NUM_SAMPLES;                                                        // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
                         DMAC_BTCTRL_VALID |                                         // Descriptor is valid
                         DMAC_BTCTRL_BLOCKACT_SUSPEND;                               // Suspend DMAC channel 0 after block transfer
     memcpy(&(*descriptor_section)[0], &descriptor, sizeof(descriptor));             // Copy the descriptor to the descriptor section
-
 
 
     NVIC_SetPriority(DMAC_3_IRQn, 0);                                               // Set the Nested Vector Interrupt Controller (NVIC) priority for DMAC Channel 3
@@ -128,19 +122,18 @@ void setup() {
                                    DMAC_CHCTRLA_TRIGACT_BURST;                      // DMAC burst transfer
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[1];                          // Set up a circular descriptor
     descriptor.srcaddr = (uint32_t)&ADC1->RESULT.reg;                               // Take the result from the ADC0 RESULT register
-    descriptor.dstaddr = (uint32_t)adcResults1 + sizeof(uint16_t) * (NUM_SAMPLES_2/2);           // Place it in the adcResults1 array
-    descriptor.btcnt = (NUM_SAMPLES_2/2);                                                        // Beat count
+    descriptor.dstaddr = (uint32_t)adcResults1 + sizeof(uint16_t) * NUM_SAMPLES;           // Place it in the adcResults1 array
+    descriptor.btcnt = NUM_SAMPLES;                                                        // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
                         DMAC_BTCTRL_VALID |                                         // Descriptor is valid
                         DMAC_BTCTRL_BLOCKACT_SUSPEND;                               // Suspend DMAC channel 4 after block transfer
     memcpy(&(*descriptor_section)[4], &descriptor, sizeof(descriptor));             // Copy the descriptor to the descriptor section
     
-
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[4];                         // Set up a circular descriptor
     descriptor.srcaddr = (uint32_t)&ADC1->RESULT.reg;                               // Take the result from the ADC0 RESULT register
-    descriptor.dstaddr = (uint32_t)&adcResults1[NUM_SAMPLES_2/2] + sizeof(uint16_t) * (NUM_SAMPLES_2/2);                                    // Place it in the adcResults1 array
-    descriptor.btcnt = (NUM_SAMPLES_2/2);                                                        // Beat count
+    descriptor.dstaddr = (uint32_t)&adcResults1[NUM_SAMPLES_2/2] + sizeof(uint16_t) * NUM_SAMPLES;                                    // Place it in the adcResults1 array
+    descriptor.btcnt = NUM_SAMPLES;                                                        // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
                         DMAC_BTCTRL_VALID |                                         // Descriptor is valid
@@ -167,7 +160,6 @@ void setup() {
     while(ADC1->SYNCBUSY.bit.ENABLE);                                               // Wait for synchronization
     ADC1->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
     while(ADC1->SYNCBUSY.bit.SWTRIG);                                               // Wait for synchronization
-
     
     
     // ADC1->CTRLA.bit.SLAVEEN = 1;                                                    // Set ADC1 to slave, ADC0 to master, both share CTRLA register
@@ -185,7 +177,6 @@ void setup() {
     while(ADC0->SYNCBUSY.bit.ENABLE);                                               // Wait for synchronization
     ADC0->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
     while(ADC0->SYNCBUSY.bit.SWTRIG);                                               // Wait for synchronization
-
 
 
 
