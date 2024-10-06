@@ -40,7 +40,7 @@ void setup() {
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
 
- Setup::SPI_init(115200);
+ Setup::SPI_init(9600);
 
 }
 
@@ -55,7 +55,7 @@ void loop() {
   myData.t1 = micros();
 
   // Build buffer: read sensor value then sum it to the previous sensor value 
-  for (uint32_t counter = 1; counter <= numSamples; counter++){
+  for (uint32_t counter = 0; counter < numSamples; counter++){
     myData.adc0 += analogRead(A0);
     myData.adc1 += analogRead(A1);
     // Pause for stability 
