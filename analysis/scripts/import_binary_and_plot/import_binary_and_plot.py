@@ -1,14 +1,15 @@
 # By Andrew Yegiayan
 # repo: https://github.com/IRIS-Digital-Dosimeter/IRIS-Project/
 
-from collections import deque
-from matplotlib import pyplot as plt
-from datetime import datetime
 from matplotlib.animation import FuncAnimation
+from matplotlib import pyplot as plt
+from collections import deque
+from datetime import datetime
 import serial.tools.list_ports
+import threading
+import struct
 import time
 import sys
-import struct
 import os
 
 def create_new_file():
@@ -120,8 +121,8 @@ def get_args(args:list[str]) -> tuple[str, int, int, int]:
     
     return (port, baud, freq, length)
 
+# There's no way this worked first try lol
 # TODO
-# There's no way this works properly
 # Implement different formats for reading from Serial
 #   e.g. binary, text/asciim etc.
 # The idea for binary is to read a set of bytes in the form of `content` 
@@ -169,28 +170,22 @@ if __name__ == "__main__":
             exit()
     
     
-    print(f"Port: {port}")
-    print(f"Baud: {baud}")
-    print(f"Freq: {freq}")
-    print(f"Lnth: {length}")
-    print()
-    print(f"Save:  {doSave}")
-    print(f"Print: {doPrint}")
-    print(f"Plot:  {doPlot}")
-    
-
     ######################################
     # Set up serial connection
+    ######################################
     # make an instance of the class before populating it
     ser = serial.Serial(port=port, baudrate=baud)
-
     # Open serial connection
     ser.close()
     ser.open()
     ser.reset_input_buffer()  
     ser.flushInput()
-    ######################################
+    
 
+    
+    ######################################
+    # Handle the flags' startup tasks
+    ######################################
     if doPrint:
         print("Printing...")
         
@@ -224,40 +219,7 @@ if __name__ == "__main__":
         # flag to track if the user is manually adjusting the view
         is_auto_scroll = True
 
-        # function to be called when the user zooms or pans
-        def on_xlim_change(event_ax):
-            global is_auto_scroll
-            if event_ax == ax:
-                is_auto_scroll = False  # Disable auto-scroll if user changes the x-axis
-
         # connect the zoom/pan event to the function
-        fig.canvas.mpl_connect('button_release_event', lambda event: on_xlim_change(event.inaxes))
-        
-        # animation function that updates the plot
-        def animate(i):
-            global is_auto_scroll
-
-            if len(q) == 0:
-                return line,  # skip if there's no data
-
-            # Update data
-            line.set_xdata(t)
-            line.set_ydata(q)
-
-            # check if auto-scroll should be active
-            if is_auto_scroll:
-                if len(t) > length * freq:
-                    ax.set_xlim(t[-length * freq], t[-1])
-            
-            return line,
-
-        # add a key press event to toggle auto-scroll back on
-        def on_key(event):
-            global is_auto_scroll
-            if event.key == 'r':  # press 'r' to re-enable auto-scroll
-                is_auto_scroll = True
-                print(length, freq)
-                ax.set_xlim(t[-length * freq], t[-1])
 
         fig.canvas.mpl_connect('key_press_event', on_key)
 
@@ -301,6 +263,9 @@ if __name__ == "__main__":
             print("\n\nError:", e)
             break
         
+    ######################################
+    # Cleanup
+    ######################################        
     if doSave:
         file.close()
     ser.close()
