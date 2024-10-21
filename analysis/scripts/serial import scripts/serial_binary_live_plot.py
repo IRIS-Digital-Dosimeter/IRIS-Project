@@ -1,6 +1,8 @@
 # by Andrew Yegiayan
 # repo: https://github.com/IRIS-Digital-Dosimeter/IRIS-Project
 
+# SUPERSEDED BY SERIAL_IMPORTER_ALL_IN_ONE.PY
+
 ######################################################################
 
 # Neat live plotter for use with `import_serial_binary.py` to visualize the data in real-time.
