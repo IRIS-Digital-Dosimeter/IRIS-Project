@@ -204,7 +204,7 @@ def async_work(ser, doPrint, doSave, doPlot):
             if line_count % 100 == 0:
                 file.flush()
             
-            if line_count >= 5000:
+            if line_count >= 50000:
                 file.close()
                 file = create_new_file()
                 line_count = 0
