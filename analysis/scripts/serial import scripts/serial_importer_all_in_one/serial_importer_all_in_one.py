@@ -8,6 +8,7 @@ from datetime import datetime
 import serial.tools.list_ports
 import threading
 import struct
+import math
 import time
 import sys
 import os
@@ -139,6 +140,10 @@ def read_bytes(ser, format='binary', content:tuple = (4,4,4,4)) -> tuple:
         case _:
             raise ValueError("Invalid format given.")
 
+# Helper that returns a sine wave based on current time
+def sine_wave(freq=1, amp=1):
+    return amp * math.sin(2 * math.pi * freq * time.time())
+
 # function to be called when the user zooms or pans
 def on_xlim_change(event_ax):
     global is_auto_scroll
@@ -156,10 +161,18 @@ def animate(i):
     line.set_xdata(t)
     line.set_ydata(q)
 
-    # check if auto-scroll should be active
-    if is_auto_scroll:
-        if len(t) > length * freq:
-            ax.set_xlim(t[-length * freq], t[-1])
+    # # check if auto-scroll should be active
+    # if is_auto_scroll:
+    #     if len(t) > length * freq:
+    #         ax.set_xlim(t[-length * freq], t[-1])
+
+    if len(t) < length * freq:
+        ax.set_xlim(t[0], t[0]+length)
+        ax.set_ylim(-10, 4116)
+    else:
+        ax.set_xlim(t[0], t[-1])  # set the x-axis to the current time window
+        ax.set_ylim(-10, 4116)
+
     
     return line,
 
@@ -168,14 +181,18 @@ def on_key(event):
     global is_auto_scroll
     if event.key == 'r':  # press 'r' to re-enable auto-scroll
         is_auto_scroll = True
-        ax.set_xlim(t[-length * freq], t[-1])     
+        # length_to_set = length if len(t) > length * freq else len(t) # set the length to the max of the two
+        # ax.set_xlim(t[-length_to_set * freq], t[-1])     
+
+        ax.set_xlim(t[0], t[-1])  # set the x-axis to the current time window
         
 
-def async_work(ser, doPrint, doSave, doPlot):
-    ser.close()
-    ser.open()
-    ser.reset_input_buffer()  
-    ser.flushInput()
+def async_work(ser, doPrint, doSave, doPlot, debug=False):
+    if debug is False:
+        ser.close()
+        ser.open()
+        ser.reset_input_buffer()  
+        ser.flushInput()
     
     if doSave:
         global file
@@ -184,13 +201,21 @@ def async_work(ser, doPrint, doSave, doPlot):
         
     if doPlot:
         pre = time.time()
+        start = pre
         
     
     while True:
-        if ser.in_waiting < 16:
-            continue
-        ser_bytes = ser.read(16)
-        t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes)
+        if debug is False:
+            if ser.in_waiting < 16:
+                continue
+            ser_bytes = ser.read(16)
+            t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes)
+        else:
+            modifier = 5
+            t0 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
+            t1 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
+            a0 = sine_wave(freq=1/modifier * 0.1, amp=4096*16/2) + 4096*16/2
+            a1 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
     
         if doPrint:
             print(f"{t0},{t1},{a0},{a1}")
@@ -201,10 +226,10 @@ def async_work(ser, doPrint, doSave, doPlot):
             
             file.write(ser_bytes)
             line_count += 1
-            if line_count % 100 == 0:
+            if line_count % 100 == 0: # commit to disk every x lines
                 file.flush()
             
-            if line_count >= 50000:
+            if line_count >= 50000: # lines per data file
                 file.close()
                 file = create_new_file()
                 line_count = 0
@@ -213,8 +238,11 @@ def async_work(ser, doPrint, doSave, doPlot):
             post = time.time()
             if (post-pre >= 1/freq): # add data to the deque every 1/freq seconds
                 q.append(a0//16)
-                t.append(len(q)/freq)
+                # t.append(len(q)/freq)
+                t.append(post - start)
                 pre = time.time()
+                
+                # print(f"q: {len(q)}, {q[-1]} t: {len(t)}, {t[-1]}")
         
         
         
@@ -223,6 +251,10 @@ def async_work(ser, doPrint, doSave, doPlot):
         
 
 if __name__ == "__main__":
+    
+    debug = False
+    valid_baud_rates = [9600, 115200]
+    
     ######################################
     # CLI argument handling 
     ######################################
@@ -235,7 +267,7 @@ if __name__ == "__main__":
     # check if necessary flags are given
     port, baud, freq, length = get_args(sys.argv)
     
-    if baud not in [9600, 115200]:
+    if baud not in valid_baud_rates:
         print("Error: Baud Rate must be 9600 or 115200!")
         exit()
 
@@ -257,7 +289,7 @@ if __name__ == "__main__":
     # Set up serial connection
     ######################################
     # make an instance of the class before populating it
-    ser = serial.Serial(port=port, baudrate=baud)
+    ser = serial.Serial() if debug is True else serial.Serial(port=port, baudrate=baud)
     # serial connection will be opened in the async data collection thread
     
     
@@ -284,10 +316,11 @@ if __name__ == "__main__":
 
         # global q, t, pre, is_auto_scroll
         
-        # q = deque(maxlen=length*freq) # samples
-        # t = deque(maxlen=length*freq) # times
-        q = deque()
-        t = deque()
+        q = deque(maxlen=length*freq) # samples
+        t = deque(maxlen=length*freq) # times
+        # t.extend(range(length*freq))
+        # q = deque()
+        # t = deque()
         pre = time.time()
         
         # set up figure and axis
@@ -296,7 +329,7 @@ if __name__ == "__main__":
 
         # set up the plot limits and labels
         ax.set_xlim(0, length)
-        ax.set_ylim(0, 4096)
+        ax.set_ylim(-10, 4116)
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Voltage (V) in 12 bits')
         ax.set_title('Sliding Window: Voltage vs Time')
@@ -311,10 +344,13 @@ if __name__ == "__main__":
         fig.canvas.mpl_connect('key_press_event', on_key)
 
         # create animation
-        ani = FuncAnimation(fig, animate, interval=1000/freq, blit=True, save_count=50)
+        # have a maximum framerate for drawing to not blow up computers at high frequencies
+        max_fr = 30
+        anim_int = 1000/freq if 1000/freq > max_fr else max_fr # ms between frame draws
+        ani = FuncAnimation(fig, animate, interval=anim_int, blit=True, save_count=50)
 
     # start the async data collection thread
-    threading.Thread(target=async_work, args=(ser, doPrint, doSave, doPlot), daemon=True).start()
+    threading.Thread(target=async_work, args=(ser, doPrint, doSave, doPlot, debug), daemon=True).start()
     
     if doPlot:
         plt.show()
