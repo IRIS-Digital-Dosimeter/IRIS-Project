@@ -3,8 +3,10 @@
 
 from matplotlib.animation import FuncAnimation
 from matplotlib import pyplot as plt
+from matplotlib import ticker
 from collections import deque
 from datetime import datetime
+from datetime import timedelta
 import serial.tools.list_ports
 import threading
 import struct
@@ -154,27 +156,25 @@ def on_xlim_change(event_ax):
 def animate(i):
     global is_auto_scroll
 
-    if len(q) == 0:
-        return line,  # skip if there's no data
+    if len(q0) == 0:
+        return a0_line, a1_line  # skip if there's no data
 
-    # Update data
-    line.set_xdata(t)
-    line.set_ydata(q)
-
-    # # check if auto-scroll should be active
-    # if is_auto_scroll:
-    #     if len(t) > length * freq:
-    #         ax.set_xlim(t[-length * freq], t[-1])
+    # update what should be plotted
+    a0_line.set_xdata(t)
+    a0_line.set_ydata(q0)
+    
+    a1_line.set_xdata(t)
+    a1_line.set_ydata(q1)
 
     if len(t) < length * freq:
         ax.set_xlim(t[0], t[0]+length)
-        ax.set_ylim(-10, 4116)
+        # ax.set_ylim(-10, 4116)
     else:
         ax.set_xlim(t[0], t[-1])  # set the x-axis to the current time window
-        ax.set_ylim(-10, 4116)
+        # ax.set_ylim(-10, 4116)
 
-    
-    return line,
+    return a0_line, a1_line,
+    # return a1_line,
 
 # add a key press event to toggle auto-scroll back on
 def on_key(event):
@@ -184,10 +184,15 @@ def on_key(event):
         # length_to_set = length if len(t) > length * freq else len(t) # set the length to the max of the two
         # ax.set_xlim(t[-length_to_set * freq], t[-1])     
 
-        ax.set_xlim(t[0], t[-1])  # set the x-axis to the current time window
+        if len(t) < length * freq:
+            ax.set_xlim(t[0], t[0]+length)
+            # ax.set_ylim(-10, 4116)
+        else:
+            ax.set_xlim(t[0], t[-1])  # set the x-axis to the current time window
+            # ax.set_ylim(-10, 4116)w
         
 
-def async_work(ser, doPrint, doSave, doPlot, debug=False):
+def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
     if debug is False:
         ser.close()
         ser.open()
@@ -200,8 +205,8 @@ def async_work(ser, doPrint, doSave, doPlot, debug=False):
         line_count = 0
         
     if doPlot:
-        pre = time.time()
-        start = pre
+        pre = start_time
+        print(f"Started plotting at {timedelta(seconds=start_time)}")
         
     
     while True:
@@ -226,10 +231,10 @@ def async_work(ser, doPrint, doSave, doPlot, debug=False):
             
             file.write(ser_bytes)
             line_count += 1
-            if line_count % 100 == 0: # commit to disk every x lines
+            if line_count % 1000 == 0: # commit to disk every x lines
                 file.flush()
             
-            if line_count >= 50000: # lines per data file
+            if line_count >= 100000: # lines per data file
                 file.close()
                 file = create_new_file()
                 line_count = 0
@@ -237,9 +242,11 @@ def async_work(ser, doPrint, doSave, doPlot, debug=False):
         if doPlot:
             post = time.time()
             if (post-pre >= 1/freq): # add data to the deque every 1/freq seconds
-                q.append(a0//16)
-                # t.append(len(q)/freq)
-                t.append(post - start)
+                q0.append(a0//16)
+                q1.append(a1//16)
+                
+                t.append(post - start_time)
+                
                 pre = time.time()
                 
                 # print(f"q: {len(q)}, {q[-1]} t: {len(t)}, {t[-1]}")
@@ -316,23 +323,40 @@ if __name__ == "__main__":
 
         # global q, t, pre, is_auto_scroll
         
-        q = deque(maxlen=length*freq) # samples
+        q0 = deque(maxlen=length*freq) # A0 samples
+        q1 = deque(maxlen=length*freq)
         t = deque(maxlen=length*freq) # times
-        # t.extend(range(length*freq))
-        # q = deque()
-        # t = deque()
-        pre = time.time()
+        
+        # set negative dummy data
+        q0.extend([0 for _ in range(length*freq)])
+        q1.extend([0 for _ in range(length*freq)])
+        
+        start_time = time.time()
+        t.extend([0-length+(i/freq) for i in range(length*freq)])
+
         
         # set up figure and axis
         fig, ax = plt.subplots()
-        line, = ax.plot([], [], lw=1)
+        a0_line, = ax.plot(t, q0, lw=1, color='r', label='a0')
+        a1_line, = ax.plot(t, q1, lw=1, color='b', label='a1')
 
         # set up the plot limits and labels
+        ax.legend()
         ax.set_xlim(0, length)
         ax.set_ylim(-10, 4116)
         ax.set_xlabel('Time (s)')
         ax.set_ylabel('Voltage (V) in 12 bits')
         ax.set_title('Sliding Window: Voltage vs Time')
+        ax.tick_params(axis='both', which='both', labelsize='small', rotation=70)
+        fig.subplots_adjust(bottom=0.2)
+
+        def format_h_m_s(t, _):
+            return timedelta(seconds=t)
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_h_m_s))
+        # def format_4096_to_3(x, _):
+        #     voltage = x*3.3/4096
+        #     return f"{voltage:.3f}"
+        # ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_4096_to_3))
         
         # flag to track if the user is manually adjusting the view
         is_auto_scroll = True
@@ -350,7 +374,7 @@ if __name__ == "__main__":
         ani = FuncAnimation(fig, animate, interval=anim_int, blit=True, save_count=50)
 
     # start the async data collection thread
-    threading.Thread(target=async_work, args=(ser, doPrint, doSave, doPlot, debug), daemon=True).start()
+    threading.Thread(target=async_work, args=(ser, doPrint, doSave, doPlot, start_time, debug), daemon=True).start()
     
     if doPlot:
         plt.show()
