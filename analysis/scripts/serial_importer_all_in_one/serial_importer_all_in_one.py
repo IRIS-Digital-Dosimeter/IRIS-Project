@@ -234,8 +234,8 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
             if line_count % 1000 == 0: # commit to disk every x lines
                 file.flush()
             
-            # create a new file every 100000 lines
-            if line_count >= 5000: # lines per data file
+            # create a new file every 200,000 lines
+            if line_count >= 200_000: # lines per data file
                 file.close()
                 file = create_new_file()
                 line_count = 0
