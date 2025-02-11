@@ -129,8 +129,8 @@ def get_args(args:list[str]) -> tuple[str, int, int, int]:
 # Implement different formats for reading from Serial
 #   e.g. binary, text/asciim etc.
 # The idea for binary is to read a set of bytes in the form of `content` 
-def read_bytes(ser, format='binary', content:tuple = (4,4,4,4)) -> tuple:
-    num_bytes = sum(content) # total number of bytes to read
+def read_bytes(ser, format='binary', schema:tuple = (4,4,4,4)) -> tuple:
+    num_bytes = sum(schema) # total number of bytes to read
     ser_bytes = ser.read(num_bytes)
     
     match format:
@@ -147,14 +147,12 @@ def sine_wave(freq=1, amp=1):
     return amp * math.sin(2 * math.pi * freq * time.time())
 
 # function to be called when the user zooms or pans
-def on_xlim_change(event_ax):
-    global is_auto_scroll
+def on_xlim_change(event_ax, is_auto_scroll):
     if event_ax == ax:
         is_auto_scroll = False  # Disable auto-scroll if user changes the x-axis
            
 # animation function that updates the plot
 def animate(i):
-    global is_auto_scroll
 
     if len(q0) == 0:
         return a0_line, a1_line  # skip if there's no data
@@ -177,8 +175,8 @@ def animate(i):
     # return a1_line,
 
 # add a key press event to toggle auto-scroll back on
-def on_key(event):
-    global is_auto_scroll
+# TODO could maybe use keybinds to change the view window? 
+def on_key(event, is_auto_scroll):
     if event.key == 'r':  # press 'r' to re-enable auto-scroll
         is_auto_scroll = True
         # length_to_set = length if len(t) > length * freq else len(t) # set the length to the max of the two
@@ -200,7 +198,6 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
         ser.flushInput()
     
     if doSave:
-        global file
         file = create_new_file()
         line_count = 0
         
@@ -210,49 +207,50 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
         
     
     while True:
-        if debug is False:
+        # data collection/creation
+        if debug is False: # read from serial if not in debug mode
             if ser.in_waiting < 16:
                 continue
             ser_bytes = ser.read(16)
-            t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes)
-        else:
+            t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes) # unpack the bytes into 4 unsigned ints
+        else: # create dummy sine wave data if in debug mode
             modifier = 5
             t0 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
             t1 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
             a0 = sine_wave(freq=1/modifier * 0.1, amp=4096*16/2) + 4096*16/2
             a1 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
     
+        # print data if user wanted it
         if doPrint:
             print(f"{t0},{t1},{a0},{a1}")
-            
+        
+        # save data if user wanted it
         if doSave:
-            if file is None: 
-                break # Exit the loop if file creation failed
+            if file is None:
+                raise Exception("File creation failed!") # panic if file creation failed
             
             file.write(ser_bytes)
             line_count += 1
             if line_count % 1000 == 0: # commit to disk every x lines
                 file.flush()
             
-            if line_count >= 100000: # lines per data file
+            # create a new file every 100000 lines
+            if line_count >= 5000: # lines per data file
                 file.close()
                 file = create_new_file()
                 line_count = 0
-                
+        
+        # plot data if user wanted it
         if doPlot:
             post = time.time()
             if (post-pre >= 1/freq): # add data to the deque every 1/freq seconds
-                q0.append(a0//16)
+                q0.append(a0//16) # data comes in as sum of 16 samples so average it out in post
                 q1.append(a1//16)
-                
                 t.append(post - start_time)
                 
                 pre = time.time()
                 
-                # print(f"q: {len(q)}, {q[-1]} t: {len(t)}, {t[-1]}")
-        
-        
-        
+                
         
         
         
@@ -296,12 +294,10 @@ if __name__ == "__main__":
     # Set up serial connection
     ######################################
     # make an instance of the class before populating it
-    ser = serial.Serial() if debug is True else serial.Serial(port=port, baudrate=baud)
     # serial connection will be opened in the async data collection thread
-    
+    ser = serial.Serial() if debug is True else serial.Serial(port=port, baudrate=baud)
     
 
-    
     ######################################
     # Handle the flags' startup tasks
     ######################################
@@ -314,26 +310,23 @@ if __name__ == "__main__":
         script_dir = os.path.dirname(__file__)
         os.makedirs(os.path.join(script_dir, 'data'), exist_ok=True)
         
-        # open a new file
-        global file
         
         
     if doPlot:
         print("Plotting...")
 
-        # global q, t, pre, is_auto_scroll
-        
+        # set up the deques for the sliding window
+        # deques bc lower overhead than Queues, and we can afford the occasional WAR/RAW/WAWs from non-thread-safety
         q0 = deque(maxlen=length*freq) # A0 samples
         q1 = deque(maxlen=length*freq)
         t = deque(maxlen=length*freq) # times
         
         # set negative dummy data
+        #   this stops the plotter from hanging for the first length seconds or length*freq frames
         q0.extend([0 for _ in range(length*freq)])
         q1.extend([0 for _ in range(length*freq)])
         
-        start_time = time.time()
         t.extend([0-length+(i/freq) for i in range(length*freq)])
-
         
         # set up figure and axis
         fig, ax = plt.subplots()
@@ -353,42 +346,41 @@ if __name__ == "__main__":
         def format_h_m_s(t, _):
             return timedelta(seconds=t)
         ax.xaxis.set_major_formatter(ticker.FuncFormatter(format_h_m_s))
-        # def format_4096_to_3(x, _):
-        #     voltage = x*3.3/4096
-        #     return f"{voltage:.3f}"
-        # ax.yaxis.set_major_formatter(ticker.FuncFormatter(format_4096_to_3))
         
         # flag to track if the user is manually adjusting the view
         is_auto_scroll = True
 
         # connect the zoom/pan event to the function
-        fig.canvas.mpl_connect('button_release_event', lambda event: on_xlim_change(event.inaxes))
+        fig.canvas.mpl_connect('button_release_event', lambda event: on_xlim_change(event.inaxes, is_auto_scroll))
 
         # add a key press event to toggle auto-scroll back on
-        fig.canvas.mpl_connect('key_press_event', on_key)
+        fig.canvas.mpl_connect('key_press_event', lambda event: on_key(event, is_auto_scroll))
 
         # create animation
-        # have a maximum framerate for drawing to not blow up computers at high frequencies
+        #   have a maximum framerate for drawing to not blow up computers at high frequencies
         max_fr = 30
         anim_int = 1000/freq if 1000/freq > max_fr else max_fr # ms between frame draws
         ani = FuncAnimation(fig, animate, interval=anim_int, blit=True, save_count=50)
 
     # start the async data collection thread
+    start_time = time.time() # only used if doPlot is True
     threading.Thread(target=async_work, args=(ser, doPrint, doSave, doPlot, start_time, debug), daemon=True).start()
     
+    # open the plot window
     if doPlot:
         plt.show()
             
             
     try:
         while True:
+            print("Something went wrong...  Check if data is being saved, printed, or plotted... \n")
             time.sleep(10)
     except Exception:
         ######################################
         # Cleanup
         ######################################        
-        if doSave:
-            file.close()
+        # if doSave:
+        #     file.close()
         ser.close()
     
     
