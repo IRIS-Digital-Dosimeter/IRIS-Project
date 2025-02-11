@@ -131,8 +131,13 @@ def get_args(args:list[str]) -> tuple[str, int, int, int]:
 # TODO
 # Implement different formats for reading from Serial
 #   e.g. binary, text/asciim etc.
+<<<<<<<< HEAD:packages/M0/Binary Serial Logger/serial_importer_all_in_one/serial_importer_all_in_one.py
 # The idea for binary is to read a set of bytes in the form of `schema` 
 def read_bytes_from_schema(ser, format='binary', schema:tuple = (4,4,4,4)) -> tuple:
+========
+# The idea for binary is to read a set of bytes in the form of `content` 
+def read_bytes(ser, format='binary', schema:tuple = (4,4,4,4)) -> tuple:
+>>>>>>>> 23a7a81 (some cleanup on the plotter. removed old scripts. made a simple dat reader for testing purposes.):analysis/scripts/serial_importer_all_in_one/serial_importer_all_in_one.py
     num_bytes = sum(schema) # total number of bytes to read
     ser_bytes = ser.read(num_bytes)
     
@@ -214,9 +219,14 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
         if debug is False: # read from serial if not in debug mode
             if ser.in_waiting < 16:
                 continue
+<<<<<<<< HEAD:packages/M0/Binary Serial Logger/serial_importer_all_in_one/serial_importer_all_in_one.py
             # ser_bytes = ser.read(16)
             # t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes) # unpack the bytes into 4 unsigned ints
             t0,t1,a0,a1 = read_bytes_from_schema(ser, format='binary', schema=(4,4,4,4))
+========
+            ser_bytes = ser.read(16)
+            t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes) # unpack the bytes into 4 unsigned ints
+>>>>>>>> 23a7a81 (some cleanup on the plotter. removed old scripts. made a simple dat reader for testing purposes.):analysis/scripts/serial_importer_all_in_one/serial_importer_all_in_one.py
         else: # create dummy sine wave data if in debug mode
             modifier = 5
             t0 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
@@ -233,17 +243,25 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
         if doSave:
             if file is None:
                 raise Exception("File creation failed!") # panic if file creation failed
+<<<<<<<< HEAD:packages/M0/Binary Serial Logger/serial_importer_all_in_one/serial_importer_all_in_one.py
             
             struct_to_write = struct.pack('<IIII', t0, t1, a0, a1) # pack the data into bytes
             file.write(struct_to_write) # pack the data into bytes and write to file
+========
+>>>>>>>> 23a7a81 (some cleanup on the plotter. removed old scripts. made a simple dat reader for testing purposes.):analysis/scripts/serial_importer_all_in_one/serial_importer_all_in_one.py
             
             line_count += 1
             
             if line_count % 1000 == 0: # commit to disk every x lines
                 file.flush()
             
+<<<<<<<< HEAD:packages/M0/Binary Serial Logger/serial_importer_all_in_one/serial_importer_all_in_one.py
             # create a new file every 100,000 lines
             if line_count >= 100_000: # lines per data file
+========
+            # create a new file every 100000 lines
+            if line_count >= 5000: # lines per data file
+>>>>>>>> 23a7a81 (some cleanup on the plotter. removed old scripts. made a simple dat reader for testing purposes.):analysis/scripts/serial_importer_all_in_one/serial_importer_all_in_one.py
                 file.close()
                 file = create_new_file()
                 print(f"new file: {file.name}")
@@ -383,6 +401,7 @@ if __name__ == "__main__":
             
     try:
         while True:
+            print("Something went wrong...  Check if data is being saved, printed, or plotted... \n")
             time.sleep(10)
     except Exception:
         ######################################
