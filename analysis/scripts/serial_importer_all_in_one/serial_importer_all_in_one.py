@@ -16,10 +16,13 @@ import sys
 import os
 
 def create_new_file():
+    parent_dir = os.path.dirname(__file__)
+    
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_")
     filename = f'serial_data_{timestamp}.dat'
     try:
-        return open('data/'+ filename, 'wb')  # Open in binary write mode
+        file_path = os.path.join(parent_dir, 'data', filename)
+        return open(file_path, 'wb')  # Open in binary write mode
     except FileNotFoundError:
         print('\nNot Found: "data/"')
         print('Create "data" directory then run this program again')
@@ -238,6 +241,7 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
             if line_count >= 200_000: # lines per data file
                 file.close()
                 file = create_new_file()
+                print(f"new file: {file.name}")
                 line_count = 0
         
         # plot data if user wanted it
@@ -258,7 +262,7 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
 if __name__ == "__main__":
     
     debug = False
-    valid_baud_rates = [9600, 115200]
+    valid_baud_rates = [9600, 115_200]
     
     ######################################
     # CLI argument handling 
@@ -307,8 +311,9 @@ if __name__ == "__main__":
     if doSave:
         print("Saving...")
         # create ./data/ directory if it doesn't exist
-        script_dir = os.path.dirname(__file__)
-        os.makedirs(os.path.join(script_dir, 'data'), exist_ok=True)
+        parent_dir = os.path.dirname(__file__)
+        os.makedirs(os.path.join(parent_dir, 'data'), exist_ok=True)
+
         
         
         
@@ -373,7 +378,6 @@ if __name__ == "__main__":
             
     try:
         while True:
-            print("Something went wrong...  Check if data is being saved, printed, or plotted... \n")
             time.sleep(10)
     except Exception:
         ######################################

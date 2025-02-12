@@ -11,7 +11,7 @@ tests/
         data/
         test_name.ipynb
 
-scripts/
+scripts/old_analysis/
         analysis_IRIS.py
         analysis_one_pin.py
         import_serial.py
