@@ -127,19 +127,19 @@ def get_args(args:list[str]) -> tuple[str, int, int, int]:
     
     return (port, baud, freq, length)
 
-# There's no way this worked first try lol
+# THIS ASSUMES THAT THE SERIAL DATA IS ALWAYS COMING IN AS 4 BYTE INTEGERS!!
 # TODO
 # Implement different formats for reading from Serial
 #   e.g. binary, text/asciim etc.
-# The idea for binary is to read a set of bytes in the form of `content` 
-def read_bytes(ser, format='binary', schema:tuple = (4,4,4,4)) -> tuple:
+# The idea for binary is to read a set of bytes in the form of `schema` 
+def read_bytes_from_schema(ser, format='binary', schema:tuple = (4,4,4,4)) -> tuple:
     num_bytes = sum(schema) # total number of bytes to read
     ser_bytes = ser.read(num_bytes)
     
     match format:
         case 'binary':
-            # return struct.unpack(f'<{len(content)}I', ser_bytes)
-            return ser_bytes
+            return struct.unpack(f'<{len(schema)}I', ser_bytes)
+            # return ser_bytes
         case 'text':
             return ser_bytes.decode('utf-8').rstrip()
         case _:
@@ -214,8 +214,9 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
         if debug is False: # read from serial if not in debug mode
             if ser.in_waiting < 16:
                 continue
-            ser_bytes = ser.read(16)
-            t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes) # unpack the bytes into 4 unsigned ints
+            # ser_bytes = ser.read(16)
+            # t0,t1,a0,a1 = struct.unpack('<IIII', ser_bytes) # unpack the bytes into 4 unsigned ints
+            t0,t1,a0,a1 = read_bytes_from_schema(ser, format='binary', schema=(4,4,4,4))
         else: # create dummy sine wave data if in debug mode
             modifier = 5
             t0 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
