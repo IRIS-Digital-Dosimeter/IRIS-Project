@@ -1,35 +1,113 @@
 #include "helper.h"
 
-void create_bin_file(FsFile* binFile, char* file_name) {
-  binFile->close();
-  while (sd.exists(file_name)) {
-    char* p = strchr(file_name, '.');
-    if (!p) {
-      error("no dot in filename");
-    }
 
-    while (true) {
-      p--;
-      if (p < file_name || *p < '0' || *p > '9') {
-        error("Can't create file name");
-      }
-      if (p[0] != '9') {
-        p[0]++;
-        break;
-      }
-      p[0] = '0';
+int find_largest_file_number(SdFs* sd, const char* extension) {
+    FsFile file, root;
+    static int maxNumber = -1;
+    
+    root = sd->open("/");
+    if (!root) {
+        Serial.println("Failed to open root directory");
+        return -1;
     }
-  }
-  if (!binFile->open(file_name, O_RDWR | O_CREAT)) {
-    error("open file_name failed");
-  }
-  Serial.println(file_name);
-  if (!binFile->preAllocate(prealloc_size)) {
-    error("preAllocate failed");
-  }
+    
+    if (maxNumber == -1) {
+        while (file.openNext(&root, O_RDONLY)) {
+            char fileName[32];
+            file.getName(fileName, sizeof(fileName));
+            file.close();
 
-  Serial.print(F("preAllocated: "));
-  Serial.print(prealloc_size_MiB);
-  Serial.println(F(" MiB"));
+            // Serial.print("retrieved filename: ");
+            // Serial.println(fileName);
+
+            char* dot = strrchr(fileName, '.');
+            if (dot && strcmp(dot, extension) == 0) {
+                *dot = '\0';
+                int num = atoi(fileName);
+                if (num > maxNumber) {
+                    maxNumber = num;
+                }
+            }
+        }
+    } else {
+        maxNumber++;
+    }
+    
+    return maxNumber;
 }
+
+void create_dat_file(SdFs* sd, FsFile* file) {
+
+    int nextNumber = find_largest_file_number(sd, ".dat") + 1;
+
+    char fileName[32];
+    snprintf(fileName, sizeof(fileName), "%012d.dat", nextNumber);
+    
+    file->close();
+
+    if (!file->open(fileName, O_RDWR | O_CREAT)) {
+        Serial.println("Failed to open file");
+        return;
+    }    
+    
+    if (!file->preAllocate(prealloc_size)) {
+        Serial.println("Pre-allocation failed");
+    }
+
+    // unsigned long pre, post;
+
+    // pre = micros();
+    // int nextNumber = find_largest_file_number(sd, ".dat") + 1;
+    // post = micros();
+
+    // Serial.print(F("time for file number: "));
+    // Serial.println(post - pre);
+
+
+    // char fileName[32];
+    // snprintf(fileName, sizeof(fileName), "%012d.dat", nextNumber);
+    // pre = micros();
+
+    // Serial.print(F("\ttime for formatting name: "));
+    // Serial.println(pre - post);
+    
+    // file->close();
+    // post = micros();
+
+    // Serial.print(F("\t\ttime for closing: "));
+    // Serial.println(post - pre);
+
+    // if (!file->open(fileName, O_RDWR | O_CREAT)) {
+    //     Serial.println("Failed to open file");
+    //     return;
+    // }
+    // pre = micros();
+
+    // Serial.print(F("\t\t\ttime for opening: "));
+    // Serial.println(pre - post);
+    
+    // Serial.print(F("Created file: "));
+    // Serial.println(fileName);
+    // Serial.println();
+    
+    // if (!file->preAllocate(prealloc_size_MiB)) {
+    //     Serial.println("Pre-allocation failed");
+    // }
+    
+}
+
+
+void printBinary(uint32_t regValue) {
+    int z = 0;
+    for (int i = 31; i >= 0; i--) {
+        Serial.print((regValue >> i) & 1);
+        
+        // if (i % 8 == 0) Serial.println();
+        if (i % 8 == 0) Serial.print(" ");
+    }
+    Serial.println(z++); // Move to the next line after printing
+    // Serial.println(); // Move to the next line after printing
+}
+
+
 

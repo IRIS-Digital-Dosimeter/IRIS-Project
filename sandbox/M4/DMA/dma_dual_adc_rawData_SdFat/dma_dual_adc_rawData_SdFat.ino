@@ -1,6 +1,7 @@
 /*
 This is a demo for reading samples from both ADCs on TWO PINS EACH.
 The DMAC then takes these and dumps them into two buffers.
+Trying to save something to disk but we'll see if that's possible
 
 Made by Andrew Yegiayan
 */
@@ -20,10 +21,10 @@ const uint8_t SD_CS_PIN = 10;
 SdFs sd;
 FsFile file;
 
-#define DEBUG_R0_P0 1
-#define DEBUG_R0_P1 1
-#define DEBUG_R1_P0 1
-#define DEBUG_R1_P1 1
+#define DEBUG_R0_P0 0
+#define DEBUG_R0_P1 0
+#define DEBUG_R1_P0 0
+#define DEBUG_R1_P1 0
 #define DEBUG_SD_BEGIN 1
 
 volatile boolean results0Part0Ready = false;
@@ -214,18 +215,6 @@ void dma_init(){
 
 }
 
-int z = 0;
-void printBinary(uint32_t regValue) {
-    for (int i = 31; i >= 0; i--) {
-        Serial.print((regValue >> i) & 1);
-        
-        // if (i % 8 == 0) Serial.println();
-        if (i % 8 == 0) Serial.print(" ");
-    }
-    Serial.println(z++); // Move to the next line after printing
-    // Serial.println(); // Move to the next line after printing
-}
-
 
 
 void setup() {
@@ -273,8 +262,29 @@ void setup() {
     
 }
 
-void loop() {   
+// empty 18KB file creation takes 30-40 ms
+// filling half a buffer takes 2-3 ms
+// writing 1 half buffer takes XXX ms
+
+unsigned long pre, post;
+void loop() {
+
+    // experimenting with file naming and file creation
+    // while (true) {
+    //     pre = micros();
+    //     create_dat_file(&sd, &file);
+    //     // file.close();
+    //     post = micros();
+    //     Serial.println(post-pre);
+        
+    //     delay(500);
+    // }
+
+
     if (results0Part0Ready) {
+        Serial.print(F("00 ready: "));
+        Serial.println(micros());
+        
         #if DEBUG_R0_P0
             Serial.print("hiii:");
             Serial.print(5000);
@@ -296,6 +306,9 @@ void loop() {
     }
 
     if (results0Part1Ready) {
+        Serial.print(F("01 ready: "));
+        Serial.println(micros());
+
         #if DEBUG_R0_P1
             Serial.print("hiii:");
             Serial.print(5000);
@@ -317,6 +330,9 @@ void loop() {
     }
 
     if (results1Part0Ready) {
+        Serial.print(F("10 ready: "));
+        Serial.println(micros());
+
         #if DEBUG_R1_P0
             Serial.print("hiii:");
             Serial.print(5000);
@@ -338,6 +354,9 @@ void loop() {
     }
 
     if (results1Part1Ready) {
+        Serial.print(F("11 ready: "));
+        Serial.println(micros());
+        
         #if DEBUG_R1_P1
             Serial.print("hiii:");
             Serial.print(5000);
