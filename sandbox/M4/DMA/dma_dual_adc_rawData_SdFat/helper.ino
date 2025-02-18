@@ -1,7 +1,6 @@
 #include "helper.h"
 #include <SdFat.h>
 
-
 bool create_dat_file(SdFs* sd, FsFile* file) {
     int nextNumber = find_largest_file_number(sd, ".dat") + 1;
 
