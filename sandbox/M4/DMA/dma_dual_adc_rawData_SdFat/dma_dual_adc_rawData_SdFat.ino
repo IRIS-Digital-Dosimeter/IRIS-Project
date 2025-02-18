@@ -257,33 +257,65 @@ void setup() {
     dma_init();
     dma_channels_enable();
 
-
     
-    
+    create_dat_file(&sd, &file);
 }
 
 // empty 18KB file creation takes 30-40 ms
 // filling half a buffer takes 2-3 ms
-// writing 1 half buffer takes XXX ms
+// writing 1 half buffer takes 6-7 ms
+// getting file size takes 0.1-0.4 ms
+// file sync takes <0.1 ms
 
 unsigned long pre, post;
+uint16_t a[NUM_SAMPLES*4];
+int counter = 0;
 void loop() {
 
-    // experimenting with file naming and file creation
-    // while (true) {
-    //     pre = micros();
-    //     create_dat_file(&sd, &file);
-    //     // file.close();
-    //     post = micros();
-    //     Serial.println(post-pre);
-        
-    //     delay(500);
-    // }
-
+    // perform auto rollover check
+    perform_rollover(&file, )
 
     if (results0Part0Ready) {
-        Serial.print(F("00 ready: "));
-        Serial.println(micros());
+
+        pre = micros();
+        // `i` should account for which half of buffer this is
+        //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
+        //        and for r0p1, it should go (2048,2049) to (4092, 4093)
+        for (uint16_t i = 0; i < NUM_SAMPLES; i++) {
+            // fills in a like x x _ _ x x _ _ x x _ _
+            // where x x is a0 a1, and _ _ is left for a2 a3
+            uint16_t j = (i/2)*4 + i%2;
+
+            // copy the data over 
+            a[j] = adcResults0[i];
+        } 
+        post = micros();
+        Serial.print(F("time to copy 00 alternating: "));
+        Serial.println(post-pre);
+
+        size_t bytes_to_write = file.write(a, sizeof(a));
+
+        pre = micros();
+        Serial.print(F("time to write 00: "));
+        Serial.println(pre-post);
+
+        size_t buh = file.fileSize();
+
+        post = micros();
+        Serial.print(F("file size and TTG: "));
+        Serial.print(buh);
+        Serial.print(F(" "));
+
+        Serial.println(post-pre);
+
+
+
+        if (++counter > 1000) {
+            file.truncate();
+            file.sync();
+            Serial.println("1000 cycles done!");
+            while(true);
+        }
         
         #if DEBUG_R0_P0
             Serial.print("hiii:");
