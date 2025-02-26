@@ -223,6 +223,7 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
             t1 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
             a0 = sine_wave(freq=1/modifier * 0.1, amp=4096*16/2) + 4096*16/2
             a1 = sine_wave(freq=1/modifier * 1, amp=4096*16/2) + 4096*16/2
+            
     
         # print data if user wanted it
         if doPrint:
@@ -233,13 +234,16 @@ def async_work(ser, doPrint, doSave, doPlot, start_time, debug=False):
             if file is None:
                 raise Exception("File creation failed!") # panic if file creation failed
             
-            file.write(ser_bytes)
+            struct_to_write = struct.pack('<IIII', t0, t1, a0, a1) # pack the data into bytes
+            file.write(struct_to_write) # pack the data into bytes and write to file
+            
             line_count += 1
+            
             if line_count % 1000 == 0: # commit to disk every x lines
                 file.flush()
             
-            # create a new file every 200,000 lines
-            if line_count >= 200_000: # lines per data file
+            # create a new file every 100,000 lines
+            if line_count >= 100_000: # lines per data file
                 file.close()
                 file = create_new_file()
                 print(f"new file: {file.name}")
