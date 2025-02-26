@@ -21,8 +21,8 @@ const uint8_t SD_CS_PIN = 10;
 SdFs sd;
 FsFile file;
 
-#define DEBUG_R0_P0 0
-#define DEBUG_R0_P1 0
+#define DEBUG_R0_P0 1
+#define DEBUG_R0_P1 1
 #define DEBUG_R1_P0 0
 #define DEBUG_R1_P1 0
 #define DEBUG_SD_BEGIN 1
@@ -273,7 +273,11 @@ int counter = 0;
 void loop() {
 
     // perform auto rollover check
-    perform_rollover(&file, )
+    bool did_rollover = perform_rollover(&file, sizeof(a));
+    if (did_rollover) {
+        Serial.print(F("rolledover. a is size: "));
+        Serial.println(sizeof(a));
+    }
 
     if (results0Part0Ready) {
 
