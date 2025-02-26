@@ -21,8 +21,8 @@ const uint8_t SD_CS_PIN = 10;
 SdFs sd;
 FsFile file;
 
-#define DEBUG_R0_P0 0
-#define DEBUG_R0_P1 0
+#define DEBUG_R0_P0 1
+#define DEBUG_R0_P1 1
 #define DEBUG_R1_P0 0
 #define DEBUG_R1_P1 0
 #define DEBUG_SD_BEGIN 1
