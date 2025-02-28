@@ -27,10 +27,10 @@ FsFile file;
 #define DEBUG_R1_P1 0
 #define DEBUG_SD_BEGIN 1
 
-volatile boolean results0Part0Ready = false;
-volatile boolean results0Part1Ready = false;
-volatile boolean results1Part0Ready = false;
-volatile boolean results1Part1Ready = false;
+volatile bool results0Part0Ready = false;
+volatile bool results0Part1Ready = false;
+volatile bool results1Part0Ready = false;
+volatile bool results1Part1Ready = false;
 uint16_t adcResults0[NUM_SAMPLES*2];                                                       // ADC0 results array
 uint16_t adcResults1[NUM_SAMPLES*2];                                                       // ADC1 results array
 
@@ -45,10 +45,14 @@ typedef struct                                                                  
 } dmadesc;
 
 // ADC0 INPUTCTRL register MUXPOS settings 
-uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
-                          ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
-uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN2,                              // AIN2 = A2
+// uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
+//                           ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
+// uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN2,                              // AIN2 = A2
+//                           ADC_INPUTCTRL_MUXPOS_AIN3 };                            // AIN3 = A3
+uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN2,                              // AIN2 = A2
                           ADC_INPUTCTRL_MUXPOS_AIN3 };                            // AIN3 = A3
+uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
+                          ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
 
 
 
@@ -221,15 +225,13 @@ void setup() {
     Serial.begin(9600);
     while(!Serial);                                                               // Wait for the console to open
 
-    #if DEBUG_SD_BEGIN
-        // Initialize SD card before setting up DMA
-        if (!sd.begin(SD_CONFIG)) {
-            Serial.println("SD initialization failed!");
-            while (1);  // Halt if SD card initialization fails
-        } else {
-            Serial.println("SD initialization succeeded!");
-        }
-    #endif
+    // Initialize SD card before setting up DMA
+    if (!sd.begin(SD_CONFIG)) {
+        Serial.println("SD initialization failed!");
+        while (1);  // Halt if SD card initialization fails
+    } else {
+        Serial.println("SD initialization succeeded!");
+    }
 
     // TODO make this use inputCtrl0 and inputCtrl1
     pinMode(A0, INPUT);
@@ -245,20 +247,21 @@ void setup() {
     PORT->Group[1].PMUX[4].reg = PORT_PMUX_PMUXE(1) | PORT_PMUX_PMUXO(1);  // PB08 is even, PB09 is odd, they share PMUX[4]
 
     // Debug output
-    Serial.print("PB08 PINCFG: 0x");
-    Serial.println(PORT->Group[1].PINCFG[8].reg, HEX);
-    Serial.print("PB09 PINCFG: 0x");
-    Serial.println(PORT->Group[1].PINCFG[9].reg, HEX);
-    Serial.print("PB08/PB09 PMUX: 0x");
-    Serial.println(PORT->Group[1].PMUX[4].reg, HEX);
+    // Serial.print("PB08 PINCFG: 0x");
+    // Serial.println(PORT->Group[1].PINCFG[8].reg, HEX);
+    // Serial.print("PB09 PINCFG: 0x");
+    // Serial.println(PORT->Group[1].PINCFG[9].reg, HEX);
+    // Serial.print("PB08/PB09 PMUX: 0x");
+    // Serial.println(PORT->Group[1].PMUX[4].reg, HEX);
 
 
     adc_init();
     dma_init();
     dma_channels_enable();
-
     
     create_dat_file(&sd, &file);
+
+    analogWriteResolution(12);
 }
 
 // empty 18KB file creation takes 30-40 ms
@@ -267,21 +270,72 @@ void setup() {
 // getting file size takes 0.1-0.4 ms
 // file sync takes <0.1 ms
 
-unsigned long pre, post;
 uint16_t a[NUM_SAMPLES*4];
-int counter = 0;
-void loop() {
+int rollovers = 0;
 
-    // perform auto rollover check
-    bool did_rollover = perform_rollover(&file, sizeof(a));
-    if (did_rollover) {
-        Serial.print(F("rolledover. a is size: "));
-        Serial.println(sizeof(a));
+int dac = 1;
+bool ascend = true;
+
+bool R0_P0_dirty = false;
+bool R0_P1_dirty = false;
+bool R1_P0_dirty = false;
+bool R1_P1_dirty = false;
+
+void loop() {
+    // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
+    if (rollovers > 10) {
+        ascend = false;
+        Serial.println("now read the data and see what is going on");
+        Serial.println(micros());
+        for (int i = 0; i < NUM_SAMPLES; i++) {
+            Serial.print(a[i*4]);
+            Serial.print(" ");
+            Serial.print(a[i*4+1]);
+            Serial.print(" ");
+            Serial.print(a[i*4+2]);
+            Serial.print(" ");
+            Serial.print(a[i*4+3]);
+            Serial.println(" ");
+
+        }
+        while (true);
     }
 
-    if (results0Part0Ready) {
+    ////////
+    // DAC stuff on A0 for debugging
+    if (dac <= 1) {
+        ascend = true;
+    }
+    if (dac >= 4095) {
+        ascend = false;
+    }
+    dac += ascend ? 5 : -5;
+    analogWrite(A0, dac);
+    ////////
 
-        pre = micros();
+    // perform auto rollover check and count how many rollovers there have been
+    rollovers += do_rollover_if_needed(&sd, &file, sizeof(a)) ? 1 : 0;
+
+    // only write a if everything is dirty
+    if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
+        // Serial.println(F("DIRTY"));
+        // Serial.print("\t"); Serial.println(R0_P0_dirty);
+        // Serial.print("\t"); Serial.println(R0_P1_dirty);
+        // Serial.print("\t"); Serial.println(R1_P0_dirty);
+        // Serial.print("\t"); Serial.println(R1_P1_dirty);
+        // write the buffer to SD
+        file.write(a, sizeof(a));
+        R0_P0_dirty = false;
+        R0_P1_dirty = false;
+        R1_P0_dirty = false;
+        R1_P1_dirty = false;
+    }
+
+
+
+    if (results0Part0Ready) {
+        R0_P0_dirty = true;
+
         // `i` should account for which half of buffer this is
         //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
         //        and for r0p1, it should go (2048,2049) to (4092, 4093)
@@ -292,35 +346,10 @@ void loop() {
 
             // copy the data over 
             a[j] = adcResults0[i];
-        } 
-        post = micros();
-        Serial.print(F("time to copy 00 alternating: "));
-        Serial.println(post-pre);
-
-        size_t bytes_to_write = file.write(a, sizeof(a));
-
-        pre = micros();
-        Serial.print(F("time to write 00: "));
-        Serial.println(pre-post);
-
-        size_t buh = file.fileSize();
-
-        post = micros();
-        Serial.print(F("file size and TTG: "));
-        Serial.print(buh);
-        Serial.print(F(" "));
-
-        Serial.println(post-pre);
-
-
-
-        if (++counter > 1000) {
-            file.truncate();
-            file.sync();
-            Serial.println("1000 cycles done!");
-            while(true);
         }
+
         
+
         #if DEBUG_R0_P0
             Serial.print("hiii:");
             Serial.print(5000);
@@ -330,10 +359,10 @@ void loop() {
             Serial.print(0);
             Serial.print(",");
 
-            Serial.print("00_0reading:");
+            Serial.print("R0_P0_reading0:");
             Serial.print(adcResults0[0]);
             Serial.print(", ");
-            Serial.print("00_1reading:");
+            Serial.print("R0_P0_reading1:");
             Serial.print(adcResults0[1]);
             Serial.println();
         #endif
@@ -342,8 +371,18 @@ void loop() {
     }
 
     if (results0Part1Ready) {
-        Serial.print(F("01 ready: "));
-        Serial.println(micros());
+        R0_P1_dirty = true;
+
+        // `i` should account for which half of buffer this is
+        //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
+        for (uint16_t i = NUM_SAMPLES; i < NUM_SAMPLES*2; i++) {
+            // fills in `a` like x x _ _ x x _ _ x x _ _
+            // where x x is a0 a1, and _ _ is left for a2 a3
+            uint16_t j = (i/2)*4 + i%2;
+
+            // copy the data over 
+            a[j] = adcResults0[i];
+        }
 
         #if DEBUG_R0_P1
             Serial.print("hiii:");
@@ -354,10 +393,10 @@ void loop() {
             Serial.print(0);
             Serial.print(",");
 
-            Serial.print("01_0reading:");
+            Serial.print("R0_P1_reading0:");
             Serial.print(adcResults0[1024]);
             Serial.print(", ");
-            Serial.print("01_1reading:");
+            Serial.print("R0_P1_reading1:");
             Serial.print(adcResults0[1025]);
             Serial.println();
         #endif
@@ -366,8 +405,10 @@ void loop() {
     }
 
     if (results1Part0Ready) {
-        Serial.print(F("10 ready: "));
-        Serial.println(micros());
+        R1_P0_dirty = true;
+
+
+        
 
         #if DEBUG_R1_P0
             Serial.print("hiii:");
@@ -378,10 +419,10 @@ void loop() {
             Serial.print(0);
             Serial.print(",");
 
-            Serial.print("10_0reading:");
+            Serial.print("R1_P0_reading0:");
             Serial.print(adcResults1[0]);
             Serial.print(", ");
-            Serial.print("10_1reading:");
+            Serial.print("R1_P0_reading1:");
             Serial.print(adcResults1[1]);
             Serial.println();
         #endif
@@ -390,8 +431,7 @@ void loop() {
     }
 
     if (results1Part1Ready) {
-        Serial.print(F("11 ready: "));
-        Serial.println(micros());
+        R1_P1_dirty = true;
         
         #if DEBUG_R1_P1
             Serial.print("hiii:");
@@ -402,10 +442,10 @@ void loop() {
             Serial.print(0);
             Serial.print(",");
 
-            Serial.print("11_0reading:");
+            Serial.print("R1_P1_reading0:");
             Serial.print(adcResults1[1024]);
             Serial.print(", ");
-            Serial.print("11_1reading:");
+            Serial.print("R1_P1_reading1:");
             Serial.print(adcResults1[1025]);
             Serial.println();
         #endif
