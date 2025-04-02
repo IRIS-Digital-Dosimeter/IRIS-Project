@@ -21,8 +21,8 @@ const uint8_t SD_CS_PIN = 10;
 SdFs sd;
 FsFile file;
 
-#define DEBUG_R0_P0 1
-#define DEBUG_R0_P1 1
+#define DEBUG_R0_P0 0
+#define DEBUG_R0_P1 0
 #define DEBUG_R1_P0 0
 #define DEBUG_R1_P1 0
 #define DEBUG_SD_BEGIN 1
@@ -44,15 +44,19 @@ typedef struct                                                                  
     uint32_t descaddr;
 } dmadesc;
 
+/*
+A0  ADC_INPUTCTRL_MUXPOS_AIN2
+A1  ADC_INPUTCTRL_MUXPOS_AIN5
+A2  ADC_INPUTCTRL_MUXPOS_AIN8  ADC_INPUTCTRL_MUXPOS_AIN0
+A3  ADC_INPUTCTRL_MUXPOS_AIN9  ADC_INPUTCTRL_MUXPOS_AIN1
+A4  ADC_INPUTCTRL_MUXPOS_AIN4
+*/
+
 // ADC0 INPUTCTRL register MUXPOS settings 
-// uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
-//                           ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
-// uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN2,                              // AIN2 = A2
-//                           ADC_INPUTCTRL_MUXPOS_AIN3 };                            // AIN3 = A3
-uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN2,                              // AIN2 = A2
-                          ADC_INPUTCTRL_MUXPOS_AIN3 };                            // AIN3 = A3
-uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
+uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
                           ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
+uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN2 = A3
+                          ADC_INPUTCTRL_MUXPOS_AIN1 };                            // AIN3 = A4
 
 
 
@@ -239,12 +243,12 @@ void setup() {
     pinMode(A2, INPUT);
     pinMode(A3, INPUT);
 
-    // Configure PB08 (A2) and PB09 (A3) for analog input
-    PORT->Group[1].PINCFG[8].bit.PMUXEN = 1;  // Enable peripheral multiplexer for PB08
-    PORT->Group[1].PINCFG[9].bit.PMUXEN = 1;  // Enable peripheral multiplexer for PB09
+    // // Configure PB08 (A2) and PB09 (A3) for analog input
+    // PORT->Group[1].PINCFG[8].bit.PMUXEN = 1;  // Enable peripheral multiplexer for PB08
+    // PORT->Group[1].PINCFG[9].bit.PMUXEN = 1;  // Enable peripheral multiplexer for PB09
 
-    // Set peripheral function B (0x1) for analog
-    PORT->Group[1].PMUX[4].reg = PORT_PMUX_PMUXE(1) | PORT_PMUX_PMUXO(1);  // PB08 is even, PB09 is odd, they share PMUX[4]
+    // // Set peripheral function B (0x1) for analog
+    // PORT->Group[1].PMUX[4].reg = PORT_PMUX_PMUXE(1) | PORT_PMUX_PMUXO(1);  // PB08 is even, PB09 is odd, they share PMUX[4]
 
     // Debug output
     // Serial.print("PB08 PINCFG: 0x");
@@ -270,7 +274,7 @@ void setup() {
 // getting file size takes 0.1-0.4 ms
 // file sync takes <0.1 ms
 
-uint16_t a[NUM_SAMPLES*4];
+uint16_t a[NUM_SAMPLES*4]; // should be a0 a1 a2 a3, a0 a1 a2 a3, a0 a1 a2 a3
 int rollovers = 0;
 
 int dac = 1;
@@ -301,17 +305,17 @@ void loop() {
         while (true);
     }
 
-    ////////
-    // DAC stuff on A0 for debugging
-    if (dac <= 1) {
-        ascend = true;
-    }
-    if (dac >= 4095) {
-        ascend = false;
-    }
-    dac += ascend ? 5 : -5;
-    analogWrite(A0, dac);
-    ////////
+    // ////////
+    // // DAC stuff on A0 for debugging
+    // if (dac <= 1) {
+    //     ascend = true;
+    // }
+    // if (dac >= 4095) {
+    //     ascend = false;
+    // }
+    // dac += ascend ? 5 : -5;
+    // analogWrite(A0, dac);
+    // ////////
 
     // perform auto rollover check and count how many rollovers there have been
     rollovers += do_rollover_if_needed(&sd, &file, sizeof(a)) ? 1 : 0;
@@ -407,6 +411,14 @@ void loop() {
     if (results1Part0Ready) {
         R1_P0_dirty = true;
 
+        for (uint16_t i = 0; i < NUM_SAMPLES; i++) {
+            // fills in a like _ _ x x _ _ x x _ _ x x
+            // where _ _ is left for a0 a1, and x x is a2 a3
+            uint16_t j = (i/2)*4 + 2 + i%2; 
+
+            // copy the data over
+            a[j] = adcResults1[i];
+        }
 
         
 
@@ -432,6 +444,17 @@ void loop() {
 
     if (results1Part1Ready) {
         R1_P1_dirty = true;
+
+        // `i` should account for which half of buffer this is
+        //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
+        for (uint16_t i = NUM_SAMPLES; i < NUM_SAMPLES*2; i++) {
+            // fills in `a` like _ _ x x _ _ x x _ _ x x
+            // where _ _ is left for a0 a1, and x x is a2 a3
+            uint16_t j = (i/2)*4 + i%2 + 2;
+
+            // copy the data over 
+            a[j] = adcResults1[i];
+        }
         
         #if DEBUG_R1_P1
             Serial.print("hiii:");
