@@ -1,5 +1,5 @@
 /*
-This is a demo for reading samples from both ADCs on TWO PINS EACH.
+This is a demo for reading averaged samples from both ADCs on TWO PINS EACH.
 The DMAC then takes these and dumps them into two buffers.
 Trying to save something to disk but we'll see if that's possible
 
@@ -31,11 +31,11 @@ volatile bool results0Part0Ready = false;
 volatile bool results0Part1Ready = false;
 volatile bool results1Part0Ready = false;
 volatile bool results1Part1Ready = false;
-uint16_t adcResults0[NUM_SAMPLES*2];                                                       // ADC0 results array
-uint16_t adcResults1[NUM_SAMPLES*2];                                                       // ADC1 results array
+uint16_t adcResults0[NUM_SAMPLES*2]; // ADC0 results array
+uint16_t adcResults1[NUM_SAMPLES*2]; // ADC1 results array
 
 
-typedef struct                                                                    // DMAC descriptor structure
+typedef struct // DMAC descriptor struct
 {
     uint16_t btctrl;
     uint16_t btcnt;
@@ -52,9 +52,10 @@ A3  ADC_INPUTCTRL_MUXPOS_AIN9  ADC_INPUTCTRL_MUXPOS_AIN1
 A4  ADC_INPUTCTRL_MUXPOS_AIN4
 */
 
-// ADC INPUTCTRL register MUXPOS settings 
+// ADC0 INPUTCTRL register MUXPOS settings 
 uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
                           ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
+// ADC1 INPUTCTRL register MUXPOS settings 
 uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN2 = A3
                           ADC_INPUTCTRL_MUXPOS_AIN1 };                            // AIN3 = A4
 
@@ -62,20 +63,27 @@ uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                            
 
 volatile dmadesc (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          // Write-back DMAC descriptors (changed to array pointer)
 dmadesc (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
-dmadesc descriptor __attribute__ ((aligned (16)));                            // Place holder descriptor
+dmadesc descriptor __attribute__ ((aligned (16)));                            // Placeholder descriptor
 
 void adc_init() {
     //////////////////////////////////////////////////////////
     // ADC0 Settings
-    ADC0->INPUTCTRL.bit.MUXPOS = inputCtrl0[0];                                     // Set the analog input to A0
+    ADC0->INPUTCTRL.bit.MUXPOS = inputCtrl0[0];                                     // Set the initial analog input to A0
     while(ADC0->SYNCBUSY.bit.INPUTCTRL);                                            // Wait for synchronization
     ADC0->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz
     while(ADC0->SYNCBUSY.bit.SAMPCTRL);                                             // Wait for synchronization  
     ADC0->DSEQCTRL.reg = ADC_DSEQCTRL_AUTOSTART |                                   // Auto start a DMAC conversion upon ADC0 DMAC sequence completion
                          ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC0 INPUTCTRL register on DMAC sequence
-    ADC0->CTRLB.reg = ADC_CTRLB_RESSEL_12BIT;                                       // Set ADC resolution to 12 bits 
+    ADC0->CTRLB.reg = ADC_CTRLB_RESSEL_16BIT;                                       // Set ADC resolution to 16 bits (averaging mode)
     while(ADC0->SYNCBUSY.bit.CTRLB);                                                // Wait for synchronization
     ADC0->CTRLA.reg = ADC_CTRLA_PRESCALER_DIV4;                                     // Divide Clock ADC GCLK by 4 (48MHz/64 = 750kHz) (12 + 1)/750kHz = 17.3us sample time 
+    ADC0->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_16 |                                  // Required for averaging mode
+                        ADC_AVGCTRL_ADJRES(4);
+    // ADC0.AVGCTRL.bit.SAMPLENUM = 0x4;
+    // ADC0.AVGCTRL.bit.ADJRES = 0x4;
+    while (ADC0->SYNCBUSY.bit.AVGCTRL);                                             // Wait for synchronization
+
+    
     ADC0->CTRLA.bit.ENABLE = 1;                                                     // Enable the ADC
     while(ADC0->SYNCBUSY.bit.ENABLE);                                               // Wait for synchronization
     ADC0->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
@@ -85,15 +93,19 @@ void adc_init() {
 
     //////////////////////////////////////////////////////////
     // ADC1 Settings
-    ADC1->INPUTCTRL.bit.MUXPOS = inputCtrl1[0];                                     // Set the analog input to A2
+    ADC1->INPUTCTRL.bit.MUXPOS = inputCtrl1[0];                                     // Set the initial analog input to A2
     while(ADC1->SYNCBUSY.bit.INPUTCTRL);                                            // Wait for synchronization
-    ADC1->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz 
+    ADC1->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPCTRL ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz 
     while(ADC1->SYNCBUSY.bit.SAMPCTRL);                                             // Wait for synchronization
     ADC1->DSEQCTRL.reg = ADC_DSEQCTRL_AUTOSTART |                                   // Auto start a DMAC conversion upon ADC0 DMAC sequence completion
-                         ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC0 INPUTCTRL register on DMAC sequence
-    ADC1->CTRLB.reg = ADC_CTRLB_RESSEL_12BIT;                                       // Set ADC resolution to 12 bits 
+                         ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC1 INPUTCTRL register on DMAC sequence
+    ADC1->CTRLB.reg = ADC_CTRLB_RESSEL_16BIT;                                       // Set ADC resolution to 16 bits (averaging mode) 
     while(ADC1->SYNCBUSY.bit.CTRLB);                                                // Wait for synchronization
     ADC1->CTRLA.reg = ADC_CTRLA_PRESCALER_DIV4;                                     // Divide Clock ADC GCLK by 4 (48MHz/64 = 750kHz) (12 + 1)/750kHz = 17.3us sample time 
+    ADC1->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_16 |                                  // Required for averaging mode
+                        ADC_AVGCTRL_ADJRES(4);
+    while (ADC1->SYNCBUSY.bit.AVGCTRL);                                             // Wait for synchronization
+
     ADC1->CTRLA.bit.ENABLE = 1;                                                     // Enable the ADC
     while(ADC1->SYNCBUSY.bit.ENABLE);                                               // Wait for synchronization
     ADC1->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
@@ -123,8 +135,8 @@ void dma_init(){
                                    DMAC_CHCTRLA_TRIGACT_BURST;                      // DMAC burst transfer
     DMAC->Channel[4].CHINTENSET.reg = DMAC_CHINTENSET_SUSP;                         // Activate the suspend (SUSP) interrupt on DMAC channel 4
 
-    descriptor.descaddr = (uint32_t)&(*descriptor_section)[4];                      // Set up a circular descriptor
-    descriptor.srcaddr = (uint32_t)inputCtrl0 + sizeof(uint32_t) * 2;               // Configure the DMAC to set the (???)
+    descriptor.descaddr = (uint32_t)&(*descriptor_section)[4];                      // Descriptor linked to itself repeatedly
+    descriptor.srcaddr = (uint32_t)inputCtrl0 + sizeof(uint32_t) * 2;               // Address of inputs to swap between
     descriptor.dstaddr = (uint32_t)&ADC0->DSEQDATA.reg;                             // Write the INPUT CTRL 
     descriptor.btcnt = 2;                                                           // Beat count is 2 (???) (code originally had it at 4) TODO TODO TODO TODO TODO
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_WORD |                                 // Beat size is WORD (32-bits)
@@ -144,8 +156,8 @@ void dma_init(){
                                    DMAC_CHCTRLA_TRIGACT_BURST;                      // DMAC burst transfer
     DMAC->Channel[5].CHINTENSET.reg = DMAC_CHINTENSET_SUSP;                         // Activate the suspend (SUSP) interrupt on DMAC channel 5
 
-    descriptor.descaddr = (uint32_t)&(*descriptor_section)[5];                      // Set up a circular descriptor
-    descriptor.srcaddr = (uint32_t)inputCtrl1 + sizeof(uint32_t) * 2;               // Configure the DMAC to set the (???)
+    descriptor.descaddr = (uint32_t)&(*descriptor_section)[5];                      // Descriptor linked to itself repeatedly
+    descriptor.srcaddr = (uint32_t)inputCtrl1 + sizeof(uint32_t) * 2;               // Address of inputs to swap between
     descriptor.dstaddr = (uint32_t)&ADC1->DSEQDATA.reg;                             // Write the INPUT CTRL 
     descriptor.btcnt = 2;                                                           // Beat count is 2 (???) (code originally had it at 4) TODO TODO TODO TODO TODO
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_WORD |                                 // Beat size is WORD (32-bits)
@@ -165,7 +177,7 @@ void dma_init(){
 
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[6];                      // Set up a linked descriptor
     descriptor.srcaddr = (uint32_t)&ADC0->RESULT.reg;                               // Take the result from the ADC0 RESULT register
-    descriptor.dstaddr = (uint32_t)adcResults0 + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the middle of adcResults0 array
+    descriptor.dstaddr = (uint32_t)adcResults0 + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the first half of adcResults0 array
     descriptor.btcnt = NUM_SAMPLES;                                                 // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
@@ -175,7 +187,7 @@ void dma_init(){
 
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[2];                      // Set up a linked descriptor
     descriptor.srcaddr = (uint32_t)&ADC0->RESULT.reg;                               // Take the result from the ADC0 RESULT register
-    descriptor.dstaddr = (uint32_t)&adcResults0[NUM_SAMPLES] + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the adcResults0 array
+    descriptor.dstaddr = (uint32_t)&adcResults0[NUM_SAMPLES] + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the second half of adcResults0 array
     descriptor.btcnt = NUM_SAMPLES;                                                 // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
@@ -197,7 +209,7 @@ void dma_init(){
 
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[7];                      // Set up a linked descriptor
     descriptor.srcaddr = (uint32_t)&ADC1->RESULT.reg;                               // Take the result from the ADC1 RESULT register
-    descriptor.dstaddr = (uint32_t)adcResults1 + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the middle of adcResults1 array
+    descriptor.dstaddr = (uint32_t)adcResults1 + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the first half of adcResults1 array
     descriptor.btcnt = NUM_SAMPLES;                                                 // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
@@ -207,7 +219,7 @@ void dma_init(){
 
     descriptor.descaddr = (uint32_t)&(*descriptor_section)[3];                      // Set up a linked descriptor
     descriptor.srcaddr = (uint32_t)&ADC1->RESULT.reg;                               // Take the result from the ADC1 RESULT register
-    descriptor.dstaddr = (uint32_t)&adcResults1[NUM_SAMPLES] + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the adcResults1 array
+    descriptor.dstaddr = (uint32_t)&adcResults1[NUM_SAMPLES] + sizeof(uint16_t) * NUM_SAMPLES;    // Place it in the second half of adcResults1 array
     descriptor.btcnt = NUM_SAMPLES;                                                 // Beat count
     descriptor.btctrl = DMAC_BTCTRL_BEATSIZE_HWORD |                                // Beat size is HWORD (16-bits)
                         DMAC_BTCTRL_DSTINC |                                        // Increment the destination address
@@ -238,35 +250,17 @@ void setup() {
     }
 
     // TODO make this use inputCtrl0 and inputCtrl1
+    // Is this even necessary?
     pinMode(A0, INPUT);
     pinMode(A1, INPUT);
     pinMode(A2, INPUT);
     pinMode(A3, INPUT);
-
-    // // Configure PB08 (A2) and PB09 (A3) for analog input
-    // PORT->Group[1].PINCFG[8].bit.PMUXEN = 1;  // Enable peripheral multiplexer for PB08
-    // PORT->Group[1].PINCFG[9].bit.PMUXEN = 1;  // Enable peripheral multiplexer for PB09
-
-    // // Set peripheral function B (0x1) for analog
-    // PORT->Group[1].PMUX[4].reg = PORT_PMUX_PMUXE(1) | PORT_PMUX_PMUXO(1);  // PB08 is even, PB09 is odd, they share PMUX[4]
-
-    // Debug output
-    // Serial.print("PB08 PINCFG: 0x");
-    // Serial.println(PORT->Group[1].PINCFG[8].reg, HEX);
-    // Serial.print("PB09 PINCFG: 0x");
-    // Serial.println(PORT->Group[1].PINCFG[9].reg, HEX);
-    // Serial.print("PB08/PB09 PMUX: 0x");
-    // Serial.println(PORT->Group[1].PMUX[4].reg, HEX);
-
 
     adc_init();
     dma_init();
     dma_channels_enable();
     
     create_dat_file(&sd, &file);
-
-    analogWriteResolution(12);
-
     last = micros();
 }
 
@@ -288,6 +282,7 @@ bool R1_P0_dirty = false;
 bool R1_P1_dirty = false;
 
 void loop() {
+    // DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
     if (rollovers > 10) {
         ascend = false;
@@ -307,28 +302,13 @@ void loop() {
         while (true);
     }
 
-    // ////////
-    // // DAC stuff on A0 for debugging
-    // if (dac <= 1) {
-    //     ascend = true;
-    // }
-    // if (dac >= 4095) {
-    //     ascend = false;
-    // }
-    // dac += ascend ? 5 : -5;
-    // analogWrite(A0, dac);
-    // ////////
-
     // perform auto rollover check and count how many rollovers there have been
     rollovers += do_rollover_if_needed(&sd, &file, sizeof(a)) ? 1 : 0;
 
     // only write a if everything is dirty
     if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
         // Serial.println(F("DIRTY"));
-        // Serial.print("\t"); Serial.println(R0_P0_dirty);
-        // Serial.print("\t"); Serial.println(R0_P1_dirty);
-        // Serial.print("\t"); Serial.println(R1_P0_dirty);
-        // Serial.print("\t"); Serial.println(R1_P1_dirty);
+
         // write the buffer to SD
         file.write(a, sizeof(a));
         R0_P0_dirty = false;
@@ -394,6 +374,7 @@ void loop() {
             a[j] = adcResults0[i];
         }
 
+
         #if DEBUG_R0_P1
             Serial.print("hiii:");
             Serial.print(5000);
@@ -412,6 +393,9 @@ void loop() {
         #endif
 
         results0Part1Ready = false;                                                   // Clear the results1 ready flag
+        
+        // Serial.println("AAAAA");
+        // while (true);
     }
 
     if (results1Part0Ready) {

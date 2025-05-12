@@ -1,0 +1,319 @@
+/*
+This is a demo for reading averaged samples from both ADCs on TWO PINS EACH.
+The DMAC then takes these and dumps them into two buffers.
+Trying to save something to disk but we'll see if that's possible
+
+Made by Andrew Yegiayan
+*/
+
+#include "FreeStack.h"
+#include "SdFat.h"
+#include "sdios.h"
+
+#include "helper.h"
+#include "config.h"
+
+SdFs sd;
+FsFile file;
+
+volatile bool results0Part0Ready = false;
+volatile bool results0Part1Ready = false;
+volatile bool results1Part0Ready = false;
+volatile bool results1Part1Ready = false;
+
+uint16_t adcResults0[NUM_RESULTS*2]; // ADC0 results array
+uint16_t adcResults1[NUM_RESULTS*2]; // ADC1 results array
+
+
+/*
+A0  ADC_INPUTCTRL_MUXPOS_AIN2
+A1  ADC_INPUTCTRL_MUXPOS_AIN5
+A2  ADC_INPUTCTRL_MUXPOS_AIN8  ADC_INPUTCTRL_MUXPOS_AIN0
+A3  ADC_INPUTCTRL_MUXPOS_AIN9  ADC_INPUTCTRL_MUXPOS_AIN1
+A4  ADC_INPUTCTRL_MUXPOS_AIN4
+*/
+
+// ADC0 INPUTCTRL register MUXPOS settings 
+uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
+                          ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
+// ADC1 INPUTCTRL register MUXPOS settings 
+uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN2 = A3
+                          ADC_INPUTCTRL_MUXPOS_AIN1 };                            // AIN3 = A4
+
+volatile dmadesc (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          // Write-back DMAC descriptors (changed to array pointer)
+dmadesc (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
+dmadesc descriptor __attribute__ ((aligned (16)));                            // Placeholder descriptor
+
+volatile int last;
+void setup() {
+    Serial.begin(9600);
+    while(!Serial);                                                               // Wait for the console to open
+
+    // Initialize SD card before setting up DMA
+    if (!sd.begin(SD_CONFIG)) {
+        Serial.println("SD initialization failed!");
+        while (true);  // Halt if SD card initialization fails
+    } else {
+        Serial.println("SD initialization succeeded!");
+    }
+
+    // TODO make this use inputCtrl0 and inputCtrl1
+    // Is this even necessary?
+    pinMode(A0, INPUT);
+    pinMode(A1, INPUT);
+    pinMode(A2, INPUT);
+    pinMode(A3, INPUT);
+
+    adc_init();
+    dma_init();
+    dma_channels_enable();
+    
+    create_dat_file(&sd, &file);
+    last = micros();
+}
+
+// empty 18KB file creation takes 30-40 ms
+// filling half a buffer takes 2-3 ms
+// writing 1 half buffer takes 6-7 ms
+// getting file size takes 0.1-0.4 ms
+// file sync takes <0.1 ms
+
+uint16_t a[NUM_RESULTS*4]; // should be t a0 a1 a2 a3, t a0 a1 a2 a3, t a0 a1 a2 a3
+
+bool R0_P0_dirty = false;
+bool R0_P1_dirty = false;
+bool R1_P0_dirty = false;
+bool R1_P1_dirty = false;
+
+int rollovers = 0;
+void loop() {
+    // DEBUGGING
+    // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
+    if (rollovers > 1) {
+        Serial.println("now read the data and see what is going on");
+        Serial.println(micros());
+        for (int i = 0; i < NUM_RESULTS; i++) {
+            Serial.print(i);
+            Serial.print(": ");
+            Serial.print(a[i*4]);
+            Serial.print(" ");
+            Serial.print(a[i*4+1]);
+            Serial.print(" ");
+            Serial.print(a[i*4+2]);
+            Serial.print(" ");
+            Serial.print(a[i*4+3]);
+            Serial.println(" ");
+        }
+        while (true);
+    }
+
+    // perform auto rollover check and count how many rollovers there have been
+    rollovers += do_rollover_if_needed(&sd, &file, sizeof(a)) ? 1 : 0;
+
+    // only write a if everything is dirty
+    if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
+        // Serial.println(F("DIRTY"));
+
+        // write the buffer to SD
+        file.write(a, sizeof(a));
+        R0_P0_dirty = false;
+        R0_P1_dirty = false;
+        R1_P0_dirty = false;
+        R1_P1_dirty = false;
+
+        volatile int now = micros();
+        Serial.println(now - last);
+        last = now;
+    }
+
+
+
+    if (results0Part0Ready) {
+        R0_P0_dirty = true;
+
+        // `i` should account for which half of buffer this is
+        //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
+        //        and for r0p1, it should go (2048,2049) to (4092, 4093)
+        for (uint16_t i = 0; i < NUM_RESULTS; i++) {
+            // fills in a like x x _ _ x x _ _ x x _ _
+            // where x x is a0 a1, and _ _ is left for a2 a3
+            uint16_t j = (i/2)*4 + i%2;
+
+            // copy the data over 
+            a[j] = adcResults0[i];
+        }
+
+        
+
+        #if DEBUG_R0_P0
+            Serial.print("hiii:");
+            Serial.print(5000);
+            Serial.print(",");
+
+            Serial.print("lo:");
+            Serial.print(0);
+            Serial.print(",");
+
+            Serial.print("R0_P0_reading0:");
+            Serial.print(adcResults0[0]);
+            Serial.print(", ");
+            Serial.print("R0_P0_reading1:");
+            Serial.print(adcResults0[1]);
+            Serial.println();
+        #endif
+
+        results0Part0Ready = false;                                                   // Clear the results0 ready flag
+    }
+
+    if (results0Part1Ready) {
+        R0_P1_dirty = true;
+
+        // `i` should account for which half of buffer this is
+        //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
+        for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
+            // fills in `a` like x x _ _ x x _ _ x x _ _
+            // where x x is a0 a1, and _ _ is left for a2 a3
+            uint16_t j = (i/2)*4 + i%2;
+
+            // copy the data over 
+            a[j] = adcResults0[i];
+        }
+
+
+        #if DEBUG_R0_P1
+            Serial.print("hiii:");
+            Serial.print(5000);
+            Serial.print(",");
+
+            Serial.print("lo:");
+            Serial.print(0);
+            Serial.print(",");
+
+            Serial.print("R0_P1_reading0:");
+            Serial.print(adcResults0[1024]);
+            Serial.print(", ");
+            Serial.print("R0_P1_reading1:");
+            Serial.print(adcResults0[1025]);
+            Serial.println();
+        #endif
+
+        results0Part1Ready = false;                                                   // Clear the results1 ready flag
+        
+        // Serial.println("AAAAA");
+        // while (true);
+    }
+
+    if (results1Part0Ready) {
+        R1_P0_dirty = true;
+
+        for (uint16_t i = 0; i < NUM_RESULTS; i++) {
+            // fills in a like _ _ x x _ _ x x _ _ x x
+            // where _ _ is left for a0 a1, and x x is a2 a3
+            uint16_t j = (i/2)*4 + 2 + i%2; 
+
+            // copy the data over
+            a[j] = adcResults1[i];
+        }
+
+        
+
+        #if DEBUG_R1_P0
+            Serial.print("hiii:");
+            Serial.print(5000);
+            Serial.print(",");
+
+            Serial.print("lo:");
+            Serial.print(0);
+            Serial.print(",");
+
+            Serial.print("R1_P0_reading0:");
+            Serial.print(adcResults1[0]);
+            Serial.print(", ");
+            Serial.print("R1_P0_reading1:");
+            Serial.print(adcResults1[1]);
+            Serial.println();
+        #endif
+
+        results1Part0Ready = false;                                                   // Clear the results0 ready flag
+    }
+
+    if (results1Part1Ready) {
+        R1_P1_dirty = true;
+
+        // `i` should account for which half of buffer this is
+        //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
+        for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
+            // fills in `a` like _ _ x x _ _ x x _ _ x x
+            // where _ _ is left for a0 a1, and x x is a2 a3
+            uint16_t j = (i/2)*4 + i%2 + 2;
+
+            // copy the data over 
+            a[j] = adcResults1[i];
+        }
+        
+        #if DEBUG_R1_P1
+            Serial.print("hiii:");
+            Serial.print(5000);
+            Serial.print(",");
+
+            Serial.print("lo:");
+            Serial.print(0);
+            Serial.print(",");
+
+            Serial.print("R1_P1_reading0:");
+            Serial.print(adcResults1[1024]);
+            Serial.print(", ");
+            Serial.print("R1_P1_reading1:");
+            Serial.print(adcResults1[1025]);
+            Serial.println();
+        #endif
+
+        results1Part1Ready = false;                                                   // Clear the results1 ready flag
+    }   
+}
+
+
+void DMAC_2_Handler()                                                             // Interrupt handler for DMAC channel 2
+{
+    static uint8_t count0 = 0;                                                      // Initialise the count 
+    // Serial.print("2 count: ");
+    // Serial.println(count0);
+    if (DMAC->Channel[2].CHINTFLAG.bit.SUSP)                                        // Check if DMAC channel 2 has been suspended (SUSP) 
+    {  
+        DMAC->Channel[2].CHCTRLB.reg = DMAC_CHCTRLB_CMD_RESUME;                       // Restart the DMAC on channel 2
+        DMAC->Channel[2].CHINTFLAG.bit.SUSP = 1;                                      // Clear the suspend (SUSP)interrupt flag
+        if (count0)                                                                   // Test if the count0 is 1
+        {
+            results0Part1Ready = true;                                                  // Set the results 0 part 1 ready flag
+        }
+        else
+        {
+            results0Part0Ready = true;                                                  // Set the results 0 part 0 ready flag
+        }
+        count0 = (count0 + 1) % 2;                                                    // Toggle the count0 between 0 and 1 
+    }
+}
+
+void DMAC_3_Handler()                                                             // Interrupt handler for DMAC channel 3
+{
+    static uint8_t count0 = 0;                                                      // Initialise the count 
+    // Serial.print("3 count: ");
+    // Serial.println(count0);
+    if (DMAC->Channel[3].CHINTFLAG.bit.SUSP)                                        // Check if DMAC channel 3 has been suspended (SUSP) 
+    {  
+        DMAC->Channel[3].CHCTRLB.reg = DMAC_CHCTRLB_CMD_RESUME;                       // Restart the DMAC on channel 3
+        DMAC->Channel[3].CHINTFLAG.bit.SUSP = 1;                                      // Clear the suspend (SUSP)interrupt flag
+        if (count0)                                                                   // Test if the count0 is 1
+        {
+            results1Part1Ready = true;                                                  // Set the results 0 part 1 ready flag
+        }
+        else
+        {
+            results1Part0Ready = true;                                                  // Set the results 0 part 0 ready flag
+        }
+        count0 = (count0 + 1) % 2;                                                    // Toggle the count0 between 0 and 1 
+    }
+}
+
+
+
