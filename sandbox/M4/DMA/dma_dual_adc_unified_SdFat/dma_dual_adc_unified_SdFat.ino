@@ -1,7 +1,7 @@
 /*
-This is a demo for reading averaged samples from both ADCs on TWO PINS EACH.
+This is a demo for reading averaged or raw samples from both ADCs on TWO PINS EACH.
 The DMAC then takes these and dumps them into two buffers.
-Trying to save something to disk but we'll see if that's possible
+Trying to save something to disk but currently reading wrong at ADC level, getting more malformed right before saving to SD :(
 
 Made by Andrew Yegiayan
 */
@@ -23,22 +23,6 @@ volatile bool results1Part1Ready = false;
 
 uint16_t adcResults0[NUM_RESULTS*2]; // ADC0 results array
 uint16_t adcResults1[NUM_RESULTS*2]; // ADC1 results array
-
-
-/*
-A0  ADC_INPUTCTRL_MUXPOS_AIN2
-A1  ADC_INPUTCTRL_MUXPOS_AIN5
-A2  ADC_INPUTCTRL_MUXPOS_AIN8  ADC_INPUTCTRL_MUXPOS_AIN0
-A3  ADC_INPUTCTRL_MUXPOS_AIN9  ADC_INPUTCTRL_MUXPOS_AIN1
-A4  ADC_INPUTCTRL_MUXPOS_AIN4
-*/
-
-// ADC0 INPUTCTRL register MUXPOS settings 
-uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A0
-                          ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
-// ADC1 INPUTCTRL register MUXPOS settings 
-uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN2 = A3
-                          ADC_INPUTCTRL_MUXPOS_AIN1 };                            // AIN3 = A4
 
 volatile dmadesc (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          // Write-back DMAC descriptors (changed to array pointer)
 dmadesc (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
@@ -72,22 +56,25 @@ void setup() {
     last = micros();
 }
 
+// SEVAK INSTEAD OF SEQUENCINGH TRY TO DO FREERUN AND SEE IF AVG STILL WORKS.
+// SEVAK INSTEAD OF SEQUENCING TRY TO DO SINGLE SHOT AND SEE IF AVG STILL WORKS
+
 // empty 18KB file creation takes 30-40 ms
 // filling half a buffer takes 2-3 ms
 // writing 1 half buffer takes 6-7 ms
 // getting file size takes 0.1-0.4 ms
 // file sync takes <0.1 ms
 
-uint16_t a[NUM_RESULTS*4]; // should be t a0 a1 a2 a3, t a0 a1 a2 a3, t a0 a1 a2 a3
+uint16_t a[NUM_RESULTS*4]; // should eventually be t a0 a1 a2 a3, t a0 a1 a2 a3, t a0 a1 a2 a3 or NUM_RESULTS*5
 
-bool R0_P0_dirty = false;
-bool R0_P1_dirty = false;
-bool R1_P0_dirty = false;
-bool R1_P1_dirty = false;
+volatile bool R0_P0_dirty = false;
+volatile bool R0_P1_dirty = false;
+volatile bool R1_P0_dirty = false;
+volatile bool R1_P1_dirty = false;
 
 int rollovers = 0;
 void loop() {
-    // DEBUGGING
+    //// DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
     if (rollovers > 1) {
         Serial.println("now read the data and see what is going on");
@@ -106,13 +93,14 @@ void loop() {
         }
         while (true);
     }
+    ////
 
     // perform auto rollover check and count how many rollovers there have been
     rollovers += do_rollover_if_needed(&sd, &file, sizeof(a)) ? 1 : 0;
 
     // only write a if everything is dirty
     if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
-        // Serial.println(F("DIRTY"));
+        Serial.println();
 
         // write the buffer to SD
         file.write(a, sizeof(a));
@@ -122,7 +110,7 @@ void loop() {
         R1_P1_dirty = false;
 
         volatile int now = micros();
-        Serial.println(now - last);
+        // Serial.println(now - last);
         last = now;
     }
 
@@ -130,6 +118,8 @@ void loop() {
 
     if (results0Part0Ready) {
         R0_P0_dirty = true;
+        Serial.print("R0_P0: ");
+        Serial.println(micros());
 
         // `i` should account for which half of buffer this is
         //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
@@ -144,22 +134,12 @@ void loop() {
         }
 
         
-
         #if DEBUG_R0_P0
-            Serial.print("hiii:");
-            Serial.print(5000);
-            Serial.print(",");
-
-            Serial.print("lo:");
-            Serial.print(0);
-            Serial.print(",");
-
-            Serial.print("R0_P0_reading0:");
-            Serial.print(adcResults0[0]);
-            Serial.print(", ");
-            Serial.print("R0_P0_reading1:");
-            Serial.print(adcResults0[1]);
-            Serial.println();
+            debug_print("R0_P0_even_reading", 
+                        adcResults0[0],
+                        "R0_P0__odd_reading",
+                        adcResults0[1]
+            );
         #endif
 
         results0Part0Ready = false;                                                   // Clear the results0 ready flag
@@ -167,6 +147,9 @@ void loop() {
 
     if (results0Part1Ready) {
         R0_P1_dirty = true;
+
+        Serial.print("\tR0_P1: ");
+        Serial.println(micros());
 
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
@@ -181,20 +164,11 @@ void loop() {
 
 
         #if DEBUG_R0_P1
-            Serial.print("hiii:");
-            Serial.print(5000);
-            Serial.print(",");
-
-            Serial.print("lo:");
-            Serial.print(0);
-            Serial.print(",");
-
-            Serial.print("R0_P1_reading0:");
-            Serial.print(adcResults0[1024]);
-            Serial.print(", ");
-            Serial.print("R0_P1_reading1:");
-            Serial.print(adcResults0[1025]);
-            Serial.println();
+            debug_print("R0_P1_even_reading", 
+                        adcResults0[1024],
+                        "R0_P1__odd_reading",
+                        adcResults0[1025]
+            );
         #endif
 
         results0Part1Ready = false;                                                   // Clear the results1 ready flag
@@ -205,6 +179,9 @@ void loop() {
 
     if (results1Part0Ready) {
         R1_P0_dirty = true;
+
+        Serial.print("\t\tR1_P0: ");
+        Serial.println(micros());
 
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
             // fills in a like _ _ x x _ _ x x _ _ x x
@@ -218,20 +195,11 @@ void loop() {
         
 
         #if DEBUG_R1_P0
-            Serial.print("hiii:");
-            Serial.print(5000);
-            Serial.print(",");
-
-            Serial.print("lo:");
-            Serial.print(0);
-            Serial.print(",");
-
-            Serial.print("R1_P0_reading0:");
-            Serial.print(adcResults1[0]);
-            Serial.print(", ");
-            Serial.print("R1_P0_reading1:");
-            Serial.print(adcResults1[1]);
-            Serial.println();
+            debug_print("R1_P0_even_reading", 
+                        adcResults1[0],
+                        "R1_P0__odd_reading",
+                        adcResults1[1]
+            );
         #endif
 
         results1Part0Ready = false;                                                   // Clear the results0 ready flag
@@ -239,6 +207,9 @@ void loop() {
 
     if (results1Part1Ready) {
         R1_P1_dirty = true;
+
+        Serial.print("\t\t\tR1_P1: ");
+        Serial.println(micros());
 
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
@@ -252,20 +223,11 @@ void loop() {
         }
         
         #if DEBUG_R1_P1
-            Serial.print("hiii:");
-            Serial.print(5000);
-            Serial.print(",");
-
-            Serial.print("lo:");
-            Serial.print(0);
-            Serial.print(",");
-
-            Serial.print("R1_P1_reading0:");
-            Serial.print(adcResults1[1024]);
-            Serial.print(", ");
-            Serial.print("R1_P1_reading1:");
-            Serial.print(adcResults1[1025]);
-            Serial.println();
+            debug_print("R1_P1_even_reading", 
+                        adcResults1[1024],
+                        "R1_P1__odd_reading",
+                        adcResults1[1025]
+            );
         #endif
 
         results1Part1Ready = false;                                                   // Clear the results1 ready flag

@@ -25,7 +25,7 @@ bool create_dat_file(SdFs* sd, FsFile* file) {
     return true; // successful file creation
 }
 
-// if the file will become too large, close the current one and open a new one
+// if the file will become too large, close the current one and open a new one on `sd`
 bool do_rollover_if_needed(SdFs* sd, FsFile* file, size_t incoming_size) {
     if (file->isOpen() && (incoming_size + file->fileSize() > prealloc_size)) {
         // file->truncate(); // trims the file down from its prealloc'd size
@@ -85,13 +85,35 @@ int find_largest_file_number(SdFs* sd, const char* extension) {
     return maxNumber;
 }
 
+// base case: no arguments left
+void debug_print() {
+    Serial.println("plain debug!");
+}
+
+template<typename Key, typename Value>
+void debug_print(Key k1, Value v1, Key k2, Value v2) {
+    Serial.print("hi:5000,");
+    Serial.print("lo:0,");
+    
+    Serial.print(k1);
+    Serial.print(":");
+    Serial.print(v1);
+    Serial.print(",");
+    Serial.print(k2);
+    Serial.print(":");
+    Serial.print(v2);
+    Serial.println();
+
+}
+
+
 #if USE_AVG_MODE
 void adc_init() {
     //////////////////////////////////////////////////////////
     // ADC0 Settings
     ADC0->INPUTCTRL.bit.MUXPOS = inputCtrl0[0];                                     // Set the initial analog input to A0
     while(ADC0->SYNCBUSY.bit.INPUTCTRL);                                            // Wait for synchronization
-    ADC0->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz
+    ADC0->SAMPCTRL.bit.SAMPLEN = ADC_SAMPLEN;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz
     while(ADC0->SYNCBUSY.bit.SAMPCTRL);                                             // Wait for synchronization  
     ADC0->DSEQCTRL.reg = ADC_DSEQCTRL_AUTOSTART |                                   // Auto start a DMAC conversion upon ADC0 DMAC sequence completion
                          ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC0 INPUTCTRL register on DMAC sequence
@@ -100,23 +122,22 @@ void adc_init() {
     ADC0->CTRLA.reg = ADC_CTRLA_PRESCALER_DIV4;                                     // Divide Clock ADC GCLK by 4 (48MHz/64 = 750kHz) (12 + 1)/750kHz = 17.3us sample time 
     ADC0->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_16 |                                  // Required for averaging mode
                         ADC_AVGCTRL_ADJRES(0x4);
-    // ADC0.AVGCTRL.bit.SAMPLENUM = 0x4;
-    // ADC0.AVGCTRL.bit.ADJRES = 0x4;
     while (ADC0->SYNCBUSY.bit.AVGCTRL);                                             // Wait for synchronization
 
-    
     ADC0->CTRLA.bit.ENABLE = 1;                                                     // Enable the ADC
     while(ADC0->SYNCBUSY.bit.ENABLE);                                               // Wait for synchronization
     ADC0->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
     while(ADC0->SYNCBUSY.bit.SWTRIG);                                               // Wait for synchronization
     ADC0->DBGCTRL.bit.DBGRUN = 0;
+
+    ADC0->EVCTRL.reg = 0;
     //////////////////////////////////////////////////////////
 
     //////////////////////////////////////////////////////////
     // ADC1 Settings
     ADC1->INPUTCTRL.bit.MUXPOS = inputCtrl1[0];                                     // Set the initial analog input to A2
     while(ADC1->SYNCBUSY.bit.INPUTCTRL);                                            // Wait for synchronization
-    ADC1->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPCTRL ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz 
+    ADC1->SAMPCTRL.bit.SAMPLEN = ADC_SAMPLEN;                                              // Extend sampling time by SAMPCTRL ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz 
     while(ADC1->SYNCBUSY.bit.SAMPCTRL);                                             // Wait for synchronization
     ADC1->DSEQCTRL.reg = ADC_DSEQCTRL_AUTOSTART |                                   // Auto start a DMAC conversion upon ADC0 DMAC sequence completion
                          ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC1 INPUTCTRL register on DMAC sequence
@@ -132,6 +153,8 @@ void adc_init() {
     ADC1->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
     while(ADC1->SYNCBUSY.bit.SWTRIG);                                               // Wait for synchronization
     ADC1->DBGCTRL.bit.DBGRUN = 0;
+
+    ADC1->EVCTRL.reg = 0;
     //////////////////////////////////////////////////////////
 }
 #else
@@ -140,7 +163,7 @@ void adc_init() {
     // ADC0 Settings
     ADC0->INPUTCTRL.bit.MUXPOS = inputCtrl0[0];                                     // Set the analog input to A0
     while(ADC0->SYNCBUSY.bit.INPUTCTRL);                                            // Wait for synchronization
-    ADC0->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz
+    ADC0->SAMPCTRL.bit.SAMPLEN = ADC_SAMPLEN;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz
     while(ADC0->SYNCBUSY.bit.SAMPCTRL);                                             // Wait for synchronization  
     ADC0->DSEQCTRL.reg = ADC_DSEQCTRL_AUTOSTART |                                   // Auto start a DMAC conversion upon ADC0 DMAC sequence completion
                          ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC0 INPUTCTRL register on DMAC sequence
@@ -152,13 +175,15 @@ void adc_init() {
     ADC0->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
     while(ADC0->SYNCBUSY.bit.SWTRIG);                                               // Wait for synchronization
     ADC0->DBGCTRL.bit.DBGRUN = 0;
+
+    ADC0->EVCTRL.reg = 0;
     //////////////////////////////////////////////////////////
 
     //////////////////////////////////////////////////////////
     // ADC1 Settings
     ADC1->INPUTCTRL.bit.MUXPOS = inputCtrl1[0];                                     // Set the analog input to A2
     while(ADC1->SYNCBUSY.bit.INPUTCTRL);                                            // Wait for synchronization
-    ADC1->SAMPCTRL.bit.SAMPLEN = 0x01;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz 
+    ADC1->SAMPCTRL.bit.SAMPLEN = ADC_SAMPLEN;                                              // Extend sampling time by SAMPLEN ADC cycles (12 + 1 + 2)/750kHz = 20us = 50kHz 
     while(ADC1->SYNCBUSY.bit.SAMPCTRL);                                             // Wait for synchronization
     ADC1->DSEQCTRL.reg = ADC_DSEQCTRL_AUTOSTART |                                   // Auto start a DMAC conversion upon ADC0 DMAC sequence completion
                          ADC_DSEQCTRL_INPUTCTRL;                                    // Change the ADC0 INPUTCTRL register on DMAC sequence
@@ -170,6 +195,8 @@ void adc_init() {
     ADC1->SWTRIG.bit.START = 1;                                                     // Initiate a software trigger to start an ADC conversion
     while(ADC1->SYNCBUSY.bit.SWTRIG);                                               // Wait for synchronization
     ADC1->DBGCTRL.bit.DBGRUN = 0;
+
+    ADC1->EVCTRL.reg = 0;
     //////////////////////////////////////////////////////////
 }
 #endif
