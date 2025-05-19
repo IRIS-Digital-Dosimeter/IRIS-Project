@@ -156,6 +156,7 @@ void loop() {
 
 
     if (results0Part0Ready) {
+        adc0 = micros();
         R0_P0_dirty = true;
         
         // grab timestamp after collection
@@ -221,6 +222,10 @@ void loop() {
     }
 
     if (results1Part0Ready) {
+        adc1 = micros();
+        Serial.print("diff: ");
+        Serial.println(adc1-adc0);
+
         R1_P0_dirty = true;
 
         // grab timestamp after collection
