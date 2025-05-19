@@ -23,6 +23,12 @@ volatile bool results1Part1Ready = false;
 
 uint16_t adcResults0[NUM_RESULTS*2]; // ADC0 results array
 uint16_t adcResults1[NUM_RESULTS*2]; // ADC1 results array
+uint16_t a[NUM_RESULTS*5]; // should eventually be t a0 a1 a2 a3, t a0 a1 a2 a3, t a0 a1 a2 a3 or NUM_RESULTS*5
+
+volatile bool R0_P0_dirty = false;
+volatile bool R0_P1_dirty = false;
+volatile bool R1_P0_dirty = false;
+volatile bool R1_P1_dirty = false;
 
 volatile dmadesc (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          // Write-back DMAC descriptors (changed to array pointer)
 dmadesc (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
@@ -50,30 +56,23 @@ void setup() {
 
     adc_init();
     dma_init();
+    delay(5); // Wait a few ms for everything to settle idk
     dma_channels_enable();
     
     create_dat_file(&sd, &file);
     last = micros();
 }
 
-// SEVAK INSTEAD OF SEQUENCINGH TRY TO DO FREERUN AND SEE IF AVG STILL WORKS.
-// SEVAK INSTEAD OF SEQUENCING TRY TO DO SINGLE SHOT AND SEE IF AVG STILL WORKS
+// SEVAK INSTEAD OF SEQUENCINGH TRY TO DO FREERUN AND SEE IF AVG STILL WORKS. // IT DOES
+// SEVAK INSTEAD OF SEQUENCING TRY TO DO SINGLE SHOT AND SEE IF AVG STILL WORKS // IT DOES
+// So the problem w/ using averaging mode lays in the sequencing. double chekc that it's actually working in raw mode
+// for now, make do with no averaging - just slow raw mode
 
-// empty 18KB file creation takes 30-40 ms
-// filling half a buffer takes 2-3 ms
-// writing 1 half buffer takes 6-7 ms
-// getting file size takes 0.1-0.4 ms
-// file sync takes <0.1 ms
 
-uint16_t a[NUM_RESULTS*4]; // should eventually be t a0 a1 a2 a3, t a0 a1 a2 a3, t a0 a1 a2 a3 or NUM_RESULTS*5
-
-volatile bool R0_P0_dirty = false;
-volatile bool R0_P1_dirty = false;
-volatile bool R1_P0_dirty = false;
-volatile bool R1_P1_dirty = false;
 
 int rollovers = 0;
 void loop() {
+
     //// DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
     if (rollovers > 1) {
@@ -82,13 +81,15 @@ void loop() {
         for (int i = 0; i < NUM_RESULTS; i++) {
             Serial.print(i);
             Serial.print(": ");
-            Serial.print(a[i*4]);
+            Serial.print(a[i*5]);
             Serial.print(" ");
-            Serial.print(a[i*4+1]);
+            Serial.print(a[i*5+1]);
             Serial.print(" ");
-            Serial.print(a[i*4+2]);
+            Serial.print(a[i*5+2]);
             Serial.print(" ");
-            Serial.print(a[i*4+3]);
+            Serial.print(a[i*5+3]);
+            Serial.print(" ");
+            Serial.print(a[i*5+4]);
             Serial.println(" ");
         }
         while (true);
@@ -100,8 +101,6 @@ void loop() {
 
     // only write a if everything is dirty
     if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
-        Serial.println();
-
         // write the buffer to SD
         file.write(a, sizeof(a));
         R0_P0_dirty = false;
@@ -110,7 +109,7 @@ void loop() {
         R1_P1_dirty = false;
 
         volatile int now = micros();
-        // Serial.println(now - last);
+        Serial.println(now - last);
         last = now;
     }
 
@@ -118,8 +117,6 @@ void loop() {
 
     if (results0Part0Ready) {
         R0_P0_dirty = true;
-        Serial.print("R0_P0: ");
-        Serial.println(micros());
 
         // `i` should account for which half of buffer this is
         //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
@@ -127,7 +124,7 @@ void loop() {
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
             // fills in a like x x _ _ x x _ _ x x _ _
             // where x x is a0 a1, and _ _ is left for a2 a3
-            uint16_t j = (i/2)*4 + i%2;
+            uint16_t j = 1 + (i/2)*5 + i%2;
 
             // copy the data over 
             a[j] = adcResults0[i];
@@ -148,15 +145,13 @@ void loop() {
     if (results0Part1Ready) {
         R0_P1_dirty = true;
 
-        Serial.print("\tR0_P1: ");
-        Serial.println(micros());
 
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
         for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
             // fills in `a` like x x _ _ x x _ _ x x _ _
             // where x x is a0 a1, and _ _ is left for a2 a3
-            uint16_t j = (i/2)*4 + i%2;
+            uint16_t j = 1 + (i/2)*5 + i%2;
 
             // copy the data over 
             a[j] = adcResults0[i];
@@ -180,13 +175,10 @@ void loop() {
     if (results1Part0Ready) {
         R1_P0_dirty = true;
 
-        Serial.print("\t\tR1_P0: ");
-        Serial.println(micros());
-
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
             // fills in a like _ _ x x _ _ x x _ _ x x
             // where _ _ is left for a0 a1, and x x is a2 a3
-            uint16_t j = (i/2)*4 + 2 + i%2; 
+            uint16_t j = 1 + (i/2)*5 + 2 + i%2; 
 
             // copy the data over
             a[j] = adcResults1[i];
@@ -208,15 +200,12 @@ void loop() {
     if (results1Part1Ready) {
         R1_P1_dirty = true;
 
-        Serial.print("\t\t\tR1_P1: ");
-        Serial.println(micros());
-
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
         for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
             // fills in `a` like _ _ x x _ _ x x _ _ x x
             // where _ _ is left for a0 a1, and x x is a2 a3
-            uint16_t j = (i/2)*4 + i%2 + 2;
+            uint16_t j = 1 + (i/2)*5 + i%2 + 2;
 
             // copy the data over 
             a[j] = adcResults1[i];
