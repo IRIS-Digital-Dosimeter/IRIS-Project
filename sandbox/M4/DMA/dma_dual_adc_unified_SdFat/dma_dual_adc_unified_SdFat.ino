@@ -34,7 +34,7 @@ volatile dmadesc (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          //
 dmadesc (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
 dmadesc descriptor __attribute__ ((aligned (16)));                            // Placeholder descriptor
 
-volatile int last;
+volatile unsigned long long last;
 void setup() {
     Serial.begin(9600);
     while(!Serial);                                                               // Wait for the console to open
@@ -71,11 +71,12 @@ void setup() {
 
 
 int rollovers = 0;
+unsigned long long adc0, adc1;
 void loop() {
 
     //// DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
-    if (rollovers > 1) {
+    if (rollovers > 3) {
         Serial.println("now read the data and see what is going on");
         Serial.println(micros());
         for (int i = 0; i < NUM_RESULTS; i++) {
@@ -108,7 +109,7 @@ void loop() {
         R1_P0_dirty = false;
         R1_P1_dirty = false;
 
-        volatile int now = micros();
+        volatile unsigned long long now = micros();
         Serial.println(now - last);
         last = now;
     }
@@ -116,19 +117,27 @@ void loop() {
 
 
     if (results0Part0Ready) {
+        adc0 = micros();
         R0_P0_dirty = true;
 
         // `i` should account for which half of buffer this is
         //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
         //        and for r0p1, it should go (2048,2049) to (4092, 4093)
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
-            // fills in a like x x _ _ x x _ _ x x _ _
-            // where x x is a0 a1, and _ _ is left for a2 a3
+            // fills in a like _ x x _ _, _ x x _ _, _ x x _ _
+            // where x x is a0 a1, and _ _ is left for a2 a3, and also t
             uint16_t j = 1 + (i/2)*5 + i%2;
 
             // copy the data over 
             a[j] = adcResults0[i];
+
+            
         }
+
+        // add same timestamp for now
+        // for (uint16_t i = 0; i < NUM_RESULTS; i+=2) {
+        //     a[i/2 * 10] = t;
+        // }
 
         
         #if DEBUG_R0_P0
@@ -149,13 +158,19 @@ void loop() {
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
         for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
-            // fills in `a` like x x _ _ x x _ _ x x _ _
-            // where x x is a0 a1, and _ _ is left for a2 a3
+            // fills in a like _ x x _ _, _ x x _ _, _ x x _ _
+            // where x x is a0 a1, and _ _ is left for a2 a3, and also t
             uint16_t j = 1 + (i/2)*5 + i%2;
 
             // copy the data over 
             a[j] = adcResults0[i];
         }
+
+        // add same timestamp for now
+        // uint16_t t = micros();
+        // for (uint16_t i = 0; i < NUM_RESULTS; i+=2) {
+        //     a[i/2 * 10 + 5] = t;
+        // }
 
 
         #if DEBUG_R0_P1
@@ -173,18 +188,26 @@ void loop() {
     }
 
     if (results1Part0Ready) {
+        adc1 = micros();
+        Serial.print("diff: ");
+        Serial.println(adc1-adc0);
+
         R1_P0_dirty = true;
 
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
-            // fills in a like _ _ x x _ _ x x _ _ x x
-            // where _ _ is left for a0 a1, and x x is a2 a3
+            // fills in a like _ _ _ x x, _ _ _ x x, _ _ _ x x
+            // where _ _ is left for t a0 a1, and x x is a2 a3
             uint16_t j = 1 + (i/2)*5 + 2 + i%2; 
 
             // copy the data over
             a[j] = adcResults1[i];
         }
 
-        
+        // add same timestamp for now
+        // uint16_t t = micros();
+        // for (uint16_t i = 0; i < NUM_RESULTS; i+=2) {
+        //     a[i/2 * 10 + 5] = t;
+        // }
 
         #if DEBUG_R1_P0
             debug_print("R1_P0_even_reading", 
@@ -203,8 +226,8 @@ void loop() {
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
         for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
-            // fills in `a` like _ _ x x _ _ x x _ _ x x
-            // where _ _ is left for a0 a1, and x x is a2 a3
+            // fills in a like _ _ _ x x, _ _ _ x x, _ _ _ x x
+            // where _ _ is left for t a0 a1, and x x is a2 a3
             uint16_t j = 1 + (i/2)*5 + i%2 + 2;
 
             // copy the data over 

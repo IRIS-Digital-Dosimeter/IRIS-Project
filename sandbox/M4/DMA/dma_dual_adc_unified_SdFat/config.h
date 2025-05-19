@@ -17,7 +17,7 @@ const uint8_t SD_CS_PIN = 10;
 //// ADC CONFIGURATION
 #define USE_AVG_MODE 0 // 1=averaging 0=rawing 
 #define NUM_RESULTS 1024 // the number of samples per pin that go directly into result buffers.
-#define ADC_SAMPLEN 0x2
+#define ADC_SAMPLEN 0x2 // extra clock cycles during sampling - 0 is default. higher sampling lengths help with higher impedance inputs
 #define ADC_PRESCALING_FACTOR ADC_CTRLA_PRESCALER_DIV256 // GCLK by default is 48MHz, so divide that by this factor
 
 //// SAMPLING TIME VARS
