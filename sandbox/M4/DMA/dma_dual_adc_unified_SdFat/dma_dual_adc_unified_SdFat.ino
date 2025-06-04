@@ -23,7 +23,14 @@ volatile bool results1Part1Ready = false;
 
 uint16_t adcResults0[NUM_RESULTS*2]; // ADC0 results array
 uint16_t adcResults1[NUM_RESULTS*2]; // ADC1 results array
-uint16_t a[NUM_RESULTS*5]; // should eventually be t a0 a1 a2 a3, t a0 a1 a2 a3, t a0 a1 a2 a3 or NUM_RESULTS*5
+// 1 timestamp per each half of the results arrays. 4 timestamps, each taking 32 bits. each will be stored in 2 elements of `write_buffer`.
+// timestamps taken after collection, e.g. after every NUM_RESULTS conversions on an ADC
+//   data will be dumped in like usual, taking up NUM_RESULTS*4 slots.
+//   a[NUM_RESULTS*4 : NUM_RESULTS*4 + 2] is R0P0 timestamp
+//   a[NUM_RESULTS*4 + 2 : NUM_RESULTS*4 + 4] is R0P1 timestamp
+//   a[NUM_RESULTS*4 + 4 : NUM_RESULTS*4 + 6] is R1P0 timestamp
+//   a[NUM_RESULTS*4 + 6: NUM_RESULTS*4 + 8] is R1P1 timestamp
+uint16_t write_buffer[WRITE_BUFFER_SIZE];       
 
 volatile bool R0_P0_dirty = false;
 volatile bool R0_P1_dirty = false;
@@ -34,8 +41,12 @@ volatile dmadesc (*wrb)[DMAC_CH_NUM] __attribute__ ((aligned (16)));          //
 dmadesc (*descriptor_section)[DMAC_CH_NUM] __attribute__ ((aligned (16)));    // DMAC channel descriptors (changed to array pointer)
 dmadesc descriptor __attribute__ ((aligned (16)));                            // Placeholder descriptor
 
-volatile unsigned long long last;
+volatile unsigned long last;
+
+
 void setup() {
+    analogWriteResolution(12);
+    
     Serial.begin(9600);
     while(!Serial);                                                               // Wait for the console to open
 
@@ -47,7 +58,6 @@ void setup() {
         Serial.println("SD initialization succeeded!");
     }
 
-    // TODO make this use inputCtrl0 and inputCtrl1
     // Is this even necessary?
     pinMode(A0, INPUT);
     pinMode(A1, INPUT);
@@ -63,16 +73,13 @@ void setup() {
     last = micros();
 }
 
-// SEVAK INSTEAD OF SEQUENCINGH TRY TO DO FREERUN AND SEE IF AVG STILL WORKS. // IT DOES
-// SEVAK INSTEAD OF SEQUENCING TRY TO DO SINGLE SHOT AND SEE IF AVG STILL WORKS // IT DOES
-// So the problem w/ using averaging mode lays in the sequencing. double chekc that it's actually working in raw mode
-// for now, make do with no averaging - just slow raw mode
-
-
-
 int rollovers = 0;
-unsigned long long adc0, adc1;
+unsigned long adc0, adc1;
 void loop() {
+
+    Serial.print("ms: ");
+    Serial.println(millis() % 4096);
+    analogWrite(DAC0, millis() % 4096);
 
     //// DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
@@ -82,34 +89,45 @@ void loop() {
         for (int i = 0; i < NUM_RESULTS; i++) {
             Serial.print(i);
             Serial.print(": ");
-            Serial.print(a[i*5]);
+            Serial.print(write_buffer[i*4]);
             Serial.print(" ");
-            Serial.print(a[i*5+1]);
+            Serial.print(write_buffer[i*4+1]);
             Serial.print(" ");
-            Serial.print(a[i*5+2]);
+            Serial.print(write_buffer[i*4+2]);
             Serial.print(" ");
-            Serial.print(a[i*5+3]);
-            Serial.print(" ");
-            Serial.print(a[i*5+4]);
+            Serial.print(write_buffer[i*4+3]);
             Serial.println(" ");
         }
+
+        Serial.println();
+        Serial.println("below are the 4 included timestamps reconstructed: ");
+        for (int j = 0; j < 4; j++) {
+            unsigned long recon = 0;
+            for (int i = 0; i < 2; i++) {
+                recon |= ((unsigned long)write_buffer[NUM_RESULTS*4 + j*2 + i]) << (i * 16);
+            }
+            Serial.print("\t");
+            Serial.println(recon);
+        }
+
+
         while (true);
     }
     ////
 
     // perform auto rollover check and count how many rollovers there have been
-    rollovers += do_rollover_if_needed(&sd, &file, sizeof(a)) ? 1 : 0;
+    rollovers += do_rollover_if_needed(&sd, &file, sizeof(write_buffer)) ? 1 : 0;
 
     // only write a if everything is dirty
     if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
         // write the buffer to SD
-        file.write(a, sizeof(a));
+        file.write(write_buffer, sizeof(write_buffer));
         R0_P0_dirty = false;
         R0_P1_dirty = false;
         R1_P0_dirty = false;
         R1_P1_dirty = false;
 
-        volatile unsigned long long now = micros();
+        volatile unsigned long now = micros();
         Serial.println(now - last);
         last = now;
     }
@@ -117,29 +135,27 @@ void loop() {
 
 
     if (results0Part0Ready) {
-        adc0 = micros();
         R0_P0_dirty = true;
+        
+        // grab timestamp after collection
+        unsigned long ts = micros();
+        for (int i = 0; i < 2; i++) {
+            write_buffer[NUM_RESULTS*4 + i] = (ts >> (i*16)) & 0xFFFF;
+        }
 
+        // copying data into a
         // `i` should account for which half of buffer this is
         //   e.g. since this is first half of the buffer, it will go (0,1) to (2044,2045)
         //        and for r0p1, it should go (2048,2049) to (4092, 4093)
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
             // fills in a like _ x x _ _, _ x x _ _, _ x x _ _
             // where x x is a0 a1, and _ _ is left for a2 a3, and also t
-            uint16_t j = 1 + (i/2)*5 + i%2;
+            uint16_t j = (i/2)*4 + i%2;
 
             // copy the data over 
-            a[j] = adcResults0[i];
-
-            
+            write_buffer[j] = adcResults0[i];
         }
 
-        // add same timestamp for now
-        // for (uint16_t i = 0; i < NUM_RESULTS; i+=2) {
-        //     a[i/2 * 10] = t;
-        // }
-
-        
         #if DEBUG_R0_P0
             debug_print("R0_P0_even_reading", 
                         adcResults0[0],
@@ -154,60 +170,53 @@ void loop() {
     if (results0Part1Ready) {
         R0_P1_dirty = true;
 
-
+        // grab timestamp after collection
+        unsigned long ts = micros();
+        for (int i = 0; i < 2; i++) {
+            write_buffer[NUM_RESULTS*4 + 2 + i] = (ts >> (i*16)) & 0xFFFF;
+        }
+        
+        // copying data into a
         // `i` should account for which half of buffer this is
         //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
         for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
             // fills in a like _ x x _ _, _ x x _ _, _ x x _ _
             // where x x is a0 a1, and _ _ is left for a2 a3, and also t
-            uint16_t j = 1 + (i/2)*5 + i%2;
+            uint16_t j = (i/2)*4 + i%2;
 
             // copy the data over 
-            a[j] = adcResults0[i];
+            write_buffer[j] = adcResults0[i];
         }
-
-        // add same timestamp for now
-        // uint16_t t = micros();
-        // for (uint16_t i = 0; i < NUM_RESULTS; i+=2) {
-        //     a[i/2 * 10 + 5] = t;
-        // }
-
 
         #if DEBUG_R0_P1
             debug_print("R0_P1_even_reading", 
-                        adcResults0[1024],
+                        adcResults0[NUM_RESULTS],
                         "R0_P1__odd_reading",
-                        adcResults0[1025]
+                        adcResults0[NUM_RESULTS + 1]
             );
         #endif
 
         results0Part1Ready = false;                                                   // Clear the results1 ready flag
-        
-        // Serial.println("AAAAA");
-        // while (true);
     }
 
     if (results1Part0Ready) {
-        adc1 = micros();
-        Serial.print("diff: ");
-        Serial.println(adc1-adc0);
-
         R1_P0_dirty = true;
 
+        // grab timestamp after collection
+        unsigned long ts = micros();
+        for (int i = 0; i < 2; i++) {
+            write_buffer[NUM_RESULTS*4 + 4 + i] = (ts >> (i*16)) & 0xFFFF;
+        }
+
+        // copying data into a
         for (uint16_t i = 0; i < NUM_RESULTS; i++) {
             // fills in a like _ _ _ x x, _ _ _ x x, _ _ _ x x
             // where _ _ is left for t a0 a1, and x x is a2 a3
-            uint16_t j = 1 + (i/2)*5 + 2 + i%2; 
+            uint16_t j = (i/2)*4 + 2 + i%2; 
 
             // copy the data over
-            a[j] = adcResults1[i];
+            write_buffer[j] = adcResults1[i];
         }
-
-        // add same timestamp for now
-        // uint16_t t = micros();
-        // for (uint16_t i = 0; i < NUM_RESULTS; i+=2) {
-        //     a[i/2 * 10 + 5] = t;
-        // }
 
         #if DEBUG_R1_P0
             debug_print("R1_P0_even_reading", 
@@ -222,23 +231,27 @@ void loop() {
 
     if (results1Part1Ready) {
         R1_P1_dirty = true;
-
-        // `i` should account for which half of buffer this is
-        //   e.g. since this is second half of the buffer, it will go (2048,2049) to (4092, 4093)
+        
+        // grab timestamp after collection
+        unsigned long ts = micros();
+        for (int i = 0; i < 2; i++) {
+            write_buffer[NUM_RESULTS*4 + 6 + i] = (ts >> (i*16)) & 0xFFFF;
+        }
+        
         for (uint16_t i = NUM_RESULTS; i < NUM_RESULTS*2; i++) {
             // fills in a like _ _ _ x x, _ _ _ x x, _ _ _ x x
             // where _ _ is left for t a0 a1, and x x is a2 a3
-            uint16_t j = 1 + (i/2)*5 + i%2 + 2;
+            uint16_t j = (i/2)*4 + i%2 + 2;
 
             // copy the data over 
-            a[j] = adcResults1[i];
+            write_buffer[j] = adcResults1[i];
         }
         
         #if DEBUG_R1_P1
             debug_print("R1_P1_even_reading", 
-                        adcResults1[1024],
+                        adcResults1[NUM_RESULTS],
                         "R1_P1__odd_reading",
-                        adcResults1[1025]
+                        adcResults1[NUM_RESULTS + 1]
             );
         #endif
 
