@@ -2,7 +2,7 @@
 
 //// FILE ALLOCATION CONFIGURATION
 //     NOTE: THE SAMSUNG 128GB SD CARD HAS AN ALLOCATION SIZE OF 128KiB (131072B) RN
-#define BYTES_PER_VALUE 2 // ADC readings go in uint16's. 10 bytes per sample is not ideal but with 128KiB block size, experimentally we lose only .7% space
+#define BYTES_PER_VALUE 2 // ADC readings go in uint16's
 #define VALUES_PER_LINE 4 // a0, a1, a2, a3
 #define BUF_SAMPLES 16384 // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
 #define SHIFT_MULT 3 // powers of 2 to ensure it lines up. maybe this can change?
@@ -20,6 +20,10 @@ const uint8_t SD_CS_PIN = 10;
 #define NUM_RESULTS 1024 // the number of samples per pin that go directly into result buffers.
 #define ADC_SAMPLEN 0x2 // extra clock cycles during sampling - 0 is default. higher sampling lengths help with higher impedance inputs
 #define ADC_PRESCALING_FACTOR ADC_CTRLA_PRESCALER_DIV256 // GCLK by default is 48MHz, so divide that by this factor
+
+//// GCLK CONFIGURATION
+#define ADC_GCLK 0x2 // use generic clock 2 instead of 1 so we can customize prescaler without affecting other peripherals
+#define GCLK_DIV_FACTOR 4 // must be power of 2
 
 //// SAMPLING TIME VARS
 //     Each ADC's perfect sampling rate (no averaging, no accounting for DMASEQ) can be calculated by the following:

@@ -64,6 +64,7 @@ void setup() {
     pinMode(A2, INPUT);
     pinMode(A3, INPUT);
 
+    gclk_init();
     adc_init();
     dma_init();
     delay(5); // Wait a few ms for everything to settle idk
@@ -71,15 +72,30 @@ void setup() {
     
     create_dat_file(&sd, &file);
     last = micros();
+
+
+    // Serial.print("adc0 generator: ");
+    // Serial.println(GCLK->PCHCTRL[40].bit.GEN);
+    // Serial.print("adc1 generator: ");
+    // Serial.println(GCLK->PCHCTRL[41].bit.GEN);
+    for (int i = 0; i <= 47; i++) {
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.println(GCLK->PCHCTRL[i].bit.GEN);
+    }
+
+
+    
+    // while(true);
 }
 
 int rollovers = 0;
 unsigned long adc0, adc1;
 void loop() {
 
-    Serial.print("ms: ");
-    Serial.println(millis() % 4096);
-    analogWrite(DAC0, millis() % 4096);
+    // Serial.print("ms: ");
+    // Serial.println(millis() % 4096);
+    // analogWrite(DAC0, millis() % 4096);
 
     //// DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
@@ -114,6 +130,10 @@ void loop() {
         while (true);
     }
     ////
+
+
+
+
 
     // perform auto rollover check and count how many rollovers there have been
     rollovers += do_rollover_if_needed(&sd, &file, sizeof(write_buffer)) ? 1 : 0;

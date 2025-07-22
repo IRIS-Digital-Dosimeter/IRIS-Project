@@ -108,6 +108,27 @@ void debug_print(Key k1, Value v1, Key k2, Value v2) {
 
 }
 
+void gclk_init() {
+    // disable generator while configuring
+    GCLK->GENCTRL[ADC_GCLK].bit.GENEN = 0x0;
+    while (GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_GENCTRL(1 << ADC_GCLK));
+
+    // copy default generator's config and zero the DIV field before modifying
+    uint32_t config = GCLK->GENCTRL[1].reg & ~GCLK_GENCTRL_DIV_Msk;
+    config |= GCLK_GENCTRL_DIV(GCLK_DIV_FACTOR) | GCLK_GENCTRL_GENEN;
+    GCLK->GENCTRL[ADC_GCLK].reg = config; // apply the config
+    while (GCLK->SYNCBUSY.reg & GCLK_SYNCBUSY_GENCTRL(1 << ADC_GCLK));
+
+    // route desired GCLK to ADC0 and ADC1
+    GCLK->PCHCTRL[40].reg = GCLK_PCHCTRL_GEN(ADC_GCLK) |
+                            GCLK_PCHCTRL_CHEN;
+    GCLK->PCHCTRL[41].reg = GCLK_PCHCTRL_GEN(ADC_GCLK) |
+                            GCLK_PCHCTRL_CHEN;
+
+    while (!(GCLK->PCHCTRL[40].reg & GCLK_PCHCTRL_CHEN));
+    while (!(GCLK->PCHCTRL[41].reg & GCLK_PCHCTRL_CHEN));
+}
+
 void adc_init() {
     //// Initial Input Pins
     ADC0->INPUTCTRL.bit.MUXPOS = inputCtrl0[0];                                     // Set the initial analog input to A0
