@@ -136,6 +136,10 @@ void loop() {
 
 
 
+
+
+
+
     // perform auto rollover check and count how many rollovers there have been
     rollovers += do_rollover_if_needed(&sd, &file, sizeof(write_buffer)) ? 1 : 0;
 
