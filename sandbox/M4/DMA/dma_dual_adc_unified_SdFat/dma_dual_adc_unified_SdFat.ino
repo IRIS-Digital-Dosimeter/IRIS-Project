@@ -95,41 +95,41 @@ void loop() {
 
     // Serial.print("ms: ");
     // Serial.println(millis() % 4096);
-    analogWrite(DAC0, millis() % 4096);
+    // analogWrite(DAC0, millis() % 4096);
 
-    //// DEBUGGING
-    // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
-    if (rollovers > 10) {
-        Serial.println("now read the data and see what is going on");
-        Serial.println(micros());
-        for (int i = 0; i < NUM_RESULTS; i++) {
-            Serial.print(i);
-            Serial.print(": ");
-            Serial.print(write_buffer[i*4]);
-            Serial.print(" ");
-            Serial.print(write_buffer[i*4+1]);
-            Serial.print(" ");
-            Serial.print(write_buffer[i*4+2]);
-            Serial.print(" ");
-            Serial.print(write_buffer[i*4+3]);
-            Serial.println(" ");
-        }
+    // //// DEBUGGING
+    // // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
+    // if (rollovers > 10) {
+    //     Serial.println("now read the data and see what is going on");
+    //     Serial.println(micros());
+    //     for (int i = 0; i < NUM_RESULTS; i++) {
+    //         Serial.print(i);
+    //         Serial.print(": ");
+    //         Serial.print(write_buffer[i*4]);
+    //         Serial.print(" ");
+    //         Serial.print(write_buffer[i*4+1]);
+    //         Serial.print(" ");
+    //         Serial.print(write_buffer[i*4+2]);
+    //         Serial.print(" ");
+    //         Serial.print(write_buffer[i*4+3]);
+    //         Serial.println(" ");
+    //     }
 
-        Serial.println();
-        Serial.println("below are the 4 included timestamps reconstructed: ");
-        for (int j = 0; j < 4; j++) {
-            unsigned long recon = 0;
-            for (int i = 0; i < 2; i++) {
-                recon |= ((unsigned long)write_buffer[NUM_RESULTS*4 + j*2 + i]) << (i * 16);
-            }
-            Serial.print("\t");
-            Serial.println(recon);
-        }
+    //     Serial.println();
+    //     Serial.println("below are the 4 included timestamps reconstructed: ");
+    //     for (int j = 0; j < 4; j++) {
+    //         unsigned long recon = 0;
+    //         for (int i = 0; i < 2; i++) {
+    //             recon |= ((unsigned long)write_buffer[NUM_RESULTS*4 + j*2 + i]) << (i * 16);
+    //         }
+    //         Serial.print("\t");
+    //         Serial.println(recon);
+    //     }
 
 
-        while (true);
-    }
-    ////
+    //     while (true);
+    // }
+    // ////
 
 
 
