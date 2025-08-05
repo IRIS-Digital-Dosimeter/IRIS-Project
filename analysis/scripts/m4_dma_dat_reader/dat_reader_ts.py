@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from pprint import pprint
 import pandas
 
-def read_data(filename, num_results):
+def read_data(filename, num_results, prev_ts0=None, prev_ts2=None):
     frame_size = num_results * 4 + 8 # number of uint16s per array
     frame_bytes = frame_size * 2     # bytes per array
 
@@ -15,7 +15,7 @@ def read_data(filename, num_results):
 
     with open(filename, "rb") as f:
         frame_count = 0
-        prev_ts0 = prev_ts2 = None  # Initialize previous timestamps
+        # prev_ts0 = prev_ts2 = None  # Initialize previous timestamps
 
         while True:
             chunk = f.read(frame_bytes)
@@ -93,7 +93,7 @@ def read_data(filename, num_results):
     total_samples = frame_count * num_results
     print(f"{filename}: {total_samples} samples per channel (from {frame_count} arrays)")
 
-    return (x0_all, a0_all), (x1_all, a1_all), (x2_all, a2_all), (x3_all, a3_all)
+    return (x0_all, a0_all), (x1_all, a1_all), (x2_all, a2_all), (x3_all, a3_all), prev_ts0, prev_ts2
 
 def linspace_between(start, end, count):
     if count <= 1:
@@ -107,11 +107,12 @@ def plot_data(files, num_results):
     labels = ["a0", "a1", "a2", "a3"]
 
     plt.figure(figsize=(12, 6))
-
+    prev_ts0, prev_ts2 = None, None
     for idx, file in enumerate(files):
         try:
-            (x0, a0), (x1, a1), (x2, a2), (x3, a3) = read_data(file, num_results)
-
+            (x0, a0), (x1, a1), (x2, a2), (x3, a3), prev_ts0, prev_ts2 = read_data(file, num_results, prev_ts0, prev_ts2)
+            prev_ts0 = x0[-1]
+            prev_ts2 = x2[-1]
             for x, y, color, label in zip(
                 [x0, x1, x2, x3],
                 [a0, a1, a2, a3],
@@ -120,11 +121,7 @@ def plot_data(files, num_results):
             ):
                 # plt.plot(x[:1000] + x[-1000:], y[:1000] + y[-1000:], color=color, marker='o', markersize=0.2, linestyle='None', linewidth=0.5, label=label if idx == 0 else "")
                 plt.plot(x, y, color=color, marker='o', markersize=1, linestyle='None', linewidth=0.5, label=label if idx == 0 else "")
-                print(f"###{color}")
-                # pprint(x[:3000])
-                # for x,y in pairwise(x):
-                    # if not x < y:
-                    #     print(f"uhoh: {x} {y}")
+
                 
 
         except Exception as e:

@@ -96,7 +96,7 @@ void loop() {
 
     // Serial.print("ms: ");
     // Serial.println(millis() % 4096);
-    // analogWrite(DAC0, millis() % 4096);
+    analogWrite(DAC0, millis() % 4096);
 
     // //// DEBUGGING
     // // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
