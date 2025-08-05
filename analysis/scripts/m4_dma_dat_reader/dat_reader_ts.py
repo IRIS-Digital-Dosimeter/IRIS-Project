@@ -42,8 +42,8 @@ def read_data(filename, num_results, prev_ts0=None, prev_ts2=None):
 
             ts0, ts1, ts2, ts3 = timestamps
 
-            # Fix timestamp interpolation:
-            # Use sliding timestamps from previous frame if available
+            # prev_ts is the final timestamp from the previous file, or if not present, None
+            # this causes artifacting in the beginning of the very first file
             if prev_ts0 is not None:
                 # print(f"diff0: {ts0 - prev_ts0}")
                 x0 = list(linspace_between(prev_ts0, ts0, num_results))
@@ -61,7 +61,7 @@ def read_data(filename, num_results, prev_ts0=None, prev_ts2=None):
                 x3 = list(linspace_between(ts2, ts3, num_results))
 
             
-            # Store the current ending timestamps to use next round
+            # store the current ending timestamps to use next round
             prev_ts0 = ts0
             prev_ts2 = ts2
 
@@ -77,18 +77,7 @@ def read_data(filename, num_results, prev_ts0=None, prev_ts2=None):
 
             frame_count += 1
 
-    df = pandas.DataFrame({
-        "x0": x0_all,
-        "x1": x1_all,
-        "x2": x2_all,
-        "x3": x3_all,
-        "a0": a0_all,
-        "a1": a1_all,
-        "a2": a2_all,
-        "a3": a3_all,
-    })
-    # df.to_csv('fuck.csv')
-    # df.to_excel('fuck.xlsx')
+
 
     total_samples = frame_count * num_results
     print(f"{filename}: {total_samples} samples per channel (from {frame_count} arrays)")
