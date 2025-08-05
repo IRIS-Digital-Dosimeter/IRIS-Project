@@ -5,7 +5,7 @@
 #define BYTES_PER_VALUE 2 // ADC readings go in uint16's
 #define VALUES_PER_LINE 4 // a0, a1, a2, a3
 #define BUF_SAMPLES 16384 // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
-#define SHIFT_MULT 3 // powers of 2 to ensure it lines up. maybe this can change?
+#define SHIFT_MULT 1 // powers of 2 to ensure it lines up. maybe this can change?
 const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE) << SHIFT_MULT; // multiplied by 2^SHIFT_MULT
 
 //// SD CONFIGURATION
@@ -48,7 +48,7 @@ https://cdn-learn.adafruit.com/assets/assets/000/111/181/original/arduino_compat
 
 // ADC0's input pins to MUX between. Only have 2!
 const uint32_t inputCtrl0[] = { ADC_INPUTCTRL_MUXPOS_AIN4,                              // AIN0 = A0
-                                ADC_INPUTCTRL_MUXPOS_AIN5 };                            // AIN5 = A1
+                                ADC_INPUTCTRL_MUXPOS_AIN6 };                            // AIN5 = A1
 // ADC1's input pins to MUX between. Only have 2!
 const uint32_t inputCtrl1[] = { ADC_INPUTCTRL_MUXPOS_AIN0,                              // AIN0 = A2 for ADC1
                                 ADC_INPUTCTRL_MUXPOS_AIN1 };                            // AIN1 = A3 for ADC1

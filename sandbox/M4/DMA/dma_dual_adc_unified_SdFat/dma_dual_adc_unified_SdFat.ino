@@ -95,11 +95,11 @@ void loop() {
 
     // Serial.print("ms: ");
     // Serial.println(millis() % 4096);
-    // analogWrite(DAC0, millis() % 4096);
+    analogWrite(DAC0, millis() % 4096);
 
     //// DEBUGGING
     // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
-    if (rollovers > 3) {
+    if (rollovers > 10) {
         Serial.println("now read the data and see what is going on");
         Serial.println(micros());
         for (int i = 0; i < NUM_RESULTS; i++) {
