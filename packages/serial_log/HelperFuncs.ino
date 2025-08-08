@@ -2,7 +2,7 @@
 
 uint32_t interSampleDelay = 20; 
 uint32_t interAverageDelay = 0; 
-uint32_t numSamples = 15;
+uint32_t numSamples = 16;
 
 
 namespace Setup {
