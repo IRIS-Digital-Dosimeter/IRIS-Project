@@ -62,20 +62,20 @@ void setup(){
 
   
   if (filePrint){
-  // Set up SD card 
-  SD_initialization(chipSelect);
-  // Set the analog pin resolution 
-  analogReadResolution(12);
-  // send notice
-  Serial.println("\t< Parameter Setup >");
-  // Ask for the desired file (time) length  
-  extractIntervalFromInput();
-  // Ask to set Parameters
-  extract_Board_Parameters();
-  // Ask for session value
-  extractSessionNameFromInput();
-  // Turn on LED while writing
-  digitalWrite(REDLEDpin, LOW);
+    // Set up SD card 
+    SD_initialization(chipSelect);
+    // Set the analog pin resolution 
+    analogReadResolution(12);
+    // send notice
+    Serial.println("\t< Parameter Setup >");
+    // Ask for the desired file (time) length  
+    extractIntervalFromInput();
+    // Ask to set Parameters
+    extract_Board_Parameters();
+    // Ask for session value
+    extractSessionNameFromInput();
+    // Turn on LED while writing
+    digitalWrite(REDLEDpin, LOW);
 
   
   }

@@ -26,6 +26,6 @@ setinter/
 */.ipynb_checkpoints/*
 
 # misc 
-.drawio
-.txt
-.dat
+*.drawio
+*.txt
+*.dat
