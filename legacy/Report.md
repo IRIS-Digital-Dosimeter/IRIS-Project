@@ -1,12 +1,11 @@
 # Report Update: 2/25/24
 At a glance:
-1. Creating a Byte Analysis :white_check_mark: - Complete but creating an executable 
-2. Verify analysis program with David  
-3. Helping Andrew parse DMA
-4. Run analysis on previous files
-5. Run modified M0/M4 program and collect files for new analysis
-6. GUI - create plan
-7. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David.
+1. Setting up new repo :white_check_mark:
+2. Merging GUI :white_check_mark:
+3. Adjusting Analysis program :white_check_mark:
+4. Creating a Byte Analysis :disappointed:
+5. Helping Andrew parse DMA 
+6. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David. 
 
 ## Newest parameters 1/8/24
 ```
@@ -182,7 +181,30 @@ $n$ = samples to average
 \end{align}
 ```
 
-## Actual median Sampling Time $\Delta t_a$
+
+## Actual Sampling Time $\Delta t_a$
+
+```math
+\begin{align}
+    \Delta t_{a} = \text{tAfter} - \text{tBefore} 
+\end{align}
+```
+```py 
+# Actual Sampling Time (array)
+t_sampling = t2 - t1 
+# find median aka Actual time spent sampling
+actual_sampling_time = numpy.median(t_sampling)
+```
+> We expected $\Delta t_a$ to be a stable value -- it is! 
+
+## Ratio of Sampling Time $r_{a/e}$
+```math
+\begin{align}
+    r_{a/e} = \frac{\Delta t_a}{\Delta t_e} 
+\end{align}
+```
+
+## Actual Time spent sampling $\Delta t_a$
 
 ```math
 \begin{align}
@@ -197,12 +219,6 @@ actual_sampling_time = numpy.median(t_sampling)
 ```
 > We expected $\Delta t_a$ to be a stable value -- it is! 
 
-## Ratio of Sampling Time $r_{a/e}$
-```math
-\begin{align}
-    r_{a/e} = \frac{\Delta t_a}{\Delta t_e} 
-\end{align}
-```
 
 ## Expected Sample Frequency $f_e$
 
@@ -257,12 +273,12 @@ Dead time vs Expectation (us)
 
 ```math
 \begin{align}
-    \text{Dead time due to ?} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}
+    \text{Dead time due to gaps} = \frac{F_a - (N\times \Delta t_a)}{N\times \Delta t_a}\\
 \end{align}
 ```
 ```math
 \begin{align}
-    \text{Dead time due to ?} = \frac{F_a - (N\times \Delta t_e)}{N\times \Delta t_e}
+    \text{Dead time due to gaps} = \frac{F_a - (N\times \Delta t_e)}{N\times \Delta t_e}
 \end{align}
 ```
 
@@ -447,11 +463,6 @@ Removing Remote
 ```bash
 $ git push origin -d <remote branch>
 ```
-### Create a Branch and Switch to it 
-```bash
-$ git checkout -b <new_brach_name>
-```
-
 ### Create a Branch and Switch to it 
 ```bash
 $ git checkout -b <new_brach_name>
