@@ -464,6 +464,15 @@ Removing Remote
 ```bash
 $ git push origin -d <remote branch>
 ```
+### Create a Branch and Switch to it 
+```bash
+$ git checkout -b <new_brach_name>
+```
+
+### Create a Branch and Switch to it 
+```bash
+$ git checkout -b <new_brach_name>
+```
 
 ### Create a Branch and Switch to it 
 ```bash
