@@ -83,7 +83,6 @@ void setup() {
         Serial.print(": ");
         Serial.println(GCLK->PCHCTRL[i].bit.GEN);
     }
-    ////
 
 
     
@@ -131,10 +130,6 @@ void loop() {
     //     while (true);
     // }
     // ////
-
-
-
-
 
 
 

@@ -1,11 +1,12 @@
 # Report Update: 2/25/24
 At a glance:
-1. Setting up new repo :white_check_mark:
-2. Merging GUI :white_check_mark:
-3. Adjusting Analysis program :white_check_mark:
-4. Creating a Byte Analysis :disappointed:
-5. Helping Andrew parse DMA 
-6. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David. 
+1. Creating a Byte Analysis :white_check_mark: - Complete but creating an executable 
+2. Verify analysis program with David  
+3. Helping Andrew parse DMA
+4. Run analysis on previous files
+5. Run modified M0/M4 program and collect files for new analysis
+6. GUI - create plan
+7. Andrew suggested to look into:  (msp430fr, STM32L4). I need to go over the exact use-case with David.
 
 ## Newest parameters 1/8/24
 ```
@@ -463,6 +464,11 @@ Removing Remote
 ```bash
 $ git push origin -d <remote branch>
 ```
+### Create a Branch and Switch to it 
+```bash
+$ git checkout -b <new_brach_name>
+```
+
 ### Create a Branch and Switch to it 
 ```bash
 $ git checkout -b <new_brach_name>
