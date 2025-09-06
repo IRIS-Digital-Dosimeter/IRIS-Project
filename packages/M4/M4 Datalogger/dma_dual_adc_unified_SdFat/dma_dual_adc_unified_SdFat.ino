@@ -8,6 +8,7 @@ Made by Andrew Yegiayan
 
 #include "FreeStack.h"
 #include "SdFat.h"
+#include "FreeStack.h"
 #include "sdios.h"
 
 #include "helper.h"
@@ -45,6 +46,7 @@ volatile unsigned long last;
 
 
 void setup() {
+
     analogWriteResolution(12);
     
     Serial.begin(9600);
@@ -52,10 +54,10 @@ void setup() {
 
     // Initialize SD card before setting up DMA
     if (!sd.begin(SD_CONFIG)) {
-        Serial.println("SD initialization failed!");
+        Serial.println(F("SD initialization failed!"));
         while (true);  // Halt if SD card initialization fails
     } else {
-        Serial.println("SD initialization succeeded!");
+        Serial.println(F("SD initialization succeeded!"));
     }
 
     // Is this even necessary?
@@ -68,25 +70,27 @@ void setup() {
     adc_init();
     dma_init();
     delay(5); // Wait a few ms for everything to settle idk
+    create_dat_file(&sd, &file);
     dma_channels_enable();
     
-    create_dat_file(&sd, &file);
-    last = micros();
+    last = millis();
 
 
     // Serial.print("adc0 generator: ");
     // Serial.println(GCLK->PCHCTRL[40].bit.GEN);
     // Serial.print("adc1 generator: ");
     // Serial.println(GCLK->PCHCTRL[41].bit.GEN);
-    for (int i = 0; i <= 47; i++) {
-        Serial.print(i);
-        Serial.print(": ");
-        Serial.println(GCLK->PCHCTRL[i].bit.GEN);
-    }
+    // for (int i = 0; i <= 47; i++) {
+    //     Serial.print(i);
+    //     Serial.print(": ");
+    //     Serial.println(GCLK->PCHCTRL[i].bit.GEN);
+    // }
 
 
-    
+    Serial.println(FreeStack());
+
     // while(true);
+    // analogWrite(DAC0, 4096);
 }
 
 int rollovers = 0;
@@ -147,8 +151,10 @@ void loop() {
         R1_P0_dirty = false;
         R1_P1_dirty = false;
 
-        volatile unsigned long now = micros();
-        Serial.println(now - last);
+        volatile unsigned long now = millis();
+        Serial.print(now - last);
+        Serial.print(F("\t"));
+        Serial.println(rollovers);
         last = now;
     }
 

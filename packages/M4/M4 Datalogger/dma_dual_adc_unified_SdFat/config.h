@@ -4,8 +4,8 @@
 //     NOTE: THE SAMSUNG 128GB SD CARD HAS AN ALLOCATION SIZE OF 128KiB (131072B) RN
 #define BYTES_PER_VALUE 2 // ADC readings go in uint16's
 #define VALUES_PER_LINE 4 // a0, a1, a2, a3
-#define BUF_SAMPLES 16384 // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
-#define SHIFT_MULT 1 // powers of 2 to ensure it lines up. maybe this can change?
+#define BUF_SAMPLES 8192 // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
+#define SHIFT_MULT 3 // powers of 2 to ensure it lines up. maybe this can change?
 
 const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE) << SHIFT_MULT; // multiplied by 2^SHIFT_MULT
 
@@ -13,16 +13,16 @@ const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE)
 #define SD_CS_PIN 10
 #define SPI_CLOCK_MHZ 50
 
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SPI_CLOCK)
 #define WRITE_BUFFER_SIZE (NUM_RESULTS*4 + 4*2) // 4 pins of NUM_RESULT samples, 4 32 bit timestamps
 #define SPI_CLOCK SD_SCK_MHZ(SPI_CLOCK_MHZ)
+#define SD_CONFIG SdSpiConfig(SD_CS_PIN, DEDICATED_SPI, SPI_CLOCK)
 #define error(s) sd.errorHalt(&Serial, F(s))
 
 //// ADC CONFIGURATION
 #define USE_AVG_MODE 0 // 1=averaging 0=rawing // AVERAGING CURRENTLY NONFUNCTIONAL
-#define NUM_RESULTS 1024 // the number of samples per pin that go directly into result buffers.
-#define ADC_SAMPLEN 2 // extra clock cycles during sampling - 0 is default. higher sampling lengths help with higher impedance inputs
-#define ADC_FACTOR_VAL 7
+#define NUM_RESULTS 8192 // the number of samples per pin that go directly into result buffers.
+#define ADC_SAMPLEN 4 // extra clock cycles during sampling - 0 is default. higher sampling lengths help with higher impedance inputs
+#define ADC_FACTOR_VAL 4
 // DIV2   => 0
 // DIV4   => 1
 // DIV8   => 2
@@ -35,7 +35,7 @@ const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE)
 #define ADC_PRESCALING_FACTOR ADC_CTRLA_PRESCALER(ADC_FACTOR_VAL) // GCLK by default is 48MHz, so divide that by this factor
 
 //// GCLK CONFIGURATION
-#define GCLK_DIV_FACTOR 4 // must be power of 2
+#define GCLK_DIV_FACTOR 5 // must be power of 2 (?)
 
 #define ADC_GCLK 2 // use generic clock 2 instead of 1 so we can customize prescaler without affecting other peripherals
 
@@ -59,8 +59,8 @@ https://cdn-learn.adafruit.com/assets/assets/000/111/181/original/arduino_compat
  A4 | ADC_INPUTCTRL_MUXPOS_AIN4 |
  A5 | ADC_INPUTCTRL_MUXPOS_AIN6 |
 */
-#define ADC0_INPUT_0 ADC_INPUTCTRL_MUXPOS_AIN4
-#define ADC0_INPUT_1 ADC_INPUTCTRL_MUXPOS_AIN6
+#define ADC0_INPUT_0 ADC_INPUTCTRL_MUXPOS_AIN0
+#define ADC0_INPUT_1 ADC_INPUTCTRL_MUXPOS_AIN5
 #define ADC1_INPUT_0 ADC_INPUTCTRL_MUXPOS_AIN0
 #define ADC1_INPUT_1 ADC_INPUTCTRL_MUXPOS_AIN1
 
