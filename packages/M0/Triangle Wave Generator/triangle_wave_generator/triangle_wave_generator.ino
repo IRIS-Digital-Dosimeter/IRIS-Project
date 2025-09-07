@@ -1,13 +1,14 @@
 void setup() {
   // put your setup code here, to run once:
   pinMode(A1, INPUT);
+  analogWriteResolution(10);
 }
 
 int dac = 0; // go 0-255 for 0V-3.3V
 bool ascend = false;
 void loop() {
   // put your main code here, to run repeatedly:
-  if (dac >= 254) {
+  if (dac >= 1023) {
     ascend = false;
   }
   if (dac <= 1) {

@@ -37,7 +37,7 @@ void setup() {
   digitalWrite(REDLEDpin, LOW);
 
   // Set input pins
-  pinMode(A0, INPUT);
+  pinMode(A0, OUTPUT);
   pinMode(A1, INPUT);
 
  Setup::SPI_init(9600);

@@ -1,6 +1,7 @@
 import sys
 import struct
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 def read_data_seq(filename, num_results):
     frame_size = num_results * 4 + 8         # Number of uint16s per array
@@ -177,12 +178,17 @@ if __name__ == "__main__":
         print("\t-seq: Plot data sequentially (default behavior is to plot data in time order)")
         sys.exit(1)
     
+    
     if sys.argv[1] == '-seq':
+        print(sys.argv)
         seq = True
-        files = sys.argv[3:]
+        files = [str(p) for p in Path(sys.argv[3]).glob("*.dat")]
+        print(files)
     else:
+        print(sys.argv)
         seq = False
-        files = sys.argv[2:]
+        files = [str(p) for p in Path(sys.argv[2]).glob("*.dat")]
+        print(files)
         
     try:
         if seq:
@@ -193,5 +199,4 @@ if __name__ == "__main__":
         print("NUM_RESULTS must be an integer.")
         sys.exit(1)
 
-    files = sys.argv[2:]
     plot_data(files, num_results, seq=seq)

@@ -1,0 +1,42 @@
+[file-allocation-config]
+BYTES_PER_VALUE = 0
+VALUES_PER_LINE = 0 
+BUF_SAMPLES = 0 
+SHIFT_MULT = 0
+
+[sd-config]
+SD_CS_PIN = 0
+SPI_CLOCK_MHZ = 0
+
+[adc-config]
+USE_AVG_MODE = 0
+NUM_RESULTS = 0
+ADC_SAMPLEN = 0
+ADC_FACTOR_VAL = 0
+
+[gclk-config]
+GCLK_DIV_FACTOR = 0
+
+# https://cdn-learn.adafruit.com/assets/assets/000/111/181/original/arduino_compatibles_Adafruit_Feather_M4_Express.png?1651092186
+#     | ADC0                      | ADC1
+# ----|---------------------------|-------------------------
+#  A0 | ADC_INPUTCTRL_MUXPOS_AIN0 |
+#  A1 | ADC_INPUTCTRL_MUXPOS_AIN5 |
+#  A2 | ADC_INPUTCTRL_MUXPOS_AIN8 | ADC_INPUTCTRL_MUXPOS_AIN0
+#  A3 | ADC_INPUTCTRL_MUXPOS_AIN9 | ADC_INPUTCTRL_MUXPOS_AIN1
+#  A4 | ADC_INPUTCTRL_MUXPOS_AIN4 |
+#  A5 | ADC_INPUTCTRL_MUXPOS_AIN6 |
+[adc-input-pins]
+ADC0_INPUT_0 = "ADC_INPUTCTRL_MUXPOS_AIN4lalalala"
+ADC0_INPUT_1 = "ADC_INPUTCTRL_MUXPOS_AIN6lalalala"
+ADC1_INPUT_0 = "ADC_INPUTCTRL_MUXPOS_AIN0lalalala"
+ADC1_INPUT_1 = "ADC_INPUTCTRL_MUXPOS_AIN1lalalala"
+
+[debug-config]
+DEBUG_R0_P0 = true
+DEBUG_R0_P1 = true
+DEBUG_R1_P0 = true
+DEBUG_R1_P1 = true
+
+
+
