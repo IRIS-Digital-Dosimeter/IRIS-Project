@@ -24,7 +24,8 @@ bool create_dat_file(SdFs* sd, FsFile* file);
 bool do_rollover_if_needed(SdFs* sd, FsFile* file, size_t size);
 
 void print_binary(uint32_t regValue);
-int find_largest_file_number(const char* extension);
+bool find_largest_file_number(SdFs* sd, const char* extension);
+int get_new_file_number();
 
 // void DMAC_2_Handler();
 // void DMAC_3_Handler();

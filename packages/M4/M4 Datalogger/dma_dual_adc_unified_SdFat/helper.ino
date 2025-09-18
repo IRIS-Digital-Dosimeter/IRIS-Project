@@ -2,10 +2,13 @@
 #include "config.h"
 #include <SdFat.h>
 
-
+static int maxNumber = -1; // keeps track of the largest file number found so far
 
 bool create_dat_file(SdFs* sd, FsFile* file) {
-    int nextNumber = find_largest_file_number(sd, ".dat") + 1;
+    if (maxNumber == -1) {
+        find_largest_file_number(sd, ".dat");
+    } // STOPPED RIGHT HERE
+    int nextNumber = get_new_file_number();
 
     char fileName[32];
     snprintf(fileName, sizeof(fileName), "%012d.dat", nextNumber);
@@ -27,9 +30,9 @@ bool create_dat_file(SdFs* sd, FsFile* file) {
 
 // if the file will become too large, close the current one and open a new one on `sd`
 bool do_rollover_if_needed(SdFs* sd, FsFile* file, size_t incoming_size) {
+    file->sync(); // commits everything to disk
     if (file->isOpen() && (incoming_size + file->fileSize() > prealloc_size)) {
         file->truncate(); // trims the file down from its prealloc'd size
-        file->sync(); // commits everything to disk
 
         create_dat_file(sd, file); // create a new file and point `file` at it
         // Serial.print("rolliin': ");
@@ -52,14 +55,14 @@ void print_binary(uint32_t regValue) {
     // Serial.println(); // Move to the next line after printing
 }
 
-int find_largest_file_number(SdFs* sd, const char* extension) {
+bool find_largest_file_number(SdFs* sd, const char* extension) {
     FsFile file, root;
-    static int maxNumber = -1;
+    // static int maxNumber = -1;
     
     root = sd->open("/");
     if (!root) {
         Serial.println("Failed to open root directory");
-        return -1;
+        return false;
     }
     
     if (maxNumber == -1) {
@@ -80,11 +83,15 @@ int find_largest_file_number(SdFs* sd, const char* extension) {
                 }
             }
         }
+
+        return true;
     } else {
-        maxNumber++;
-    }
-    
-    return maxNumber;
+        return false;
+    }   
+}
+
+int get_new_file_number() {
+    return ++maxNumber;
 }
 
 // base case: no arguments left

@@ -1,3 +1,4 @@
+from pprint import pprint
 import sys
 import struct
 import matplotlib.pyplot as plt
@@ -155,6 +156,8 @@ def plot_data(files, num_results, seq=False):
                     labels
                 ):
                     plt.plot(x, y, color=color, marker='o', markersize=1, linestyle='None', linewidth=0.5, label=label if idx == 0 else "")
+                    # pprint(y)
+                    
 
             except Exception as e:
                 print(f"Error processing {file}: {e}")

@@ -4,8 +4,8 @@
 //     NOTE: THE SAMSUNG 128GB SD CARD HAS AN ALLOCATION SIZE OF 128KiB (131072B) RN
 #define BYTES_PER_VALUE 2 // ADC readings go in uint16's
 #define VALUES_PER_LINE 4 // a0, a1, a2, a3
-#define BUF_SAMPLES 8192 // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
-#define SHIFT_MULT 3 // powers of 2 to ensure it lines up. maybe this can change?
+#define BUF_SAMPLES 16384 // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
+#define SHIFT_MULT 4 // powers of 2 to ensure it lines up. maybe this can change?
 
 const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE) << SHIFT_MULT; // multiplied by 2^SHIFT_MULT
 
@@ -35,7 +35,7 @@ const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE)
 #define ADC_PRESCALING_FACTOR ADC_CTRLA_PRESCALER(ADC_FACTOR_VAL) // GCLK by default is 48MHz, so divide that by this factor
 
 //// GCLK CONFIGURATION
-#define GCLK_DIV_FACTOR 5 // must be power of 2 (?)
+#define GCLK_DIV_FACTOR 4 // must be power of 2 (?)
 
 #define ADC_GCLK 2 // use generic clock 2 instead of 1 so we can customize prescaler without affecting other peripherals
 
