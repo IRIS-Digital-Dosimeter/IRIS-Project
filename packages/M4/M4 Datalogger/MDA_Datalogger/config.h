@@ -9,9 +9,6 @@
 
 const uint64_t prealloc_size = (BUF_SAMPLES * VALUES_PER_LINE * BYTES_PER_VALUE) << SHIFT_MULT; // multiplied by 2^SHIFT_MULT
 
-//// TOGGLE SWITCH CONFIGURATION
-#define SWITCH_PIN 5
-
 //// SD CONFIGURATION
 #define SD_CS_PIN 10
 #define SPI_CLOCK_MHZ 50

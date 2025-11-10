@@ -1,0 +1,31 @@
+["FILE ALLOCATION CONFIGURATION"]
+BYTES_PER_VALUE = "2"
+VALUES_PER_LINE = "4" # // a0, a1, a2, a3
+BUF_SAMPLES = "16384" # // should be ALLOCATION SIZE /floordiv/ (BYTES PER VALUE * VALUES PER LINE)
+SHIFT_MULT = "1" # // powers of 2 to ensure it lines up. maybe this can change?
+
+["SD CONFIGURATION"]
+SD_CS_PIN = "10"
+SPI_CLOCK_MHZ = "50"
+
+["ADC CONFIGURATION"]
+USE_AVG_MODE = "0" # // 1=averaging 0=rawing // AVERAGING CURRENTLY NONFUNCTIONAL
+NUM_RESULTS = "1024" # // the number of samples per pin that go directly into result buffers.
+ADC_SAMPLEN = "2" # // extra clock cycles during sampling - 0 is default. higher sampling lengths help with higher impedance inputs
+ADC_FACTOR_VAL = "7"
+
+["GCLK CONFIGURATION"]
+GCLK_DIV_FACTOR = "4" # // must be power of 2
+ADC_GCLK = "2" # // use generic clock 2 instead of 1 so we can customize prescaler without affecting other peripherals
+
+["ADC INPUT PINS"]
+ADC0_INPUT_0 = "ADC_INPUTCTRL_MUXPOS_AIN4"
+ADC0_INPUT_1 = "ADC_INPUTCTRL_MUXPOS_AIN6"
+ADC1_INPUT_0 = "ADC_INPUTCTRL_MUXPOS_AIN0"
+ADC1_INPUT_1 = "ADC_INPUTCTRL_MUXPOS_AIN1"
+
+["DEBUG PRINT CONFIGURATION"]
+DEBUG_R0_P0 = "0"
+DEBUG_R0_P1 = "0"
+DEBUG_R1_P0 = "0"
+DEBUG_R1_P1 = "0"

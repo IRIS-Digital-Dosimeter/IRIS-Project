@@ -60,22 +60,31 @@ void setup() {
         Serial.println(F("SD initialization succeeded!"));
     }
 
+    // Is this even necessary?
     pinMode(A0, INPUT);
     pinMode(A1, INPUT);
     pinMode(A2, INPUT);
     pinMode(A3, INPUT);
 
-    pinMode(SWITCH_PIN, INPUT_PULLUP);
-
     gclk_init();
     adc_init();
     dma_init();
     delay(5); // Wait a few ms for everything to settle idk
-    // create_dat_file(&sd, &file);
-    find_largest_file_number(&sd, ".dat");
+    create_dat_file(&sd, &file);
     dma_channels_enable();
     
     last = millis();
+
+
+    // Serial.print("adc0 generator: ");
+    // Serial.println(GCLK->PCHCTRL[40].bit.GEN);
+    // Serial.print("adc1 generator: ");
+    // Serial.println(GCLK->PCHCTRL[41].bit.GEN);
+    // for (int i = 0; i <= 47; i++) {
+    //     Serial.print(i);
+    //     Serial.print(": ");
+    //     Serial.println(GCLK->PCHCTRL[i].bit.GEN);
+    // }
 
 
     Serial.println(FreeStack());
@@ -84,9 +93,7 @@ void setup() {
     // analogWrite(DAC0, 4096);
 }
 
-bool lastswitchstate = LOW;
 int rollovers = 0;
-int switchState = LOW;
 unsigned long adc0, adc1;
 void loop() {
 
@@ -94,80 +101,62 @@ void loop() {
     // Serial.println(millis() % 4096);
     // analogWrite(DAC0, millis() % 4096);
 
+    // //// DEBUGGING
+    // // stop the sketch on 12th file creation. for some reason it goes till 12? and not 10 or 11?
+    // if (rollovers > 10) {
+    //     Serial.println("now read the data and see what is going on");
+    //     Serial.println(micros());
+    //     for (int i = 0; i < NUM_RESULTS; i++) {
+    //         Serial.print(i);
+    //         Serial.print(": ");
+    //         Serial.print(write_buffer[i*4]);
+    //         Serial.print(" ");
+    //         Serial.print(write_buffer[i*4+1]);
+    //         Serial.print(" ");
+    //         Serial.print(write_buffer[i*4+2]);
+    //         Serial.print(" ");
+    //         Serial.print(write_buffer[i*4+3]);
+    //         Serial.println(" ");
+    //     }
+
+    //     Serial.println();
+    //     Serial.println("below are the 4 included timestamps reconstructed: ");
+    //     for (int j = 0; j < 4; j++) {
+    //         unsigned long recon = 0;
+    //         for (int i = 0; i < 2; i++) {
+    //             recon |= ((unsigned long)write_buffer[NUM_RESULTS*4 + j*2 + i]) << (i * 16);
+    //         }
+    //         Serial.print("\t");
+    //         Serial.println(recon);
+    //     }
 
 
-    // START CODING HERE SEVCOCK
-    //    SEVCOCK ok so what ur gonna do is commit existing file to disk and then 
-    //    create new one every single time switch goes to low
+    //     while (true);
+    // }
+    // ////
+
+
+
+
+
+    // perform auto rollover check and count how many rollovers there have been
+    rollovers += do_rollover_if_needed(&sd, &file, sizeof(write_buffer)) ? 1 : 0;
+
     // only write a if everything is dirty
     if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
-        // check if toggle switch is on
-        switchState = digitalRead(SWITCH_PIN);
+        // write the buffer to SD
+        file.write(write_buffer, sizeof(write_buffer));
+        R0_P0_dirty = false;
+        R0_P1_dirty = false;
+        R1_P0_dirty = false;
+        R1_P1_dirty = false;
 
-        // detect rising edge (switch toggled on)
-        if (switchState == HIGH && lastswitchstate == LOW) {
-            if (!file.isOpen()) {
-                create_dat_file(&sd, &file);  // your existing helper
-                Serial.println(F("Opened new data file"));
-            }
-        }
-
-        if (switchState == HIGH && file.isOpen()) { // if switch toggled on, write data to SD,             
-            // write the buffer to SD
-            file.write(write_buffer, sizeof(write_buffer));
-            R0_P0_dirty = false;
-            R0_P1_dirty = false;
-            R1_P0_dirty = false;
-            R1_P1_dirty = false;
-
-            volatile unsigned long now = millis();
-            Serial.print(now - last);
-            Serial.print(F("\t"));
-            Serial.println(rollovers);
-            last = now;
-
-        } 
-        
-        // detect falling edge (switch turned OFF)
-        if (switchState == LOW && lastswitchstate == HIGH) {
-            if (file.isOpen()) {
-                file.truncate();
-                file.close();
-                Serial.println(F("Closed data file"));
-            } 
-        }
-
-        lastswitchstate = switchState;
+        volatile unsigned long now = millis();
+        Serial.print(now - last);
+        Serial.print(F("\t"));
+        Serial.println(rollovers);
+        last = now;
     }
-
-    // // perform auto rollover check and count how many rollovers there have been
-    // rollovers += do_rollover_if_needed(&sd, &file, sizeof(write_buffer)) ? 1 : 0;
-    // // only write a if everything is dirty
-    // if (R0_P0_dirty && R0_P1_dirty && R1_P0_dirty && R1_P1_dirty) {
-    //     // check if toggle switch is on
-    //     switchState = digitalRead(SWITCH_PIN);
-    //     Serial.print(switchState);
-    //     Serial.print(" ");
-    //     // if switch toggled off, zero the array before writing
-    //     //     this means the plot will show correctly, but doesnt save file every time the switch is flipped
-    //     //     in this mode, a headless run will have zero visible way to tell if a file was finished committing
-    //     if (switchState == LOW) {
-    //         memset(write_buffer, 0, sizeof(write_buffer) - sizeof(write_buffer[0])*8);
-    //     }
-            
-    //     // write the buffer to SD
-    //     file.write(write_buffer, sizeof(write_buffer));
-    //     R0_P0_dirty = false;
-    //     R0_P1_dirty = false;
-    //     R1_P0_dirty = false;
-    //     R1_P1_dirty = false;
-
-    //     volatile unsigned long now = millis();
-    //     Serial.print(now - last);
-    //     Serial.print(F("\t"));
-    //     Serial.println(rollovers);
-    //     last = now;
-    // }
 
 
 
